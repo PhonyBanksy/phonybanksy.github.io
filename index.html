@@ -4,52 +4,48 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>JSON Waypoint Processor</title>
-    <!-- Link to the CSS file -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="saved-routes">
-        <h3>Saved Routes 
-            <button id="exportZipBtn">Export All Routes (ZIP)</button><button onclick="" id="clearCacheBtn" class="clear-cache-btn">Clear All</button>
+        <h3>Saved Routes
+            <button id="exportZipBtn">Export All (ZIP)</button>
+            <button id="clearCacheBtn" class="clear-cache-btn">Clear All</button>
         </h3>
         <div id="routeList"></div>
     </div>
 
     <div class="main-content">
         <div class="input-output">
-            <!-- Make the input field editable -->
             <textarea placeholder="Input JSON" id="json_data"></textarea>
             <textarea placeholder="Output JSON" readonly id="output"></textarea>
         </div>
-        
+
+        <div id="routeCanvas">	<img id="mapImage" src="map.png" style="display: none;"></div>
 
         <div class="controls">
-            <!-- Ensure the checkbox can be toggled -->
             <label for="reverse" class="checkbox-label">
-                Reverse the track?
-                <input type="checkbox" id="reverse" checked />
+                <input type="checkbox" id="reverse" checked>
+                <span>Reverse track?</span>
             </label>
             
-            <!-- Update scaling dropdown options to +5, +10, and +15 -->
             <select id="scale_mode">
-				<option value="+0">Original gates</option>
+                <option value="+0">Original gates</option>
                 <option value="+5">Gate width +5</option>
                 <option value="+10">Gate width +10</option>
                 <option value="+15">Gate width +15</option>
             </select>
 
-            <!-- Add IDs to buttons for easier JavaScript handling -->
-            <button onclick="" id="processBtn" class="">Process the waypoints</button>
-            
-            <button onclick="" id="copyOutputBtn" class="">Copy the output</button>
-			<button onclick="clearJsonData()" id="clearJsonBtn">Clear input</button>
-			<button onclick="clearOutputField()" id="clearJsonBtn">Clear Output</button>
+            <button id="processBtn">Process</button>
+            <button id="copyOutputBtn">Copy Output</button>
+            <button onclick="clearJsonData()" id="clearJsonBtn">Clear Input</button>
+            <button onclick="clearOutputField()" id="clearOutputBtn">Clear Output</button>
+            <button id="visualizeBtn">Visualize</button>
+			If it makes you laugh, come laught to my face =) Very crude!
         </div>
     </div>
 
-    <!-- Link to the JavaScript file -->
-    <script src="app.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="route.js"></script>    <script src="app.js"></script>
 </body>
 </html>
-	
