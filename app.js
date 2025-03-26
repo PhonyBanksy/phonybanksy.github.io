@@ -26,7 +26,7 @@ const RouteProcessor = {
                 outputField.value = JSON.stringify(data, null, 2);
 
                 // Set suffix
-                scaleSuffix = reverseChecked ? `Reversed +${scaleFactor}` : `+${scaleFactor}`;
+                scaleSuffix = reverseChecked ? `(R) +${scaleFactor}` : `+${scaleFactor}`;
                 
                 // Save to localStorage
                 RouteProcessor.saveRouteToLocalStorage(data.routeName + ' ' + scaleSuffix, data);
@@ -145,6 +145,12 @@ const RouteManager = {
     }
 };
 
+function clearJsonData() {
+    document.getElementById('json_data').value = '';
+}
+function clearOutputField() {
+    document.getElementById('output').value = '';
+}
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
     RouteProcessor.updateRouteList();

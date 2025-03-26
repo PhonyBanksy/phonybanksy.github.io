@@ -32,6 +32,7 @@
             
             <!-- Update scaling dropdown options to +5, +10, and +15 -->
             <select id="scale_mode">
+				<option value="+0">Original gates</option>
                 <option value="+5">Gate width +5</option>
                 <option value="+10">Gate width +10</option>
                 <option value="+15">Gate width +15</option>
@@ -41,6 +42,8 @@
             <button onclick="" id="processBtn" class="">Process the waypoints</button>
             
             <button onclick="" id="copyOutputBtn" class="">Copy the output</button>
+			<button onclick="clearJsonData()" id="clearJsonBtn">Clear input</button>
+			<button onclick="clearOutputField()" id="clearJsonBtn">Clear Output</button>
         </div>
     </div>
 
