@@ -32,7 +32,7 @@ const RouteProcessor = {
                 RouteProcessor.saveRouteToLocalStorage(data.routeName + ' ' + scaleSuffix, data);
                 RouteProcessor.updateRouteList();
             } else {
-                outputField.value = 'Invalid input. Expected a JSON object with a "waypoints" array.';
+                outputField.value = 'Invalid input. Expected a JSON text with a "waypoints" array.';
             }
         } catch (error) {
             outputField.value = 'Error parsing JSON: ' + error.message;
