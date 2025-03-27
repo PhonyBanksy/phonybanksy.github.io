@@ -3,7 +3,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
     
-    // Configuration with alignment parameters
     const imageConfig = {
         naturalWidth: 4000,
         naturalHeight: 4000,
@@ -32,7 +31,8 @@ document.addEventListener('DOMContentLoaded', function () {
         scale: 1,
         isDragging: false,
         dragStartX: 0,
-        dragStartY: 0
+        dragStartY: 0,
+        hasFitView: false
     };
 
     const gameToImageX = (gameX) => 
@@ -62,6 +62,8 @@ document.addEventListener('DOMContentLoaded', function () {
             viewState.scale = newScale;
             drawWaypoints();
         }
+        viewState.hasFitView = true;
+        e.preventDefault();
     });
 
     canvas.addEventListener('mousedown', (e) => {
@@ -95,7 +97,7 @@ document.addEventListener('DOMContentLoaded', function () {
     };
 
     const fitWaypointsInView = (waypoints) => {
-        if (waypoints.length === 0) return;
+        if (waypoints.length === 0 || viewState.hasFitView) return;
         let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
         waypoints.forEach(wp => {
             const x = gameToImageX(wp.translation.x);
@@ -182,5 +184,8 @@ document.addEventListener('DOMContentLoaded', function () {
         updateCanvasSize();
         drawWaypoints();
     });
-    document.getElementById('visualizeBtn').addEventListener('click', drawWaypoints);
+    document.getElementById('visualizeBtn').addEventListener('click', () => {
+        viewState.hasFitView = false; // Reset fit view flag on each click
+        drawWaypoints();
+    });
 });
