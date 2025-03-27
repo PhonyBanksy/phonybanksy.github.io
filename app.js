@@ -43,7 +43,7 @@ saveRouteToLocalStorage(routeName, routeData) {
     try {
         let routes = JSON.parse(localStorage.getItem('routes')) || [];
 
-        // Ensure routes is an array (prevents crashes if localStorage has invalid data)
+        // Ensure `routes` is always an array to prevent localStorage corruption
         if (!Array.isArray(routes)) {
             routes = [];
             localStorage.setItem('routes', JSON.stringify(routes));
@@ -51,8 +51,10 @@ saveRouteToLocalStorage(routeName, routeData) {
             return;
         }
 
-        // Check for duplicate route names (case-insensitive & ignores extra spaces)
-        if (routes.some(route => route.routeName.trim().toLowerCase() === routeName.trim().toLowerCase())) {
+        // Normalize the route name for duplicate checking (case-insensitive & trim spaces)
+        const normalizedRouteName = routeName.trim().toLowerCase();
+
+        if (routes.some(route => route.routeName.trim().toLowerCase() === normalizedRouteName)) {
             alert('Route already exists in your list');
             return;
         }
@@ -61,7 +63,7 @@ saveRouteToLocalStorage(routeName, routeData) {
         routes.push({ routeName, routeData });
         localStorage.setItem('routes', JSON.stringify(routes));
 
-        // Update the UI
+        // Update the route list UI
         RouteProcessor.updateRouteList();
     } catch (error) {
         console.error("Error saving route:", error);
@@ -71,7 +73,14 @@ saveRouteToLocalStorage(routeName, routeData) {
 
 updateRouteList() {
     const routeListContainer = document.getElementById('routeList');
-    const routes = JSON.parse(localStorage.getItem('routes')) || [];
+    let routes = JSON.parse(localStorage.getItem('routes')) || [];
+
+    // Ensure routes is always an array
+    if (!Array.isArray(routes)) {
+        routes = [];
+        localStorage.setItem('routes', JSON.stringify(routes));
+    }
+
     routeListContainer.innerHTML = '';
 
     if (routes.length === 0) {
@@ -106,8 +115,6 @@ updateRouteList() {
         routeListContainer.appendChild(listItem);
     });
 },
-
-
     deleteRoute(index) {
         const routes = JSON.parse(localStorage.getItem('routes')) || [];
         routes.splice(index, 1);
