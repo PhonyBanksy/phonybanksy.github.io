@@ -5,26 +5,20 @@ document.addEventListener('DOMContentLoaded', function () {
     
     // Configuration with alignment parameters
     const imageConfig = {
-        // Map image properties
-        naturalWidth: 4000,     // New image width
-        naturalHeight: 4000,   // New image height
-        imageOffsetX: 2350,     // X position of game (0,0) on image
-        imageOffsetY: 580,      // Y position of game (0,0) on image
-        
-        // Coordinate conversion settings
-        gameToImageScale: 0.002,  // Scale factor from game units to image
-        flipY: false,             // No vertical flip needed
-        
-        // Waypoint alignment adjustments
-        offsetX: 0,             // Reset horizontal offset
-        offsetY: 0,             // Reset vertical offset
-        scaleFactor: 0.93        // Waypoint scaling factor
+        naturalWidth: 4000,
+        naturalHeight: 4000,
+        imageOffsetX: 2381,
+        imageOffsetY: 574,
+        gameToImageScale: 0.002,
+        flipY: false,
+        offsetX: 0,
+        offsetY: 0,
+        scaleFactor: 0.93
     };
 
     const mapImage = new Image();
-    mapImage.src = 'map.jpg';    // Updated image filename
+    mapImage.src = 'map.jpg';
 
-    // Canvas setup
     const updateCanvasSize = () => {
         canvas.width = container.clientWidth;
         canvas.height = container.clientHeight;
@@ -32,7 +26,6 @@ document.addEventListener('DOMContentLoaded', function () {
     updateCanvasSize();
     container.appendChild(canvas);
 
-    // View state management
     let viewState = {
         panX: canvas.width / 2,
         panY: canvas.height / 2,
@@ -42,7 +35,6 @@ document.addEventListener('DOMContentLoaded', function () {
         dragStartY: 0
     };
 
-    // Coordinate conversions with centering adjustment
     const gameToImageX = (gameX) => 
         (gameX * imageConfig.scaleFactor * imageConfig.gameToImageScale) + 
         imageConfig.imageOffsetX + 
@@ -56,7 +48,6 @@ document.addEventListener('DOMContentLoaded', function () {
         imageConfig.offsetY -
         imageConfig.naturalHeight / 2;
 
-    // Input handling
     canvas.addEventListener('wheel', (e) => {
         const zoomFactor = 1.1;
         const mouseX = e.offsetX;
@@ -93,7 +84,6 @@ document.addEventListener('DOMContentLoaded', function () {
         })
     );
 
-    // Waypoint processing
     const parseWaypoints = () => {
         try {
             const output = document.getElementById('output').value;
@@ -104,18 +94,45 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     };
 
-    // Drawing functions
+    const fitWaypointsInView = (waypoints) => {
+        if (waypoints.length === 0) return;
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        waypoints.forEach(wp => {
+            const x = gameToImageX(wp.translation.x);
+            const y = gameToImageY(wp.translation.y);
+            minX = Math.min(minX, x);
+            minY = Math.min(minY, y);
+            maxX = Math.max(maxX, x);
+            maxY = Math.max(maxY, y);
+        });
+
+        const padding = 50;
+        minX -= padding;
+        minY -= padding;
+        maxX += padding;
+        maxY += padding;
+
+        const width = maxX - minX;
+        const height = maxY - minY;
+
+        const scaleX = canvas.width / width;
+        const scaleY = canvas.height / height;
+        viewState.scale = Math.min(scaleX, scaleY) * 0.9;
+        viewState.panX = canvas.width / 2 - ((minX + maxX) / 2) * viewState.scale;
+        viewState.panY = canvas.height / 2 - ((minY + maxY) / 2) * viewState.scale;
+    };
+
     const drawWaypoints = () => {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         const waypoints = parseWaypoints();
-        
         if (!mapImage.complete) return;
+
+        fitWaypointsInView(waypoints);
 
         ctx.save();
         ctx.translate(viewState.panX, viewState.panY);
         ctx.scale(viewState.scale, viewState.scale);
 
-        // Draw map background centered
         ctx.drawImage(
             mapImage,
             -imageConfig.naturalWidth / 2,
@@ -124,7 +141,6 @@ document.addEventListener('DOMContentLoaded', function () {
             imageConfig.naturalHeight
         );
 
-        // Draw waypoint paths
         waypoints.forEach((wp, index) => {
             const x = gameToImageX(wp.translation.x);
             const y = gameToImageY(wp.translation.y);
@@ -139,7 +155,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 ctx.stroke();
             }
 
-            // Draw waypoint marker
             ctx.beginPath();
             ctx.arc(x, y, 5 / viewState.scale, 0, Math.PI * 2);
             ctx.fillStyle = '#00f';
@@ -148,16 +163,20 @@ document.addEventListener('DOMContentLoaded', function () {
             ctx.lineWidth = 2 / viewState.scale;
             ctx.stroke();
 
-            // Draw waypoint label
-            ctx.fillStyle = '#fff';
-            ctx.font = `${14 / viewState.scale}px Arial`;
-            ctx.fillText(`WP${index}`, x + 8 / viewState.scale, y - 8 / viewState.scale);
+            if (index === 0) {
+                ctx.fillStyle = '#fff';
+                ctx.font = `${16 / viewState.scale}px Arial bold`;
+                ctx.fillText('START', x + 10 / viewState.scale, y - 10 / viewState.scale);
+            } else if (index === waypoints.length - 1) {
+                ctx.fillStyle = '#fff';
+                ctx.font = `${16 / viewState.scale}px Arial bold`;
+                ctx.fillText('FINISH', x + 10 / viewState.scale, y - 10 / viewState.scale);
+            }
         });
 
         ctx.restore();
     };
 
-    // Event listeners
     mapImage.addEventListener('load', drawWaypoints);
     window.addEventListener('resize', () => {
         updateCanvasSize();
