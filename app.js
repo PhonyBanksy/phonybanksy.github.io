@@ -39,50 +39,74 @@ const RouteProcessor = {
         }
     },
 
-    saveRouteToLocalStorage(routeName, routeData) {
-        const routes = JSON.parse(localStorage.getItem('routes')) || [];
-        routes.push({ routeName, routeData });
-        localStorage.setItem('routes', JSON.stringify(routes));
-    },
+saveRouteToLocalStorage(routeName, routeData) {
+    try {
+        let routes = JSON.parse(localStorage.getItem('routes')) || [];
 
-    updateRouteList() {
-        const routeListContainer = document.getElementById('routeList');
-        const routes = JSON.parse(localStorage.getItem('routes')) || [];
-        routeListContainer.innerHTML = '';
-
-        if (routes.length === 0) {
-            routeListContainer.innerHTML = '<p>No routes available.</p>';
+        // Ensure routes is an array (prevents crashes if localStorage has invalid data)
+        if (!Array.isArray(routes)) {
+            routes = [];
+            localStorage.setItem('routes', JSON.stringify(routes));
+            alert("Local storage data was corrupted and has been reset.");
             return;
         }
 
-        routes.forEach((route, index) => {
-            const listItem = document.createElement('li');
+        // Check for duplicate route names (case-insensitive & ignores extra spaces)
+        if (routes.some(route => route.routeName.trim().toLowerCase() === routeName.trim().toLowerCase())) {
+            alert('Route already exists in your list');
+            return;
+        }
 
-            // Delete button
-            const deleteButton = document.createElement('span');
-            deleteButton.textContent = ' ❌';
-            deleteButton.classList.add('delete-btn');
-            deleteButton.onclick = (e) => {
-                e.stopPropagation();
-                RouteProcessor.deleteRoute(index);
-            };
+        // Add the new route
+        routes.push({ routeName, routeData });
+        localStorage.setItem('routes', JSON.stringify(routes));
 
-            // Append delete button and route name
-            listItem.appendChild(deleteButton);
-            listItem.appendChild(document.createTextNode(' ' + route.routeName));
+        // Update the UI
+        RouteProcessor.updateRouteList();
+    } catch (error) {
+        console.error("Error saving route:", error);
+        alert("An error occurred while saving the route.");
+    }
+},
 
-            // On click, load the original route and processed data into input and output fields
-            listItem.onclick = () => {
-    const inputField = document.getElementById('json_data');
-    const outputField = document.getElementById('output');
-    inputField.value = JSON.stringify(route.routeData, null, 2);
-    outputField.value = JSON.stringify(route.routeData, null, 2);
+updateRouteList() {
+    const routeListContainer = document.getElementById('routeList');
+    const routes = JSON.parse(localStorage.getItem('routes')) || [];
+    routeListContainer.innerHTML = '';
 
-            };
+    if (routes.length === 0) {
+        routeListContainer.innerHTML = '<p>No routes available.</p>';
+        return;
+    }
 
-            routeListContainer.appendChild(listItem);
-        });
-    },
+    routes.forEach((route, index) => {
+        const listItem = document.createElement('li');
+
+        // Delete button
+        const deleteButton = document.createElement('span');
+        deleteButton.textContent = ' ❌';
+        deleteButton.classList.add('delete-btn');
+        deleteButton.onclick = (e) => {
+            e.stopPropagation();
+            RouteProcessor.deleteRoute(index);
+        };
+
+        // Append delete button and route name
+        listItem.appendChild(deleteButton);
+        listItem.appendChild(document.createTextNode(' ' + route.routeName));
+
+        // On click, load the original route and processed data into input and output fields
+        listItem.onclick = () => {
+            const inputField = document.getElementById('json_data');
+            const outputField = document.getElementById('output');
+            inputField.value = JSON.stringify(route.routeData, null, 2);
+            outputField.value = JSON.stringify(route.routeData, null, 2);
+        };
+
+        routeListContainer.appendChild(listItem);
+    });
+},
+
 
     deleteRoute(index) {
         const routes = JSON.parse(localStorage.getItem('routes')) || [];
