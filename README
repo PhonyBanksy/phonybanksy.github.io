@@ -6,8 +6,6 @@ A web application that allows MotorTown players to edit and manage the routes th
 ## Features
 
 
-- **Edit Routes**: Easily modify the routes you’ve created for racing or events.
-
 - **Cache Storage**: Stores user-processed routes in the cache for quick access.
 
 - **Reverse Waypoints**: Allows users to reverse the start and finish waypoints of their routes.
