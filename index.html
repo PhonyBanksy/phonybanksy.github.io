@@ -16,13 +16,6 @@
     </div>
 
     <div class="main-content">
-        <div class="input-output">
-            <textarea placeholder="Input JSON" id="json_data"></textarea>
-            <textarea placeholder="Output JSON" readonly id="output"></textarea>
-        </div>
-
-        <div id="routeCanvas">	<img id="mapImage" src="map.png" style="display: none;"></div>
-
         <div class="controls">
             <label for="reverse" class="checkbox-label">
                 <input type="checkbox" id="reverse" checked>
@@ -41,11 +34,35 @@
             <button onclick="clearJsonData()" id="clearJsonBtn">Clear Input</button>
             <button onclick="clearOutputField()" id="clearOutputBtn">Clear Output</button>
             <button id="visualizeBtn">Visualize</button>
-			Scroll mouse to zoom and unlock panning
+            <span class="scroll-hint">Scroll mouse to zoom and unlock panning</span>
+        </div>
+
+        <div class="input-output">
+            <textarea placeholder="Input JSON" id="json_data"></textarea>
+            <textarea placeholder="Output JSON" readonly id="output"></textarea>
+        </div>
+
+        <div class="visual-area">
+            <div id="routeCanvas">
+                <img id="mapImage" src="map.jpg" style="display: none;">
+            </div>
+
+            <div class="usage-instructions">
+                <h3>How to Use</h3>
+                <ul>
+                    <li><strong>In MotorTown:</strong> Open your event and export the route.</li>
+                    <li><strong>On this site:</strong> <strong>Paste</strong> into the Input window.</li>
+                    <li><strong>Configure:</strong> Check/uncheck "Reverse?" to swap start with finish.</li>
+                    <li><strong>Resize:</strong> Use the dropdown to enlarge gates if they are too small for large events.</li>
+                    <li><strong>Finalize:</strong> Press <strong>Process</strong>, then <strong>Copy Output</strong>.</li>
+                    <li><strong>Import:</strong> Paste the code back into the game and enjoy!</li>
+                </ul>
+            </div>
         </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <script src="route.js"></script>    <script src="app.js"></script>
+    <script src="route.js"></script>
+    <script src="app.js"></script>
 </body>
 </html>

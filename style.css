@@ -30,15 +30,24 @@ body {
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 15px;
     height: 100%;
 }
 
+.controls {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+    background-color: #2e2e2e;
+    padding: 10px;
+    border-radius: 8px;
+}
+
 .input-output {
-    flex: 1;
     display: flex;
     gap: 20px;
-    min-height: 200px;
+    height: 200px; /* Fixed height for text areas */
 }
 
 textarea {
@@ -49,34 +58,66 @@ textarea {
     padding: 10px;
     border-radius: 8px;
     resize: none;
-    min-height: 150px;
+}
+
+/* Container for side-by-side Map and Instructions */
+.visual-area {
+    display: flex;
+    gap: 20px;
+    flex: 1; 
+    min-height: 0; /* Important for flex child scrolling */
 }
 
 #routeCanvas {
-    flex: 1;
+    flex: 3; /* Map takes 75% width */
     background-color: #2e2e2e;
     border: 1px solid #555;
     border-radius: 8px;
     position: relative;
     overflow: hidden;
-    min-height: 300px;
 }
 
-.controls {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-    flex-wrap: wrap;
+#routeCanvas canvas {
+    width: 100%;
+    height: 100%;
+    background: #4a749c;
+    touch-action: none;
+}
+
+.usage-instructions {
+    flex: 1; /* Instructions take 25% width */
+    background-color: #2e2e2e;
+    border: 1px solid #555;
+    border-radius: 8px;
+    padding: 15px;
+    font-size: 13px;
+    line-height: 1.6;
+    overflow-y: auto;
+}
+
+.usage-instructions h3 {
+    margin-bottom: 10px;
+    color: #00bfff;
+    border-bottom: 1px solid #555;
+    padding-bottom: 5px;
+}
+
+.usage-instructions ul {
+    list-style-type: none;
+}
+
+.usage-instructions li {
+    margin-bottom: 12px;
 }
 
 button, select {
     background-color: #00008b;
     color: white;
     border: none;
-    padding: 8px 16px;
+    padding: 8px 12px;
     cursor: pointer;
     border-radius: 5px;
-    font-size: 14px;
+    font-size: 13px;
 }
 
 button:hover {
@@ -87,38 +128,16 @@ button:hover {
     background-color: #cc0000 !important;
 }
 
-.clear-cache-btn:hover {
-    background-color: #990000 !important;
-}
-
 .checkbox-label {
     display: flex;
     align-items: center;
     gap: 8px;
     padding: 5px 10px;
-    background-color: #2e2e2e;
+    background-color: #3e3e3e;
     border-radius: 5px;
 }
 
-.checkbox-label input[type="checkbox"] {
-    width: 16px;
-    height: 16px;
-}
-
-.route-item {
-    background: #2e2e2e;
-    padding: 10px;
-    margin: 5px 0;
-    border-radius: 5px;
-    cursor: pointer;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-#routeCanvas canvas {
-    width: 100%;
-    height: 100%;
-	background: #4a749c;
-    touch-action: none;
+.scroll-hint {
+    font-size: 11px;
+    color: #aaa;
 }
