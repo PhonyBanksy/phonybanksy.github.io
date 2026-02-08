@@ -141,3 +141,38 @@ button:hover {
     font-size: 11px;
     color: #aaa;
 }
+.instruction-footer {
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #555;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.warning-text {
+    color: red;
+    font-size: 16px;
+    font-weight: bold;
+    line-height: 1;
+}
+
+.clear-cache-btn {
+    background-color: #cc0000 !important;
+    width: 100%; /* Makes the button easy to click in the sidebar-style instruction box */
+    padding: 10px !important;
+}
+
+.clear-cache-btn:hover {
+    background-color: #990000 !important;
+}
+
+/* Ensure the instruction box uses flex to push the footer down if needed */
+.usage-instructions {
+    display: flex;
+    flex-direction: column;
+}
+
+.usage-instructions ol {
+    flex: 1;
+}

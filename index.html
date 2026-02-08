@@ -10,8 +10,7 @@
     <div class="saved-routes">
         <h3>Saved Routes
             <button id="exportZipBtn">Export All (ZIP)</button>
-            <button id="clearCacheBtn" class="clear-cache-btn">Clear All</button>
-        </h3>
+            </h3>
         <div id="routeList"></div>
     </div>
 
@@ -19,7 +18,7 @@
         <div class="controls">
             <label for="reverse" class="checkbox-label">
                 <input type="checkbox" id="reverse" checked>
-                <span>Reverse track?</span>
+                <span>Reverse?</span>
             </label>
             
             <select id="scale_mode">
@@ -49,14 +48,19 @@
 
             <div class="usage-instructions">
                 <h3>How to Use</h3>
-                <ul>
+                <ol>
                     <li><strong>In MotorTown:</strong> Open your event and export the route.</li>
-                    <li><strong>On this site:</strong> <strong>Paste</strong> into the Input window.</li>
+                    <li><strong>On this site:</strong> Use <code>Ctrl+V</code> to paste into the Input window.</li>
                     <li><strong>Configure:</strong> Check/uncheck "Reverse?" to swap start with finish.</li>
                     <li><strong>Resize:</strong> Use the dropdown to enlarge gates if they are too small for large events.</li>
                     <li><strong>Finalize:</strong> Press <strong>Process</strong>, then <strong>Copy Output</strong>.</li>
-                    <li><strong>Import:</strong> Paste the code back into the game and enjoy!</li>
-                </ul>
+                    <li><strong>Import:</strong> Import the code back into the event in game and enjoy!</li>
+                </ol>
+                
+                <div class="instruction-footer">
+                    <p class="warning-text">Clearing browser cookies/cache will also clear all saved routes on this website.</p>
+                    <button id="clearCacheBtn" class="clear-cache-btn">Clear All Saved Routes</button>
+                </div>
             </div>
         </div>
     </div>
