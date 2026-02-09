@@ -118,15 +118,15 @@ document.addEventListener('DOMContentLoaded', function () {
         })
     );
 
-    const parseWaypoints = () => {
-        try {
-            const input = document.getElementById('json_data').value;
-            const data = JSON.parse(input);
-            return data.waypoints || [];
-        } catch (e) {
-            return [];
-        }
-    };
+	const parseWaypoints = () => {
+		try {
+			const input = document.getElementById('json_data').value;
+			const data = JSON.parse(input);
+			return data.waypoints || [];
+		} catch (e) {
+			return [];
+		}
+	};
 
     const showEditor = (index, x, y, wp) => {
         selectedWaypointIndex = index;

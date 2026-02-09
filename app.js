@@ -8,7 +8,6 @@ const RouteProcessor = {
 
         try {
             const data = JSON.parse(inputField.value);
-
             if (data && Array.isArray(data.waypoints)) {
                 if (reverseChecked) {
                     data.waypoints.reverse();
@@ -19,13 +18,15 @@ const RouteProcessor = {
                         waypoint.scale3D.y += scaleFactor;
                     }
                 });
+				
 
-                outputField.value = JSON.stringify(data, null, 2);
                 scaleSuffix = reverseChecked ? `(R) +${scaleFactor}` : `+${scaleFactor}`;
-                
-                // Save with overwrite check
-                RouteProcessor.saveRouteToLocalStorage(data.routeName + ' ' + scaleSuffix, data);
-                RouteProcessor.updateRouteList();
+				inputField.value = JSON.stringify(data, null, 2);
+                outputField.value = JSON.stringify(data, null, 2);
+				
+                document.getElementById('visualizeBtn').click();
+				RouteProcessor.saveRouteToLocalStorage(data.routeName + ' ' + scaleSuffix, data);
+				RouteProcessor.updateRouteList();
             } else {
                 outputField.value = 'Invalid input. Expected a JSON text with a "waypoints" array.';
             }
