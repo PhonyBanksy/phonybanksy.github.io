@@ -230,17 +230,29 @@ document.addEventListener('DOMContentLoaded', function () {
 			ctx.strokeStyle = '#000'; // Black outline
 			ctx.lineWidth = 3 / viewState.scale; // Width of the outline
 			ctx.strokeText(index + 1, x + 8 / viewState.scale, y + 4 / viewState.scale);
-			ctx.fillStyle = '#ff0000'; // Red fill
-			ctx.fillText(index + 1, x + 8 / viewState.scale, y + 4 / viewState.scale);
-            if (index === 0) {
-                ctx.fillStyle = '#fff';
-                ctx.font = `${14 / viewState.scale}px Arial bold`;
-                ctx.fillText('START', x + 10 / viewState.scale, y - 10 / viewState.scale);
-            } else if (index === waypoints.length - 1) {
-                ctx.fillStyle = '#fff';
-                ctx.font = `${14 / viewState.scale}px Arial bold`;
-                ctx.fillText('FINISH', x + 10 / viewState.scale, y - 10 / viewState.scale);
-            }
+			ctx.fillStyle = '#fff';
+ctx.textAlign = 'center'; // Center align for cleaner stacking
+
+if (index === 0) {
+    // Draw "START" text
+    ctx.font = `${21 / viewState.scale}px Arial bold`;
+    ctx.fillText('START', x, y - 35 / viewState.scale);
+    
+    // Draw Larger Icon Below Text
+    ctx.font = `${28 / viewState.scale}px Arial`; 
+    ctx.fillText('🏎️', x, y - 10 / viewState.scale);
+} else if (index === waypoints.length - 1) {
+    // Draw "FINISH" text
+    ctx.font = `${21 / viewState.scale}px Arial bold`;
+    ctx.fillText('FINISH', x, y - 35 / viewState.scale);
+    
+    // Draw Larger Icon Below Text
+    ctx.font = `${28 / viewState.scale}px Arial`;
+    ctx.fillText('🏁', x, y - 10 / viewState.scale, 50 / viewState.scale);
+}
+
+// Reset textAlign for the numbers so they stay positioned correctly
+ctx.textAlign = 'start';
         });
 
         ctx.restore();
