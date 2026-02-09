@@ -14,7 +14,18 @@
         <div id="routeList"></div>
     </div>
 
-    <div class="main-content">
+	<div class="main-content">
+	
+	<div id="waypointEditor" style="display:none; position:absolute; background:#333; padding:15px; border:2px solid #00bfff; border-radius:8px; z-index:1000; color: white;">
+		<h4 style="margin-bottom:10px;">Edit Waypoint</h4>
+		<label>Gate Width (Y): <br>
+				<input type="number" id="editScaleY" style="width: 80px; margin-top:5px;">
+		</label>
+    <div style="margin-top:10px; display:flex; gap:5px;">
+        <button onclick="saveWaypointEdit()" style="background: #28a745;">OK</button>
+        <button onclick="window.closeEditor()" style="background: #6c757d;">Cancel</button>
+    </div>
+	</div>
         <div class="controls">
             <label for="reverse" class="checkbox-label">
                 <input type="checkbox" id="reverse" checked>
@@ -53,6 +64,7 @@
                     <li><strong>On this site:</strong> Use <code>Ctrl+V</code> to paste into the Input window.</li>
                     <li><strong>Configure:</strong> Check/uncheck "Reverse?" to swap start with finish.</li>
                     <li><strong>Resize:</strong> Use the dropdown to enlarge gates if they are too small for large events.</li>
+                    <li><strong>Resize:</strong> Click on individual gate to change only THAT gate width.</li>
                     <li><strong>Finalize:</strong> Press <strong>Process</strong>, then <strong>Copy Output</strong>.</li>
                     <li><strong>Import:</strong> Import the code back into the event in game and enjoy!</li>
                 </ol>

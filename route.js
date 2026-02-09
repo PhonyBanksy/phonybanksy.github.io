@@ -35,6 +35,8 @@ document.addEventListener('DOMContentLoaded', function () {
         hasFitView: false
     };
 
+    let selectedWaypointIndex = null;
+
     const gameToImageX = (gameX) => 
         (gameX * imageConfig.scaleFactor * imageConfig.gameToImageScale) + 
         imageConfig.imageOffsetX + 
@@ -42,11 +44,20 @@ document.addEventListener('DOMContentLoaded', function () {
         imageConfig.naturalWidth / 2;
 
     const gameToImageY = (gameY) => 
-        (imageConfig.flipY ? -1 : 1) * 
-        (gameY * imageConfig.scaleFactor * imageConfig.gameToImageScale) + 
+        (imageConfig.flipY ? -1 : 1) * (gameY * imageConfig.scaleFactor * imageConfig.gameToImageScale) + 
         imageConfig.imageOffsetY + 
         imageConfig.offsetY -
         imageConfig.naturalHeight / 2;
+
+    // Helper to get screen coordinates from game coordinates
+    const getScreenCoords = (gameX, gameY) => {
+        const imgX = gameToImageX(gameX);
+        const imgY = gameToImageY(gameY);
+        return {
+            x: (imgX * viewState.scale) + viewState.panX,
+            y: (imgY * viewState.scale) + viewState.panY
+        };
+    };
 
     canvas.addEventListener('wheel', (e) => {
         const zoomFactor = 1.1;
@@ -61,15 +72,35 @@ document.addEventListener('DOMContentLoaded', function () {
             viewState.panY = mouseY - (mouseY - viewState.panY) * zoom;
             viewState.scale = newScale;
             drawWaypoints();
+            if (selectedWaypointIndex !== null) updateEditorPosition();
         }
         viewState.hasFitView = true;
         e.preventDefault();
     });
 
     canvas.addEventListener('mousedown', (e) => {
-        viewState.isDragging = true;
-        viewState.dragStartX = e.clientX - viewState.panX;
-        viewState.dragStartY = e.clientY - viewState.panY;
+        // Detect click on waypoint
+        const rect = canvas.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+        
+        const waypoints = parseWaypoints();
+        let clickedIndex = -1;
+
+        waypoints.forEach((wp, index) => {
+            const screen = getScreenCoords(wp.translation.x, wp.translation.y);
+            const dist = Math.sqrt((mouseX - screen.x) ** 2 + (mouseY - screen.y) ** 2);
+            if (dist < 10) clickedIndex = index;
+        });
+
+        if (clickedIndex !== -1) {
+            showEditor(clickedIndex, mouseX, mouseY, waypoints[clickedIndex]);
+        } else {
+            viewState.isDragging = true;
+            viewState.dragStartX = e.clientX - viewState.panX;
+            viewState.dragStartY = e.clientY - viewState.panY;
+            // closeEditor(); // Optional: close editor if clicking empty space
+        }
     });
 
     canvas.addEventListener('mousemove', (e) => {
@@ -77,6 +108,7 @@ document.addEventListener('DOMContentLoaded', function () {
             viewState.panX = e.clientX - viewState.dragStartX;
             viewState.panY = e.clientY - viewState.dragStartY;
             drawWaypoints();
+            if (selectedWaypointIndex !== null) updateEditorPosition();
         }
     });
 
@@ -88,12 +120,40 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const parseWaypoints = () => {
         try {
-            const output = document.getElementById('output').value;
-            return JSON.parse(output).waypoints || [];
+            const input = document.getElementById('json_data').value;
+            const data = JSON.parse(input);
+            return data.waypoints || [];
         } catch (e) {
-            console.error('Error parsing waypoints:', e);
             return [];
         }
+    };
+
+    const showEditor = (index, x, y, wp) => {
+        selectedWaypointIndex = index;
+        const editor = document.getElementById('waypointEditor');
+        if (!editor) return;
+        
+        editor.style.display = 'block';
+        updateEditorPosition();
+        document.getElementById('editScaleY').value = wp.scale3D.y;
+    };
+
+    const updateEditorPosition = () => {
+        const waypoints = parseWaypoints();
+        if (selectedWaypointIndex === null || !waypoints[selectedWaypointIndex]) return;
+        
+        const wp = waypoints[selectedWaypointIndex];
+        const screen = getScreenCoords(wp.translation.x, wp.translation.y);
+        const editor = document.getElementById('waypointEditor');
+        
+        editor.style.left = (screen.x + 15) + 'px';
+        editor.style.top = (screen.y - 15) + 'px';
+    };
+
+    window.closeEditor = () => {
+        selectedWaypointIndex = null;
+        const editor = document.getElementById('waypointEditor');
+        if (editor) editor.style.display = 'none';
     };
 
     const fitWaypointsInView = (waypoints) => {
@@ -159,19 +219,26 @@ document.addEventListener('DOMContentLoaded', function () {
 
             ctx.beginPath();
             ctx.arc(x, y, 5 / viewState.scale, 0, Math.PI * 2);
-            ctx.fillStyle = '#00f';
+            ctx.fillStyle = (index === selectedWaypointIndex) ? '#ffff00' : '#00f';
             ctx.fill();
             ctx.strokeStyle = '#000';
             ctx.lineWidth = 2 / viewState.scale;
             ctx.stroke();
 
+// Draw Numbered Waypoints
+			ctx.font = `${24 / viewState.scale}px Arial bold`;
+			ctx.strokeStyle = '#000'; // Black outline
+			ctx.lineWidth = 3 / viewState.scale; // Width of the outline
+			ctx.strokeText(index + 1, x + 8 / viewState.scale, y + 4 / viewState.scale);
+			ctx.fillStyle = '#ff0000'; // Red fill
+			ctx.fillText(index + 1, x + 8 / viewState.scale, y + 4 / viewState.scale);
             if (index === 0) {
                 ctx.fillStyle = '#fff';
-                ctx.font = `${16 / viewState.scale}px Arial bold`;
+                ctx.font = `${14 / viewState.scale}px Arial bold`;
                 ctx.fillText('START', x + 10 / viewState.scale, y - 10 / viewState.scale);
             } else if (index === waypoints.length - 1) {
                 ctx.fillStyle = '#fff';
-                ctx.font = `${16 / viewState.scale}px Arial bold`;
+                ctx.font = `${14 / viewState.scale}px Arial bold`;
                 ctx.fillText('FINISH', x + 10 / viewState.scale, y - 10 / viewState.scale);
             }
         });
@@ -184,8 +251,12 @@ document.addEventListener('DOMContentLoaded', function () {
         updateCanvasSize();
         drawWaypoints();
     });
+    
     document.getElementById('visualizeBtn').addEventListener('click', () => {
-        viewState.hasFitView = false; // Reset fit view flag on each click
+        viewState.hasFitView = false;
         drawWaypoints();
     });
+
+    // Handle global function for saving edits from app.js context
+    window.getSelectedWaypointIndex = () => selectedWaypointIndex;
 });

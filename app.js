@@ -10,25 +10,20 @@ const RouteProcessor = {
             const data = JSON.parse(inputField.value);
 
             if (data && Array.isArray(data.waypoints)) {
-                // Reverse if checked
                 if (reverseChecked) {
                     data.waypoints.reverse();
                 }
 
-                // Apply scaling
                 data.waypoints.forEach(waypoint => {
                     if (waypoint.scale3D && typeof waypoint.scale3D.y === 'number') {
                         waypoint.scale3D.y += scaleFactor;
                     }
                 });
 
-                // Display the result
                 outputField.value = JSON.stringify(data, null, 2);
-
-                // Set suffix
                 scaleSuffix = reverseChecked ? `(R) +${scaleFactor}` : `+${scaleFactor}`;
                 
-                // Save to localStorage
+                // Save with overwrite check
                 RouteProcessor.saveRouteToLocalStorage(data.routeName + ' ' + scaleSuffix, data);
                 RouteProcessor.updateRouteList();
             } else {
@@ -39,82 +34,76 @@ const RouteProcessor = {
         }
     },
 
-saveRouteToLocalStorage(routeName, routeData) {
-    try {
+    saveRouteToLocalStorage(routeName, routeData) {
+        try {
+            let routes = JSON.parse(localStorage.getItem('routes')) || [];
+
+            if (!Array.isArray(routes)) {
+                routes = [];
+            }
+
+            const normalizedRouteName = routeName.trim().toLowerCase();
+            const existingIndex = routes.findIndex(route => route.routeName.trim().toLowerCase() === normalizedRouteName);
+
+            // Overwrite Logic
+            if (existingIndex !== -1) {
+                const confirmOverwrite = confirm(`Route "${routeName}" already exists. Would you like to overwrite it?`);
+                if (confirmOverwrite) {
+                    routes[existingIndex] = { routeName, routeData };
+                } else {
+                    return; // Exit without saving
+                }
+            } else {
+                routes.push({ routeName, routeData });
+            }
+
+            localStorage.setItem('routes', JSON.stringify(routes));
+            RouteProcessor.updateRouteList();
+        } catch (error) {
+            console.error("Error saving route:", error);
+        }
+    },
+
+    updateRouteList() {
+        const routeListContainer = document.getElementById('routeList');
         let routes = JSON.parse(localStorage.getItem('routes')) || [];
 
-        // Ensure `routes` is always an array to prevent localStorage corruption
         if (!Array.isArray(routes)) {
             routes = [];
             localStorage.setItem('routes', JSON.stringify(routes));
-            alert("Local storage data was corrupted and has been reset.");
+        }
+
+        routeListContainer.innerHTML = '';
+
+        if (routes.length === 0) {
+            routeListContainer.innerHTML = '<p>No routes available.</p>';
             return;
         }
 
-        // Normalize the route name for duplicate checking (case-insensitive & trim spaces)
-        const normalizedRouteName = routeName.trim().toLowerCase();
+        routes.forEach((route, index) => {
+            const listItem = document.createElement('li');
+            const deleteButton = document.createElement('span');
+            deleteButton.textContent = ' ❌';
+            deleteButton.classList.add('delete-btn');
+            deleteButton.onclick = (e) => {
+                e.stopPropagation();
+                RouteProcessor.deleteRoute(index);
+            };
 
-        if (routes.some(route => route.routeName.trim().toLowerCase() === normalizedRouteName)) {
-            alert('Route already exists in your list');
-            return;
-        }
+            listItem.appendChild(deleteButton);
+            listItem.appendChild(document.createTextNode(' ' + route.routeName));
 
-        // Add the new route
-        routes.push({ routeName, routeData });
-        localStorage.setItem('routes', JSON.stringify(routes));
+            listItem.onclick = () => {
+                const inputField = document.getElementById('json_data');
+                inputField.value = JSON.stringify(route.routeData, null, 2);
+                // Trigger visual update
+                document.getElementById('visualizeBtn').click();
+            };
 
-        // Update the route list UI
-        RouteProcessor.updateRouteList();
-    } catch (error) {
-        console.error("Error saving route:", error);
-        alert("An error occurred while saving the route.");
-    }
-},
+            routeListContainer.appendChild(listItem);
+        });
+    },
 
-updateRouteList() {
-    const routeListContainer = document.getElementById('routeList');
-    let routes = JSON.parse(localStorage.getItem('routes')) || [];
-
-    // Ensure routes is always an array
-    if (!Array.isArray(routes)) {
-        routes = [];
-        localStorage.setItem('routes', JSON.stringify(routes));
-    }
-
-    routeListContainer.innerHTML = '';
-
-    if (routes.length === 0) {
-        routeListContainer.innerHTML = '<p>No routes available.</p>';
-        return;
-    }
-
-    routes.forEach((route, index) => {
-        const listItem = document.createElement('li');
-
-        // Delete button
-        const deleteButton = document.createElement('span');
-        deleteButton.textContent = ' ❌';
-        deleteButton.classList.add('delete-btn');
-        deleteButton.onclick = (e) => {
-            e.stopPropagation();
-            RouteProcessor.deleteRoute(index);
-        };
-
-        // Append delete button and route name
-        listItem.appendChild(deleteButton);
-        listItem.appendChild(document.createTextNode(' ' + route.routeName));
-
-        // On click, load the original route and processed data into input and output fields
-        listItem.onclick = () => {
-            const inputField = document.getElementById('json_data');
-            const outputField = document.getElementById('output');
-            inputField.value = JSON.stringify(route.routeData, null, 2);
-            outputField.value = JSON.stringify(route.routeData, null, 2);
-        };
-
-        routeListContainer.appendChild(listItem);
-    });
-},
     deleteRoute(index) {
         const routes = JSON.parse(localStorage.getItem('routes')) || [];
         routes.splice(index, 1);
@@ -122,20 +111,8 @@ updateRouteList() {
         RouteProcessor.updateRouteList();
     },
 
-    export() {
-        const outputField = document.getElementById('output');
-        const blob = new Blob([outputField.value], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'output.json';
-        a.click();
-        URL.revokeObjectURL(url);
-    },
-
     exportAllRoutesAsZip() {
         const routes = JSON.parse(localStorage.getItem('routes')) || [];
-
         if (routes.length === 0) {
             alert('No routes available to export.');
             return;
@@ -147,49 +124,61 @@ updateRouteList() {
             zip.file(fileName, JSON.stringify(route.routeData, null, 2));
         });
 
-        zip.generateAsync({ type: 'blob' })
-            .then(blob => {
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'routes.zip';
-                a.click();
-                URL.revokeObjectURL(url);
-            })
-            .catch(error => {
-                console.error('Error generating ZIP:', error);
-            });
-    },
-
-    clearOutput() {
-        document.getElementById('output').value = '';
+        zip.generateAsync({ type: 'blob' }).then(blob => {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'routes.zip';
+            a.click();
+            URL.revokeObjectURL(url);
+        });
     }
 };
 
-// Route Manager
+// Function to handle individual waypoint editing from the popup
+function saveWaypointEdit() {
+    const inputField = document.getElementById('json_data');
+    const index = window.getSelectedWaypointIndex();
+    const newScaleY = parseFloat(document.getElementById('editScaleY').value);
+
+    try {
+        const data = JSON.parse(inputField.value);
+        if (index !== null && data.waypoints[index]) {
+            // Update the data
+            data.waypoints[index].scale3D.y = newScaleY;
+            
+            // Put updated JSON back into input field
+            inputField.value = JSON.stringify(data, null, 2);
+            
+            // Process automatically (updates output and visualizer)
+            RouteProcessor.reverse();
+            
+            // Close editor
+            window.closeEditor();
+        }
+    } catch (e) {
+        alert("Error updating waypoint: " + e.message);
+    }
+}
+
 const RouteManager = {
     clear() {
         if (confirm('Are you sure you want to clear all routes?')) {
-            document.getElementById('routeList').innerHTML = '';
             localStorage.removeItem('routes');
+            RouteProcessor.updateRouteList();
         }
     }
 };
 
-function clearJsonData() {
-    document.getElementById('json_data').value = '';
-}
-function clearOutputField() {
-    document.getElementById('output').value = '';
-}
-// Initialize on page load
+function clearJsonData() { document.getElementById('json_data').value = ''; }
+function clearOutputField() { document.getElementById('output').value = ''; }
+
 document.addEventListener('DOMContentLoaded', () => {
     RouteProcessor.updateRouteList();
     document.getElementById('processBtn').onclick = () => RouteProcessor.reverse();
     document.getElementById('copyOutputBtn').onclick = () => {
         navigator.clipboard.writeText(document.getElementById('output').value)
-            .then(() => alert('Output copied to clipboard'))
-            .catch(() => alert('Failed to copy output'));
+            .then(() => alert('Output copied to clipboard'));
     };
     document.getElementById('clearCacheBtn').onclick = () => RouteManager.clear();
     document.getElementById('exportZipBtn').onclick = () => RouteProcessor.exportAllRoutesAsZip();
