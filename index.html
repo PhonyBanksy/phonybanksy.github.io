@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MotorTown event waypoint editor</title>
+    <title>JSON Waypoint Processor</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -14,22 +14,16 @@
         <div id="routeList"></div>
     </div>
 
-	<div class="main-content">
-	
-	<div id="waypointEditor" style="display:none; position:absolute; background:#333; padding:15px; border:2px solid #00bfff; border-radius:8px; z-index:1000; color: white;">
-		<h4 style="margin-bottom:10px;">Edit Waypoint</h4>
-		<label>Gate Width (Y): <br>
-				<input type="number" id="editScaleY" style="width: 80px; margin-top:5px;">
-		</label>
-    <div style="margin-top:10px; display:flex; gap:5px;">
-        <button onclick="saveWaypointEdit()" style="background: #28a745;">OK</button>
-        <button onclick="window.closeEditor()" style="background: #6c757d;">Cancel</button>
-    </div>
-	</div>
+    <div class="main-content">
         <div class="controls">
             <label for="reverse" class="checkbox-label">
                 <input type="checkbox" id="reverse" checked>
                 <span>Reverse?</span>
+            </label>
+            
+            <label for="boxes" class="checkbox-label">
+                <input type="checkbox" id="boxes">
+                <span>Boxes?</span>
             </label>
             
             <select id="scale_mode">
@@ -55,6 +49,41 @@
         <div class="visual-area">
             <div id="routeCanvas">
                 <img id="mapImage" src="map.jpg" style="display: none;">
+                
+                <div id="wpContext" class="wp-menu" style="display: none;">
+                    <div class="menu-header">
+                        <span id="wpTitle">Waypoint #</span>
+                        <span class="close-menu" onclick="closeWpMenu()">×</span>
+                    </div>
+                    
+                    <div id="wpMainOpts">
+                        <button id="btnOptAdjust">Adjust</button>
+                        <button id="btnOptRotate">Rotate</button>
+                    </div>
+
+                    <div id="wpAdjustPanel" style="display: none;">
+                        <div class="input-group">
+                            <label>Width (Y): <input type="number" id="inpWidth" step="0.5"></label>
+                        </div>
+                        <div class="input-group">
+                            <label>Height (X): <input type="number" id="inpHeight" step="0.5"></label>
+                        </div>
+                        <div class="input-group">
+                            <label>Depth (Z): <input type="number" id="inpDepth" step="0.5"></label>
+                        </div>
+                        <button id="btnBackAdjust">Back</button>
+                    </div>
+
+                    <div id="wpRotatePanel" style="display: none;">
+                        <p>Drag the bubble to rotate</p>
+                        <div class="rotate-display">
+                            Angle: <span id="rotateVal">0</span>°
+                        </div>
+                        <button id="btnBackRotate">Back</button>
+                    </div>
+                </div>
+                
+                <div id="rotationHandle" class="rotation-handle" style="display: none;"></div>
             </div>
 
             <div class="usage-instructions">
@@ -62,11 +91,16 @@
                 <ol>
                     <li><strong>In MotorTown:</strong> Open your event and export the route.</li>
                     <li><strong>On this site:</strong> Use <code>Ctrl+V</code> to paste into the Input window.</li>
-                    <li><strong>Configure:</strong> Check/uncheck "Reverse?" to swap start with finish.</li>
-                    <li><strong>Resize:</strong> Use the dropdown to enlarge gates if they are too small for large events.</li>
-                    <li><strong>Resize:</strong> Click on individual gate to change only THAT gate width.</li>
+                    <li><strong>Configure:</strong> 
+                        <ul>
+                            <li>Check "Reverse?" to swap start/finish.</li>
+                            <li>Check "Boxes?" to make gate depth equal to width.</li>
+                        </ul>
+                    </li>
+                    <li><strong>Resize:</strong> Use the dropdown to enlarge gates.</li>
+                    <li><strong>Interact:</strong> Click points on the map to Adjust dimensions or Rotate.</li>
                     <li><strong>Finalize:</strong> Press <strong>Process</strong>, then <strong>Copy Output</strong>.</li>
-                    <li><strong>Import:</strong> Import the code back into the event in game and enjoy!</li>
+                    <li><strong>Import:</strong> Import the code back into the event in game.</li>
                 </ol>
                 
                 <div class="instruction-footer">
