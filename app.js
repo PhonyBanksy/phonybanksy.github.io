@@ -1,54 +1,96 @@
+// --- Math Helpers ---
+const MathUtils = {
+    // Convert Quaternion {x,y,z,w} to Angle (Degrees) around Z-axis
+    toAngle: (q) => {
+        if (!q) return 0;
+        // 2 * atan2(z, w) gives radians
+        const rad = 2 * Math.atan2(q.z, q.w);
+        let deg = rad * (180 / Math.PI);
+        return deg; // Returns -180 to 180
+    },
+
+    // Convert Angle (Degrees) to Quaternion {x,y,z,w}
+    toQuaternion: (degrees) => {
+        const rad = degrees * (Math.PI / 180);
+        return {
+            x: 0,
+            y: 0,
+            z: Math.sin(rad / 2),
+            w: Math.cos(rad / 2)
+        };
+    }
+};
+
 const RouteProcessor = {
     /**
-     * Main processing function that handles Reversing, Scaling, and Rotating waypoints.
+     * Main processing function.
      */
     process() {
         const inputField = document.getElementById('json_data');
         const outputField = document.getElementById('output');
         
-        // Get values from the UI controls
         const scaleFactor = parseInt(document.getElementById('scale_mode').value) || 0;
-        const rotationAngle = parseFloat(document.getElementById('rotation_angle')?.value) || 0;
+        const rotationBatchAngle = parseFloat(document.getElementById('rotation_angle').value) || 0;
         const reverseChecked = document.getElementById('reverse').checked;
+        const squareGates = document.getElementById('boxes').checked;
         
         try {
             const data = JSON.parse(inputField.value);
 
             if (data && Array.isArray(data.waypoints)) {
-                // 1. Reverse the route if the checkbox is checked
+                // 1. Reverse Route
                 if (reverseChecked) {
                     data.waypoints.reverse();
                 }
 
-                // 2. Process each waypoint for Scale and Rotation
+                // 2. Process Waypoints
                 data.waypoints.forEach(waypoint => {
-                    // Apply Scaling to Gate Width (y-axis in MotorTown)
-                    if (waypoint.scale3D && typeof waypoint.scale3D.y === 'number') {
+                    // Ensure scale object exists
+                    if (!waypoint.scale3D) waypoint.scale3D = { x: 1, y: 10, z: 1 };
+
+                    // Apply Scale (Width/Y)
+                    if (typeof waypoint.scale3D.y === 'number') {
                         waypoint.scale3D.y += scaleFactor;
                     }
 
-                    // Apply Rotation (Yaw/Z-axis adjustment)
-                    if (waypoint.rotation && typeof waypoint.rotation.z === 'number') {
-                        waypoint.rotation.z += rotationAngle;
+                    // Apply Square Box Logic (Depth = Width)
+                    if (squareGates) {
+                        waypoint.scale3D.z = waypoint.scale3D.y;
                     }
+
+                    // Apply Rotation
+                    // We must convert Q -> Angle -> Add Offset -> Q
+                    let currentAngle = 0;
+                    if (waypoint.rotation) {
+                        currentAngle = MathUtils.toAngle(waypoint.rotation);
+                    }
+                    
+                    const newAngle = currentAngle + rotationBatchAngle;
+                    waypoint.rotation = MathUtils.toQuaternion(newAngle);
                 });
 
-                // 3. Display the result in the output field
-                outputField.value = JSON.stringify(data, null, 2);
+                // 3. Output
+                const resultJson = JSON.stringify(data, null, 2);
+                outputField.value = resultJson;
 
-                // Create a label for the saved route
+                // 4. Save
                 let suffix = reverseChecked ? `(R) ` : '';
-                suffix += `W+${scaleFactor} Rot:${rotationAngle}°`;
+                if (scaleFactor > 0) suffix += `W+${scaleFactor} `;
+                if (rotationBatchAngle !== 0) suffix += `Rot:${rotationBatchAngle}°`;
                 
-                // 4. Save to localStorage and refresh UI list
-                const name = (data.routeName || "Unnamed Route") + ' ' + suffix;
+                const name = (data.routeName || "Unnamed") + ' ' + suffix;
                 RouteProcessor.saveRouteToLocalStorage(name, data);
-                RouteProcessor.updateRouteList();
+                
+                // 5. Update Visualizer automatically
+                if (window.MapVisualizer) {
+                    window.MapVisualizer.loadFromOutput();
+                }
+
             } else {
-                outputField.value = 'Invalid input. Expected a JSON text with a "waypoints" array.';
+                outputField.value = 'Error: Input must contain a "waypoints" array.';
             }
         } catch (error) {
-            outputField.value = 'Error parsing JSON: ' + error.message;
+            outputField.value = 'JSON Parse Error: ' + error.message;
         }
     },
 
@@ -56,51 +98,51 @@ const RouteProcessor = {
         try {
             let routes = JSON.parse(localStorage.getItem('routes')) || [];
             if (!Array.isArray(routes)) routes = [];
-
-            const normalizedName = routeName.trim().toLowerCase();
-            if (routes.some(r => r.routeName.trim().toLowerCase() === normalizedName)) {
-                alert('Route already exists in your list');
-                return;
+            
+            // Allow duplicates, just append timestamp if needed, or simple check
+            const exists = routes.find(r => r.routeName === routeName);
+            if (!exists) {
+                routes.push({ routeName, routeData });
+                localStorage.setItem('routes', JSON.stringify(routes));
+                RouteProcessor.updateRouteList();
             }
-
-            routes.push({ routeName, routeData });
-            localStorage.setItem('routes', JSON.stringify(routes));
-            RouteProcessor.updateRouteList();
         } catch (error) {
-            console.error("Error saving route:", error);
+            console.error("Save error:", error);
         }
     },
 
     updateRouteList() {
-        const routeListContainer = document.getElementById('routeList');
+        const list = document.getElementById('routeList');
         let routes = JSON.parse(localStorage.getItem('routes')) || [];
-        if (!Array.isArray(routes)) routes = [];
-
-        routeListContainer.innerHTML = '';
+        
+        list.innerHTML = '';
         if (routes.length === 0) {
-            routeListContainer.innerHTML = '<p>No routes available.</p>';
+            list.innerHTML = '<li class="empty">No saved routes</li>';
             return;
         }
 
         routes.forEach((route, index) => {
-            const listItem = document.createElement('li');
+            const li = document.createElement('li');
+            li.innerHTML = `
+                <span class="route-name">${route.routeName}</span>
+                <span class="delete-route" title="Delete">×</span>
+            `;
             
-            const deleteButton = document.createElement('span');
-            deleteButton.textContent = ' ❌';
-            deleteButton.classList.add('delete-btn');
-            deleteButton.onclick = (e) => {
+            // Load click
+            li.querySelector('.route-name').onclick = () => {
+                const str = JSON.stringify(route.routeData, null, 2);
+                document.getElementById('json_data').value = str;
+                document.getElementById('output').value = str;
+                if (window.MapVisualizer) window.MapVisualizer.loadFromOutput();
+            };
+
+            // Delete click
+            li.querySelector('.delete-route').onclick = (e) => {
                 e.stopPropagation();
                 RouteProcessor.deleteRoute(index);
             };
 
-            listItem.appendChild(deleteButton);
-            listItem.appendChild(document.createTextNode(' ' + route.routeName));
-            listItem.onclick = () => {
-                document.getElementById('json_data').value = JSON.stringify(route.routeData, null, 2);
-                document.getElementById('output').value = JSON.stringify(route.routeData, null, 2);
-            };
-
-            routeListContainer.appendChild(listItem);
+            list.appendChild(li);
         });
     },
 
@@ -113,50 +155,47 @@ const RouteProcessor = {
 
     exportAllRoutesAsZip() {
         const routes = JSON.parse(localStorage.getItem('routes')) || [];
-        if (routes.length === 0) {
-            alert('No routes available to export.');
-            return;
-        }
+        if (routes.length === 0) return alert('Nothing to export.');
 
         const zip = new JSZip();
-        routes.forEach((route, index) => {
-            const fileName = `${route.routeName || 'Route_' + (index + 1)}.json`;
-            zip.file(fileName, JSON.stringify(route.routeData, null, 2));
+        routes.forEach((r, i) => {
+            const name = (r.routeName || `route_${i}`).replace(/[^a-z0-9]/gi, '_');
+            zip.file(`${name}.json`, JSON.stringify(r.routeData, null, 2));
         });
 
         zip.generateAsync({ type: 'blob' }).then(blob => {
-            const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
-            a.href = url;
-            a.download = 'routes.zip';
+            a.href = URL.createObjectURL(blob);
+            a.download = 'motortown_routes.zip';
             a.click();
-            URL.revokeObjectURL(url);
         });
     }
 };
 
-// Global helpers for UI buttons
+// --- Global UI Bindings ---
 function clearJsonData() { document.getElementById('json_data').value = ''; }
 function clearOutputField() { document.getElementById('output').value = ''; }
+window.closeWpMenu = () => { document.getElementById('wpContext').style.display = 'none'; document.getElementById('rotationHandle').style.display = 'none'; };
 
-// Initialization
 document.addEventListener('DOMContentLoaded', () => {
     RouteProcessor.updateRouteList();
     
-    // Wire up buttons
-    document.getElementById('processBtn').onclick = () => RouteProcessor.process();
-    document.getElementById('exportZipBtn').onclick = () => RouteProcessor.exportAllRoutesAsZip();
-    
-    document.getElementById('copyOutputBtn').onclick = () => {
-        navigator.clipboard.writeText(document.getElementById('output').value)
-            .then(() => alert('Output copied to clipboard'))
-            .catch(() => alert('Failed to copy'));
-    };
-    
+    document.getElementById('processBtn').onclick = RouteProcessor.process;
+    document.getElementById('exportZipBtn').onclick = RouteProcessor.exportAllRoutesAsZip;
     document.getElementById('clearCacheBtn').onclick = () => {
-        if (confirm('Clear all saved routes?')) {
+        if(confirm('Delete all saved routes?')) {
             localStorage.removeItem('routes');
             RouteProcessor.updateRouteList();
         }
+    };
+    
+    document.getElementById('copyOutputBtn').onclick = () => {
+        const out = document.getElementById('output');
+        out.select();
+        document.execCommand('copy');
+        // Simple visual feedback
+        const originalText = document.getElementById('copyOutputBtn').textContent;
+        document.getElementById('copyOutputBtn').textContent = "Copied!";
+        setTimeout(() => document.getElementById('copyOutputBtn').textContent = originalText, 1000);
     };
 });

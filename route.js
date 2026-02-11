@@ -2,437 +2,322 @@ document.addEventListener('DOMContentLoaded', function () {
     const container = document.getElementById('routeCanvas');
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
-    
-    // UI Elements
+    container.appendChild(canvas);
+
+    // UI Refs
     const menu = document.getElementById('wpContext');
-    const menuTitle = document.getElementById('wpTitle');
-    const panelMain = document.getElementById('wpMainOpts');
-    const panelAdjust = document.getElementById('wpAdjustPanel');
-    const panelRotate = document.getElementById('wpRotatePanel');
-    const rotHandle = document.getElementById('rotationHandle');
-    
-    // Inputs
     const inpW = document.getElementById('inpWidth');
     const inpH = document.getElementById('inpHeight');
     const inpD = document.getElementById('inpDepth');
+    const rotateDisplay = document.getElementById('rotateVal');
+    const rotSlider = document.getElementById('rotSlider');
+    
+    // Map Loading Refs
+    const mapInput = document.getElementById('mapUpload');
+    const btnLoadMap = document.getElementById('btnLoadMap');
+    const statusText = document.getElementById('mapStatus');
 
     // Config
-    const imageConfig = {
-        naturalWidth: 4000,
-        naturalHeight: 4000,
-        imageOffsetX: 2381,
-        imageOffsetY: 574,
-        gameToImageScale: 0.002,
-        flipY: false,
-        offsetX: 0,
-        offsetY: 0,
-        scaleFactor: 0.93
+    const mapConfig = {
+        width: 4000, height: 4000,
+        gameOffsetX: 2381, gameOffsetY: 574,
+        scale: 0.002
     };
 
-    const mapImage = new Image();
+    let mapImage = new Image();
+    let mapLoaded = false;
+
+    // State
+    let view = { x: 0, y: 0, zoom: 0.5, dragging: false, startX: 0, startY: 0 };
+    let waypointsRendered = [];
+    let activeWpIndex = -1;
+    let isRotating = false;
+
+    // --- MAP LOADING ---
+    mapImage.onload = () => {
+        mapLoaded = true;
+        statusText.textContent = "Map Loaded (map.jpg)";
+        statusText.style.color = "#4caf50";
+        draw();
+    };
+    mapImage.onerror = () => {
+        mapLoaded = false;
+        statusText.textContent = "Auto-load failed. Select map manually.";
+        statusText.style.color = "#ff9800";
+        draw();
+    };
     mapImage.src = 'map.jpg';
 
-    let viewState = {
-        panX: canvas.width / 2,
-        panY: canvas.height / 2,
-        scale: 1,
-        isDragging: false,
-        dragStartX: 0,
-        dragStartY: 0,
-        hasFitView: false
+    btnLoadMap.onclick = () => mapInput.click();
+    mapInput.onchange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                mapImage = new Image();
+                mapImage.onload = () => {
+                    mapLoaded = true;
+                    statusText.textContent = "Custom Map Loaded";
+                    statusText.style.color = "#4caf50";
+                    draw();
+                };
+                mapImage.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
     };
 
-    let renderedWaypoints = [];
-    let selectedWaypointIndex = -1;
-    let isRotating = false;
-    let isDraggingHandle = false;
-
-    // --- SETUP ---
-    const updateCanvasSize = () => {
-        canvas.width = container.clientWidth;
-        canvas.height = container.clientHeight;
-    };
-    updateCanvasSize();
-    container.appendChild(canvas);
-
-    // --- MATH HELPERS ---
-    const gameToImageX = (gameX) => 
-        (gameX * imageConfig.scaleFactor * imageConfig.gameToImageScale) + 
-        imageConfig.imageOffsetX + 
-        imageConfig.offsetX -
-        imageConfig.naturalWidth / 2;
-
-    const gameToImageY = (gameY) => 
-        (imageConfig.flipY ? -1 : 1) * (gameY * imageConfig.scaleFactor * imageConfig.gameToImageScale) + 
-        imageConfig.imageOffsetY + 
-        imageConfig.offsetY -
-        imageConfig.naturalHeight / 2;
-
-    // --- NEW ROTATION LOGIC (Z-Axis / 2D Plane) ---
-    // User provided: z and w have values. This is rotation around Z-axis.
-    // Angle = 2 * atan2(z, w)
-    const getAngleFromQuaternion = (q) => {
+    // --- MATH ---
+    const toAngle = (q) => {
         if (!q) return 0;
-        // Calculate angle in radians
-        const rad = 2 * Math.atan2(q.z, q.w);
-        // Convert to degrees
-        return rad * (180 / Math.PI);
+        return (2 * Math.atan2(q.z, q.w)) * (180 / Math.PI);
+    };
+    
+    const toQuat = (deg) => {
+        const rad = deg * (Math.PI / 180);
+        return { x:0, y:0, z: Math.sin(rad/2), w: Math.cos(rad/2) };
     };
 
-    const getQuaternionFromAngle = (degrees) => {
-        const rad = degrees * (Math.PI / 180);
-        // Half angle for quaternion calculation
-        const halfRad = rad / 2;
-        return {
-            x: 0,
-            y: 0,
-            z: Math.sin(halfRad),
-            w: Math.cos(halfRad)
-        };
+    const gameToScreen = (gx, gy) => {
+        let mx = (gx * mapConfig.scale * 0.93) + mapConfig.gameOffsetX;
+        let my = (gy * mapConfig.scale * 0.93) + mapConfig.gameOffsetY;
+        mx -= mapConfig.width/2; 
+        my -= mapConfig.height/2;
+
+        const sx = (mx * view.zoom) + view.x + canvas.width/2;
+        const sy = (my * view.zoom) + view.y + canvas.height/2;
+        return { x: sx, y: sy };
     };
 
     // --- DRAWING ---
-    const drawWaypoints = () => {
+    const draw = () => {
+        canvas.width = container.clientWidth;
+        canvas.height = container.clientHeight;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        const waypoints = parseWaypoints();
-        renderedWaypoints = []; 
-
-        if (!mapImage.complete) return;
-
-        fitWaypointsInView(waypoints);
 
         ctx.save();
-        ctx.translate(viewState.panX, viewState.panY);
-        ctx.scale(viewState.scale, viewState.scale);
+        ctx.translate(canvas.width/2 + view.x, canvas.height/2 + view.y);
+        ctx.scale(view.zoom, view.zoom);
+        
+        if (mapLoaded) {
+            ctx.drawImage(mapImage, -mapConfig.width/2, -mapConfig.height/2);
+        } else {
+            ctx.strokeStyle = '#555';
+            ctx.lineWidth = 10;
+            ctx.strokeRect(-mapConfig.width/2, -mapConfig.height/2, mapConfig.width, mapConfig.height);
+            ctx.fillStyle = '#fff';
+            ctx.font = '50px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText("Map not loaded", 0, 0);
+        }
+        ctx.restore();
 
-        ctx.drawImage(mapImage, -imageConfig.naturalWidth/2, -imageConfig.naturalHeight/2, imageConfig.naturalWidth, imageConfig.naturalHeight);
+        const data = getRouteData();
+        waypointsRendered = [];
+        
+        if (!data || !data.waypoints) return;
 
-        waypoints.forEach((wp, index) => {
-            const x = gameToImageX(wp.translation.x);
-            const y = gameToImageY(wp.translation.y);
-            const radius = 5 / viewState.scale;
+        // Draw Connections
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        data.waypoints.forEach((wp, i) => {
+            const pos = gameToScreen(wp.translation.x, wp.translation.y);
+            if (i === 0) ctx.moveTo(pos.x, pos.y);
+            else ctx.lineTo(pos.x, pos.y);
+        });
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+        ctx.stroke();
 
-            // Save screen coordinates for clicking
-            const screenX = (x * viewState.scale) + viewState.panX;
-            const screenY = (y * viewState.scale) + viewState.panY;
+        // Draw Waypoints
+        data.waypoints.forEach((wp, i) => {
+            const pos = gameToScreen(wp.translation.x, wp.translation.y);
+            const isSelected = (i === activeWpIndex);
             
-            renderedWaypoints.push({
-                index: index,
-                gx: x, gy: y,
-                sx: screenX, sy: screenY,
-                r: radius * 2
-            });
+            waypointsRendered.push({ i, x: pos.x, y: pos.y, r: 10 });
 
-            // Draw Lines between waypoints
-            if (index > 0) {
-                const prev = waypoints[index - 1];
-                ctx.beginPath();
-                ctx.moveTo(gameToImageX(prev.translation.x), gameToImageY(prev.translation.y));
-                ctx.lineTo(x, y);
-                ctx.strokeStyle = '#ff0000';
-                ctx.lineWidth = 2 / viewState.scale;
-                ctx.stroke();
-            }
+            // 1. Rotation Line (Gate Width visualization)
+            // Draws a line crossing the waypoint perpendicular to the track (roughly) or based on rotation
+            const angle = toAngle(wp.rotation);
+            const rad = angle * (Math.PI / 180);
+            
+            // Visual width of the gate line
+            const gateLen = 30 * view.zoom; 
+            
+            const dx = Math.cos(rad) * gateLen;
+            const dy = Math.sin(rad) * gateLen;
 
-            // Draw Rotation Direction
-            if (wp.rotation) {
-                const angleDeg = getAngleFromQuaternion(wp.rotation);
-                const angleRad = angleDeg * (Math.PI / 180);
-                
-                // Length of the direction line
-                const lineLen = 20 / viewState.scale;
-                
-                // Calculate "Width" direction (Perpendicular to forward?)
-                // Usually in these editors, the rotation defines the "Forward" or the "Gate Plane".
-                // Let's draw a line representing the rotation angle directly.
-                // Note: Canvas Y is Down. If Game Y is Up, we flip sin.
-                // Assuming standard 2D rotation mapping for now.
-                
-                const dx = Math.cos(angleRad) * lineLen;
-                const dy = Math.sin(angleRad) * lineLen; 
-
-                ctx.beginPath();
-                ctx.moveTo(x - dx, y - dy); 
-                ctx.lineTo(x + dx, y + dy);
-                ctx.strokeStyle = '#00ff00'; // Green = Rotation
-                ctx.lineWidth = 3 / viewState.scale;
-                ctx.stroke();
-            }
-
-            // Draw Dot
             ctx.beginPath();
-            ctx.arc(x, y, radius, 0, Math.PI * 2);
-            ctx.fillStyle = (index === selectedWaypointIndex) ? '#ffff00' : '#00f';
-            ctx.fill();
-            ctx.strokeStyle = '#000';
-            ctx.lineWidth = 2 / viewState.scale;
+            ctx.moveTo(pos.x - dx, pos.y - dy);
+            ctx.lineTo(pos.x + dx, pos.y + dy);
+            ctx.strokeStyle = '#00ff00'; // Green gate line
+            ctx.lineWidth = 3;
             ctx.stroke();
 
-            // Labels
-            if (index === 0 || index === waypoints.length - 1) {
-                ctx.fillStyle = '#fff';
-                ctx.font = `${16 / viewState.scale}px Arial bold`;
-                const label = index === 0 ? 'START' : 'FINISH';
-                ctx.fillText(label, x + 10 / viewState.scale, y - 10 / viewState.scale);
+            // 2. Dot
+            ctx.beginPath();
+            ctx.arc(pos.x, pos.y, 5, 0, Math.PI * 2);
+            ctx.fillStyle = isSelected ? '#ffff00' : '#00bfff';
+            ctx.fill();
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+
+            // 3. Text Labels (Start/Finish/Index)
+            ctx.fillStyle = '#fff';
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'left';
+            
+            // Draw Index Number slightly offset
+            ctx.fillText(`#${i}`, pos.x + 8, pos.y - 8);
+
+            // Draw START / FINISH
+            if (i === 0) {
+                ctx.fillStyle = '#4caf50'; // Green for Start
+                ctx.font = 'bold 14px Arial';
+                ctx.fillText("START", pos.x + 8, pos.y + 15);
+            } else if (i === data.waypoints.length - 1) {
+                ctx.fillStyle = '#ff4d4d'; // Red for Finish
+                ctx.font = 'bold 14px Arial';
+                ctx.fillText("FINISH", pos.x + 8, pos.y + 15);
             }
         });
-
-        ctx.restore();
-        
-        // Update Rotation Bubble Position (Screen Space)
-        if (isRotating && selectedWaypointIndex !== -1) {
-            updateRotationHandlePosition();
-        }
     };
 
-    // --- INTERACTION ---
-
-    canvas.addEventListener('wheel', (e) => {
-        // Zoom logic
-        const zoomFactor = 1.1;
-        const direction = e.deltaY < 0 ? 1 : -1;
-        const zoom = direction > 0 ? zoomFactor : 1 / zoomFactor;
-        const newScale = viewState.scale * zoom;
-        if (newScale > 0.1 && newScale < 10) {
-            viewState.panX = e.offsetX - (e.offsetX - viewState.panX) * zoom;
-            viewState.panY = e.offsetY - (e.offsetY - viewState.panY) * zoom;
-            viewState.scale = newScale;
-            drawWaypoints();
-            if(menu.style.display !== 'none') closeMenu();
-        }
-        viewState.hasFitView = true;
-        e.preventDefault();
-    });
-
-    canvas.addEventListener('mousedown', (e) => {
-        const clickX = e.offsetX;
-        const clickY = e.offsetY;
-        let clickedIndex = -1;
-
-        // Hit test
-        for (let i = renderedWaypoints.length - 1; i >= 0; i--) {
-            const wp = renderedWaypoints[i];
-            const dist = Math.sqrt((clickX - wp.sx) ** 2 + (clickY - wp.sy) ** 2);
-            if (dist < Math.max(wp.r, 15)) { // 15px hit radius
-                clickedIndex = wp.index;
-                break;
-            }
-        }
-
-        if (clickedIndex !== -1) {
-            e.stopPropagation();
-            selectWaypoint(clickedIndex);
-        } else {
-            viewState.isDragging = true;
-            viewState.dragStartX = e.clientX - viewState.panX;
-            viewState.dragStartY = e.clientY - viewState.panY;
-            if (selectedWaypointIndex !== -1 && !isRotating) {
-                selectedWaypointIndex = -1;
-                closeMenu();
-                drawWaypoints();
-            }
-        }
-    });
-
-    canvas.addEventListener('mousemove', (e) => {
-        if (viewState.isDragging) {
-            viewState.panX = e.clientX - viewState.dragStartX;
-            viewState.panY = e.clientY - viewState.dragStartY;
-            drawWaypoints();
-            if(menu.style.display !== 'none') closeMenu();
-        }
-    });
-
-    ['mouseup', 'mouseleave'].forEach(event => 
-        canvas.addEventListener(event, () => {
-            viewState.isDragging = false;
-        })
-    );
-
-    // --- HANDLE DRAGGING ---
-    
-    rotHandle.addEventListener('mousedown', (e) => {
-        isDraggingHandle = true;
-        e.stopPropagation(); // Stop canvas drag
-        e.preventDefault();
-    });
-
-    window.addEventListener('mousemove', (e) => {
-        if (isDraggingHandle && selectedWaypointIndex !== -1) {
-            const wpMeta = renderedWaypoints.find(w => w.index === selectedWaypointIndex);
-            if (!wpMeta) return;
-
-            // Calculate angle based on mouse position relative to waypoint center (screen space)
-            const rect = container.getBoundingClientRect();
-            const mouseX = e.clientX - rect.left;
-            const mouseY = e.clientY - rect.top;
-
-            const dx = mouseX - wpMeta.sx;
-            const dy = mouseY - wpMeta.sy;
-
-            // Calculate degrees
-            let angleRad = Math.atan2(dy, dx);
-            let angleDeg = angleRad * (180 / Math.PI);
-            
-            document.getElementById('rotateVal').textContent = Math.round(angleDeg);
-            updateWaypointRotation(selectedWaypointIndex, angleDeg);
-            drawWaypoints(); // Redraw line
-        }
-    });
-
-    window.addEventListener('mouseup', () => {
-        isDraggingHandle = false;
-    });
-
-    // --- LOGIC ---
-
-    const parseWaypoints = () => {
-        try {
-            const val = document.getElementById('output').value;
-            return val ? JSON.parse(val).waypoints || [] : [];
-        } catch (e) { return []; }
+    const getRouteData = () => {
+        try { return JSON.parse(document.getElementById('output').value); }
+        catch (e) { return null; }
     };
-    
-    const getFullData = () => {
-        try { return JSON.parse(document.getElementById('output').value); } catch(e){ return null; }
-    };
-    
-    const saveFullData = (data) => {
+
+    const saveRouteData = (data) => {
         const str = JSON.stringify(data, null, 2);
         document.getElementById('output').value = str;
         document.getElementById('json_data').value = str;
     };
 
-    const fitWaypointsInView = (waypoints) => {
-        if (waypoints.length === 0 || viewState.hasFitView) return;
-        let minX=Infinity, minY=Infinity, maxX=-Infinity, maxY=-Infinity;
-        waypoints.forEach(wp => {
-            const x = gameToImageX(wp.translation.x);
-            const y = gameToImageY(wp.translation.y);
-            minX = Math.min(minX, x); minY = Math.min(minY, y);
-            maxX = Math.max(maxX, x); maxY = Math.max(maxY, y);
-        });
-        const padding = 50;
-        minX-=padding; minY-=padding; maxX+=padding; maxY+=padding;
-        const w = maxX-minX; const h = maxY-minY;
-        const sX = canvas.width/w; const sY = canvas.height/h;
-        viewState.scale = Math.min(sX, sY) * 0.9;
-        viewState.panX = canvas.width/2 - ((minX+maxX)/2)*viewState.scale;
-        viewState.panY = canvas.height/2 - ((minY+maxY)/2)*viewState.scale;
-    };
+    // --- INTERACTION ---
+    canvas.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        const zoomSpeed = 0.1;
+        const delta = -Math.sign(e.deltaY) * zoomSpeed;
+        const newZoom = Math.max(0.05, Math.min(view.zoom + delta, 5));
+        view.zoom = newZoom;
+        draw();
+        closeMenu();
+    });
 
-    // --- MENU SYSTEM ---
-
-    const selectWaypoint = (index) => {
-        selectedWaypointIndex = index;
-        const wpMeta = renderedWaypoints.find(w => w.index === index);
-        
-        drawWaypoints(); // Highlight
-
-        const data = getFullData();
-        const wp = data.waypoints[index];
-
-        menuTitle.textContent = `Waypoint #${index}`;
-
-        // Fill Inputs
-        const scale = wp.scale3D || {x:0, y:0, z:0};
-        inpW.value = scale.y; // Width
-        inpH.value = scale.x; // Height
-        inpD.value = scale.z; // Depth
-
-        // Position Menu NEXT to the waypoint
-        menu.style.display = 'block';
-        if (wpMeta) {
-            menu.style.left = (wpMeta.sx + 20) + 'px';
-            menu.style.top = (wpMeta.sy - 20) + 'px';
+    canvas.addEventListener('mousedown', (e) => {
+        const mx = e.offsetX, my = e.offsetY;
+        let hit = -1;
+        // Hit test top-most first
+        for (let i = waypointsRendered.length - 1; i >= 0; i--) {
+            const wp = waypointsRendered[i];
+            const dist = Math.hypot(wp.x - mx, wp.y - my);
+            if (dist < 15) { hit = wp.i; break; }
         }
 
-        showMainOpts();
-        rotHandle.style.display = 'none';
-        isRotating = false;
-    };
+        if (hit !== -1) {
+            openMenu(hit);
+        } else {
+            view.dragging = true;
+            view.startX = e.clientX - view.x;
+            view.startY = e.clientY - view.y;
+            closeMenu();
+            activeWpIndex = -1;
+            draw();
+        }
+    });
 
-    const closeMenu = () => {
+    window.addEventListener('mousemove', (e) => {
+        if (view.dragging) {
+            view.x = e.clientX - view.startX;
+            view.y = e.clientY - view.startY;
+            draw();
+        }
+    });
+
+    window.addEventListener('mouseup', () => { view.dragging = false; });
+
+    function openMenu(index) {
+        activeWpIndex = index;
+        const wpMeta = waypointsRendered.find(w => w.i === index);
+        
+        menu.style.display = 'block';
+        menu.style.left = (wpMeta.x + 15) + 'px';
+        menu.style.top = (wpMeta.y - 15) + 'px';
+        
+        document.getElementById('wpTitle').textContent = `Waypoint #${index}`;
+        document.getElementById('wpMainOpts').style.display = 'flex';
+        document.getElementById('wpAdjustPanel').style.display = 'none';
+        document.getElementById('wpRotatePanel').style.display = 'none';
+        isRotating = false;
+
+        const data = getRouteData();
+        const wp = data.waypoints[index];
+        const s = wp.scale3D || {x:1, y:1, z:1};
+        inpW.value = s.y; inpH.value = s.x; inpD.value = s.z;
+        
+        // Init Slider
+        const angle = Math.round(toAngle(wp.rotation));
+        rotSlider.value = angle;
+        rotateDisplay.textContent = angle;
+
+        draw(); 
+    }
+
+    window.closeMenu = () => {
         menu.style.display = 'none';
-        rotHandle.style.display = 'none';
         isRotating = false;
     };
 
-    const showMainOpts = () => {
-        panelMain.style.display = 'flex';
-        panelAdjust.style.display = 'none';
-        panelRotate.style.display = 'none';
-    };
-
+    // --- SUBMENUS ---
     document.getElementById('btnOptAdjust').onclick = () => {
-        panelMain.style.display = 'none';
-        panelAdjust.style.display = 'flex';
+        document.getElementById('wpMainOpts').style.display = 'none';
+        document.getElementById('wpAdjustPanel').style.display = 'block';
     };
-
+    
     document.getElementById('btnOptRotate').onclick = () => {
-        panelMain.style.display = 'none';
-        panelRotate.style.display = 'block';
+        document.getElementById('wpMainOpts').style.display = 'none';
+        document.getElementById('wpRotatePanel').style.display = 'block';
         isRotating = true;
-        
-        const data = getFullData();
-        const wp = data.waypoints[selectedWaypointIndex];
-        const angle = getAngleFromQuaternion(wp.rotation);
-        document.getElementById('rotateVal').textContent = Math.round(angle);
-        
-        rotHandle.style.display = 'block';
-        updateRotationHandlePosition();
     };
 
-    document.getElementById('btnBackAdjust').onclick = showMainOpts;
+    document.getElementById('btnBackAdjust').onclick = () => {
+        document.getElementById('wpAdjustPanel').style.display = 'none';
+        document.getElementById('wpMainOpts').style.display = 'flex';
+    };
     document.getElementById('btnBackRotate').onclick = () => {
-        showMainOpts();
-        rotHandle.style.display = 'none';
+        document.getElementById('wpRotatePanel').style.display = 'none';
+        document.getElementById('wpMainOpts').style.display = 'flex';
         isRotating = false;
     };
 
+    // --- DATA UPDATES ---
     const updateDims = () => {
-        if (selectedWaypointIndex === -1) return;
-        const data = getFullData();
-        if(!data.waypoints[selectedWaypointIndex].scale3D) data.waypoints[selectedWaypointIndex].scale3D = {x:0,y:0,z:0};
-        
-        data.waypoints[selectedWaypointIndex].scale3D.y = parseFloat(inpW.value) || 0;
-        data.waypoints[selectedWaypointIndex].scale3D.x = parseFloat(inpH.value) || 0;
-        data.waypoints[selectedWaypointIndex].scale3D.z = parseFloat(inpD.value) || 0;
-        
-        saveFullData(data);
-        drawWaypoints();
+        if (activeWpIndex === -1) return;
+        const data = getRouteData();
+        if (!data.waypoints[activeWpIndex].scale3D) data.waypoints[activeWpIndex].scale3D = {};
+        data.waypoints[activeWpIndex].scale3D.y = parseFloat(inpW.value) || 0;
+        data.waypoints[activeWpIndex].scale3D.x = parseFloat(inpH.value) || 0;
+        data.waypoints[activeWpIndex].scale3D.z = parseFloat(inpD.value) || 0;
+        saveRouteData(data);
     };
-    inpW.onchange = updateDims;
-    inpH.onchange = updateDims;
-    inpD.onchange = updateDims;
+    inpW.oninput = updateDims;
+    inpH.oninput = updateDims;
+    inpD.oninput = updateDims;
 
-    function updateWaypointRotation(index, degrees) {
-        const data = getFullData();
-        data.waypoints[index].rotation = getQuaternionFromAngle(degrees);
-        saveFullData(data);
-    }
-
-    function updateRotationHandlePosition() {
-        const wpMeta = renderedWaypoints.find(w => w.index === selectedWaypointIndex);
-        if (!wpMeta) return;
-
-        const data = getFullData();
-        const wp = data.waypoints[selectedWaypointIndex];
-        const angleDeg = getAngleFromQuaternion(wp.rotation);
-        const angleRad = angleDeg * (Math.PI / 180);
-
-        const dist = 60; // Distance from center
+    // --- SLIDER ROTATION ---
+    rotSlider.oninput = (e) => {
+        if (activeWpIndex === -1) return;
+        const deg = parseFloat(e.target.value);
+        rotateDisplay.textContent = deg;
         
-        // Calculate handle position
-        const handleX = wpMeta.sx + Math.cos(angleRad) * dist;
-        const handleY = wpMeta.sy + Math.sin(angleRad) * dist;
+        const data = getRouteData();
+        data.waypoints[activeWpIndex].rotation = toQuat(deg);
+        saveRouteData(data);
+        draw();
+    };
 
-        rotHandle.style.left = (handleX - 10) + 'px'; // -10 for centering (20px width)
-        rotHandle.style.top = (handleY - 10) + 'px';
-    }
-
-    // Init
-    mapImage.addEventListener('load', drawWaypoints);
-    window.addEventListener('resize', () => { updateCanvasSize(); drawWaypoints(); });
-    document.getElementById('visualizeBtn').onclick = () => { viewState.hasFitView=false; drawWaypoints(); };
+    window.MapVisualizer = {
+        loadFromOutput: () => { draw(); }
+    };
 });
