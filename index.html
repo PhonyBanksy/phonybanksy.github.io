@@ -55,6 +55,7 @@
 
             <div class="tool-group right">
                 <button id="processBtn" class="btn-primary">Process Batch</button>
+                <button id="saveCacheBtn" class="btn-secondary">Save to Cache</button>
                 <button id="copyOutputBtn" class="btn-success">Copy Output</button>
             </div>
         </div>
@@ -62,36 +63,24 @@
         <div class="editor-layout">
             <div class="map-container" id="routeCanvas">
                 <div class="map-overlay-hint">Scroll to Zoom • Drag to Pan • Click Point to Edit</div>
-                
                 <div id="wpContext" class="context-menu">
                     <div class="menu-header">
                         <span id="wpTitle">Waypoint</span>
                         <span class="close-menu" onclick="closeWpMenu()">×</span>
                     </div>
-                    
                     <div id="wpMainOpts" class="menu-body">
                         <button id="btnOptAdjust">Adjust Size</button>
                         <button id="btnOptRotate">Rotate</button>
                     </div>
-
                     <div id="wpAdjustPanel" class="menu-body" style="display: none;">
-                        <div class="input-row">
-                            <label>W (Y):</label> <input type="number" id="inpWidth" step="0.5">
-                        </div>
-                        <div class="input-row">
-                            <label>H (X):</label> <input type="number" id="inpHeight" step="0.5">
-                        </div>
-                        <div class="input-row">
-                            <label>D (Z):</label> <input type="number" id="inpDepth" step="0.5">
-                        </div>
+                        <div class="input-row"><label>W (Y):</label> <input type="number" id="inpWidth" step="0.5"></div>
+                        <div class="input-row"><label>H (X):</label> <input type="number" id="inpHeight" step="0.5"></div>
+                        <div class="input-row"><label>D (Z):</label> <input type="number" id="inpDepth" step="0.5"></div>
                         <button id="btnBackAdjust" class="btn-secondary">Back</button>
                     </div>
-
                     <div id="wpRotatePanel" class="menu-body" style="display: none;">
                         <div class="rotate-readout">Angle: <span id="rotateVal">0</span>°</div>
-                        <div class="slider-container">
-                            <input type="range" id="rotSlider" min="-180" max="180" value="0">
-                        </div>
+                        <div class="slider-container"><input type="range" id="rotSlider" min="-180" max="180" value="0"></div>
                         <button id="btnBackRotate" class="btn-secondary">Back</button>
                     </div>
                 </div>
@@ -99,17 +88,11 @@
 
             <div class="json-panel">
                 <div class="json-box">
-                    <div class="box-header">
-                        <span>Input</span>
-                        <button onclick="clearJsonData()">Clear</button>
-                    </div>
+                    <div class="box-header"><span>Input</span><button onclick="clearJsonData()">Clear</button></div>
                     <textarea id="json_data" placeholder="Paste Route JSON here..."></textarea>
                 </div>
                 <div class="json-box">
-                    <div class="box-header">
-                        <span>Output</span>
-                        <button onclick="clearOutputField()">Clear</button>
-                    </div>
+                    <div class="box-header"><span>Output</span><button onclick="clearOutputField()">Clear</button></div>
                     <textarea id="output" readonly placeholder="Result will appear here..."></textarea>
                 </div>
             </div>

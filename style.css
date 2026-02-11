@@ -19,6 +19,16 @@ body {
     overflow: hidden;
 }
 
+@keyframes blink {
+    0% { filter: brightness(1); transform: scale(1); }
+    50% { filter: brightness(2); transform: scale(1.05); }
+    100% { filter: brightness(1); transform: scale(1); }
+}
+
+.blink-active {
+    animation: blink 0.4s ease-in-out;
+}
+
 .sidebar {
     width: 260px;
     background-color: #252526;

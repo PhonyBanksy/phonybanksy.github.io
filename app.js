@@ -3,10 +3,9 @@ const MathUtils = {
     // Convert Quaternion {x,y,z,w} to Angle (Degrees) around Z-axis
     toAngle: (q) => {
         if (!q) return 0;
-        // 2 * atan2(z, w) gives radians
         const rad = 2 * Math.atan2(q.z, q.w);
         let deg = rad * (180 / Math.PI);
-        return deg; // Returns -180 to 180
+        return deg;
     },
 
     // Convert Angle (Degrees) to Quaternion {x,y,z,w}
@@ -22,9 +21,6 @@ const MathUtils = {
 };
 
 const RouteProcessor = {
-    /**
-     * Main processing function.
-     */
     process() {
         const inputField = document.getElementById('json_data');
         const outputField = document.getElementById('output');
@@ -38,42 +34,35 @@ const RouteProcessor = {
             const data = JSON.parse(inputField.value);
 
             if (data && Array.isArray(data.waypoints)) {
-                // 1. Reverse Route
                 if (reverseChecked) {
                     data.waypoints.reverse();
                 }
 
-                // 2. Process Waypoints
                 data.waypoints.forEach(waypoint => {
-                    // Ensure scale object exists
                     if (!waypoint.scale3D) waypoint.scale3D = { x: 1, y: 10, z: 1 };
 
-                    // Apply Scale (Width/Y)
+                    // MotorTown: Width is Y
                     if (typeof waypoint.scale3D.y === 'number') {
                         waypoint.scale3D.y += scaleFactor;
                     }
 
-                    // Apply Square Box Logic (Depth = Width)
+                    // MotorTown: Depth is X. Square Gates makes Depth = Width.
                     if (squareGates) {
-                        waypoint.scale3D.z = waypoint.scale3D.y;
+                        waypoint.scale3D.x = waypoint.scale3D.y;
                     }
 
-                    // Apply Rotation
-                    // We must convert Q -> Angle -> Add Offset -> Q
                     let currentAngle = 0;
                     if (waypoint.rotation) {
                         currentAngle = MathUtils.toAngle(waypoint.rotation);
                     }
                     
-                    const newAngle = currentAngle + rotationBatchAngle + 90;
+                    const newAngle = currentAngle + rotationBatchAngle;
                     waypoint.rotation = MathUtils.toQuaternion(newAngle);
                 });
 
-                // 3. Output
                 const resultJson = JSON.stringify(data, null, 2);
                 outputField.value = resultJson;
 
-                // 4. Save
                 let suffix = reverseChecked ? `(R) ` : '';
                 if (scaleFactor > 0) suffix += `W+${scaleFactor} `;
                 if (rotationBatchAngle !== 0) suffix += `Rot:${rotationBatchAngle}°`;
@@ -81,10 +70,11 @@ const RouteProcessor = {
                 const name = (data.routeName || "Unnamed") + ' ' + suffix;
                 RouteProcessor.saveRouteToLocalStorage(name, data);
                 
-                // 5. Update Visualizer automatically
                 if (window.MapVisualizer) {
                     window.MapVisualizer.loadFromOutput();
                 }
+
+                this.triggerBlink('processBtn');
 
             } else {
                 outputField.value = 'Error: Input must contain a "waypoints" array.';
@@ -94,18 +84,26 @@ const RouteProcessor = {
         }
     },
 
+    triggerBlink(btnId) {
+        const btn = document.getElementById(btnId);
+        if (btn) {
+            btn.classList.add('blink-active');
+            setTimeout(() => btn.classList.remove('blink-active'), 400);
+        }
+    },
+
     saveRouteToLocalStorage(routeName, routeData) {
         try {
             let routes = JSON.parse(localStorage.getItem('routes')) || [];
             if (!Array.isArray(routes)) routes = [];
             
-            // Allow duplicates, just append timestamp if needed, or simple check
             const exists = routes.find(r => r.routeName === routeName);
             if (!exists) {
                 routes.push({ routeName, routeData });
                 localStorage.setItem('routes', JSON.stringify(routes));
                 RouteProcessor.updateRouteList();
             }
+            this.triggerBlink('saveCacheBtn');
         } catch (error) {
             console.error("Save error:", error);
         }
@@ -128,7 +126,6 @@ const RouteProcessor = {
                 <span class="delete-route" title="Delete">×</span>
             `;
             
-            // Load click
             li.querySelector('.route-name').onclick = () => {
                 const str = JSON.stringify(route.routeData, null, 2);
                 document.getElementById('json_data').value = str;
@@ -136,7 +133,6 @@ const RouteProcessor = {
                 if (window.MapVisualizer) window.MapVisualizer.loadFromOutput();
             };
 
-            // Delete click
             li.querySelector('.delete-route').onclick = (e) => {
                 e.stopPropagation();
                 RouteProcessor.deleteRoute(index);
@@ -172,15 +168,17 @@ const RouteProcessor = {
     }
 };
 
-// --- Global UI Bindings ---
-function clearJsonData() { document.getElementById('json_data').value = ''; }
-function clearOutputField() { document.getElementById('output').value = ''; }
-window.closeWpMenu = () => { document.getElementById('wpContext').style.display = 'none'; document.getElementById('rotationHandle').style.display = 'none'; };
-
 document.addEventListener('DOMContentLoaded', () => {
     RouteProcessor.updateRouteList();
     
-    document.getElementById('processBtn').onclick = RouteProcessor.process;
+    document.getElementById('processBtn').onclick = () => RouteProcessor.process();
+    document.getElementById('saveCacheBtn').onclick = () => {
+        const out = document.getElementById('output').value;
+        try {
+            const data = JSON.parse(out);
+            RouteProcessor.saveRouteToLocalStorage(data.routeName || "Manual Save", data);
+        } catch(e) { alert("No valid output to save."); }
+    };
     document.getElementById('exportZipBtn').onclick = RouteProcessor.exportAllRoutesAsZip;
     document.getElementById('clearCacheBtn').onclick = () => {
         if(confirm('Delete all saved routes?')) {
@@ -193,10 +191,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const out = document.getElementById('output');
         out.select();
         document.execCommand('copy');
-        // Simple visual feedback
-        const originalText = document.getElementById('copyOutputBtn').textContent;
-        document.getElementById('copyOutputBtn').textContent = "Copied!";
-        setTimeout(() => document.getElementById('copyOutputBtn').textContent = originalText, 1000);
+        RouteProcessor.triggerBlink('copyOutputBtn');
     };
-
 });
