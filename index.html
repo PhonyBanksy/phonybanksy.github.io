@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MotorTown Route Editor</title>
@@ -12,9 +13,8 @@
             <h3>Saved Routes</h3>
             <button id="exportZipBtn" class="btn-small">Export All (ZIP)</button>
         </div>
-        
         <ul id="routeList"></ul>
-               
+        
         <div class="map-controls">
             <h3>Map Settings</h3>
             <input type="file" id="mapUpload" accept="image/*" style="display: none;">
@@ -31,7 +31,7 @@
         <div class="toolbar">
             <div class="tool-group">
                 <label class="checkbox-wrapper">
-                    <input type="checkbox" id="reverse">
+                    <input type="checkbox" id="reverse" checked>
                     <span>Reverse Route</span>
                 </label>
                 <label class="checkbox-wrapper">
@@ -47,6 +47,11 @@
                     <option value="10">Resize: Width +10</option>
                     <option value="15">Resize: Width +15</option>
                 </select>
+                
+                <div class="input-with-label">
+                    <span>Batch Rotate (°):</span>
+                    <input type="number" id="rotation_angle" value="0" placeholder="0">
+                </div>
             </div>
 
             <div class="tool-group right">
@@ -96,10 +101,7 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <script src="route.js"></script>
-    <script src="app.js"></script>
+    <script src="route.js?v=1.0"></script>
+    <script src="app.js?v=1.0"></script>
 </body>
-
 </html>
-
-

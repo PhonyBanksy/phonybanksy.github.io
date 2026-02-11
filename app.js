@@ -193,5 +193,4 @@ document.addEventListener('DOMContentLoaded', () => {
         document.execCommand('copy');
         RouteProcessor.triggerBlink('copyOutputBtn');
     };
-
 });
