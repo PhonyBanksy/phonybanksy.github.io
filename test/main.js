@@ -1,22 +1,17 @@
-import { bindRouteProcessorUI, RouteProcessor } from './route-processor.js';
-import { MapVisualizer } from './map-visualizer.js';
-import { setupWaypointUI } from './waypoint-ui.js';
-
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. Initialize Route Processor (Load saved routes)
-    RouteProcessor.updateRouteList();
+    // 1. Initialize Route Processor UI
+    if (window.RouteProcessor) {
+        window.RouteProcessor.updateRouteList();
+        window.bindRouteProcessorUI();
+    }
     
-    // 2. Initialize Map Visualizer
-    const visualizer = MapVisualizer();
+    // 2. Initialize Map Visualizer (stored globally)
+    window.CurrentVisualizer = window.MapVisualizer('routeCanvas', 'output');
     
-    // 3. Setup Waypoint UI
-    setupWaypointUI(visualizer);
+    // 3. Setup Waypoint UI using the global visualizer
+    if (window.setupWaypointUI) {
+        window.setupWaypointUI(window.CurrentVisualizer);
+    }
     
-    // 4. Bind Route Processor Controls
-    bindRouteProcessorUI();
-    
-    // 5. Expose visualizer globally for RouteProcessor to call
-    window.MapVisualizer = visualizer;
-    
-    console.log('✓ App initialized');
+    console.log('✓ App initialized (Standard Scripts)');
 });
