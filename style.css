@@ -47,16 +47,8 @@ body {
 #routeList li:hover { background: #3e3e3e; }
 
 /* MAP CONTROLS */
-.map-controls {
-    border-top: 1px solid var(--border);
-    padding-top: 15px;
-    margin-bottom: 15px;
-}
-.status-text {
-    font-size: 11px;
-    margin-top: 5px;
-    text-align: center;
-}
+.map-controls { border-top: 1px solid var(--border); padding-top: 15px; margin-bottom: 15px; }
+.status-text { font-size: 11px; margin-top: 5px; text-align: center; }
 
 .delete-route { color: #ff4d4d; font-weight: bold; padding: 0 5px; cursor: pointer; }
 .sidebar-footer { margin-top: auto; padding-top: 15px; border-top: 1px solid var(--border); }
@@ -94,7 +86,7 @@ button:hover { filter: brightness(1.1); }
     flex: 2;
     background: #0f0f0f;
     background-image: radial-gradient(#333 1px, transparent 0);
-    background-size: 20px 20px; /* Grid pattern fallback */
+    background-size: 20px 20px;
     border-radius: 6px;
     border: 1px solid var(--border);
     position: relative;
