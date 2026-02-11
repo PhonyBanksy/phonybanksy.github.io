@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MotorTown Route Editor</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="sidebar">
+        <div class="header">
+            <h3>Saved Routes</h3>
+            <button id="exportZipBtn" class="btn-small">Export All (ZIP)</button>
+        </div>
+        <ul id="routeList"></ul>
+        
+        <div class="map-controls">
+            <h3>Map Settings</h3>
+            <input type="file" id="mapUpload" accept="image/*" style="display: none;">
+            <button id="btnLoadMap" class="btn-secondary" style="width: 100%">📂 Select Map Image</button>
+            <p class="status-text" id="mapStatus">Trying auto-load...</p>
+        </div>
+
+        <div class="sidebar-footer">
+            <button id="clearCacheBtn" class="btn-danger">Clear All Data</button>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="toolbar">
+            <div class="tool-group">
+                <label class="checkbox-wrapper">
+                    <input type="checkbox" id="reverse">
+                    <span>Reverse Route</span>
+                </label>
+                <label class="checkbox-wrapper">
+                    <input type="checkbox" id="boxes">
+                    <span>Square Gates</span>
+                </label>
+            </div>
+
+            <div class="tool-group">
+                <select id="scale_mode">
+                    <option value="0">Resize: None</option>
+                    <option value="5">Resize: Width +5</option>
+                    <option value="10">Resize: Width +10</option>
+                    <option value="15">Resize: Width +15</option>
+                </select>
+            </div>
+
+            <div class="tool-group right">
+                <button id="processBtn" class="btn-primary">Process Batch</button>
+                <button id="saveCacheBtn" class="btn-secondary">Save to Cache</button>
+                <button id="copyOutputBtn" class="btn-success">Copy Output</button>
+            </div>
+        </div>
+
+        <div class="editor-layout">
+            <div class="map-container" id="routeCanvas">
+                <div class="map-overlay-hint">Scroll to Zoom • Drag to Pan • Click Point to Edit</div>
+                <div id="wpContext" class="context-menu">
+                    <div class="menu-header">
+                        <span id="wpTitle">Waypoint</span>
+                        <span class="close-menu" onclick="closeWpMenu()">×</span>
+                    </div>
+                    <div id="wpMainOpts" class="menu-body">
+                        <button id="btnOptAdjust" class="btn-secondary">Adjust Size</button>
+                        <button id="btnOptRotate" class="btn-secondary">Rotate</button>
+                    </div>
+                    <div id="wpAdjustPanel" class="menu-body" style="display: none;">
+                        <div class="input-row"><label>Width:</label> <input type="number" id="inpWidth" step="0.5"></div>
+                        <div class="input-row"><label>Height:</label> <input type="number" id="inpHeight" step="0.5"></div>
+                        <div class="input-row"><label>Depth:</label> <input type="number" id="inpDepth" step="0.5"></div>
+                        <button id="btnBackAdjust" class="btn-secondary">Back</button>
+                    </div>
+                    <div id="wpRotatePanel" class="menu-body" style="display: none;">
+                        <div class="rotate-readout">Angle: <span id="rotateVal">0</span>°</div>
+                        <div class="slider-container"><input type="range" id="rotSlider" min="-180" max="180" value="0"></div>
+                        <button id="btnBackRotate" class="btn-secondary">Back</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="json-panel">
+                <div class="json-box">
+                    <div class="box-header"><span>Input</span><button onclick="clearJsonData()">Clear</button></div>
+                    <textarea id="json_data" placeholder="Paste Route JSON here..."></textarea>
+                </div>
+                <div class="json-box">
+                    <div class="box-header"><span>Output</span><button onclick="clearOutputField()">Clear</button></div>
+                    <textarea id="output" readonly placeholder="Result will appear here..."></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+	<script src="lib/jszip.min.js"></script>
+    <script type="module" src="main.js?v=1.0"></script>
+</body>
+</html>
