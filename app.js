@@ -56,7 +56,7 @@ const RouteProcessor = {
                         currentAngle = MathUtils.toAngle(waypoint.rotation);
                     }
                     
-                    const newAngle = currentAngle + rotationBatchAngle;
+                    const newAngle = currentAngle + rotationBatchAngle + 90;
                     waypoint.rotation = MathUtils.toQuaternion(newAngle);
                 });
 
@@ -193,4 +193,5 @@ document.addEventListener('DOMContentLoaded', () => {
         document.execCommand('copy');
         RouteProcessor.triggerBlink('copyOutputBtn');
     };
+
 });
