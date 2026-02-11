@@ -1,125 +1,149 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MotorTown Route Editor</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
-    <div class="sidebar">
-        <div class="header">
-            <h3>Saved Routes</h3>
-            <button id="exportZipBtn" class="btn-small">Export All (ZIP)</button>
-        </div>
-        <ul id="routeList"></ul>
-        
-        <div class="map-controls">
-            <h3>Map Settings</h3>
-            <input type="file" id="mapUpload" accept="image/*" style="display: none;">
-            <button id="btnLoadMap" class="btn-secondary" style="width: 100%">📂 Select Map Image</button>
-            <p class="status-text" id="mapStatus">Trying auto-load...</p>
-        </div>
+/* style.css */
+:root {
+    --bg-dark: #1e1e1e;
+    --bg-panel: #2e2e2e;
+    --border: #444;
+    --accent: #007acc;
+    --text-main: #e0e0e0;
+    --text-muted: #aaa;
+}
 
-        <div class="sidebar-footer">
-            <button id="clearCacheBtn" class="btn-danger">Clear All Data</button>
-        </div>
-    </div>
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
-    <div class="main-content">
-        <div class="toolbar">
-            <div class="tool-group">
-                <label class="checkbox-wrapper">
-                    <input type="checkbox" id="reverse" checked>
-                    <span>Reverse Route</span>
-                </label>
-                <label class="checkbox-wrapper">
-                    <input type="checkbox" id="boxes">
-                    <span>Square Gates</span>
-                </label>
-            </div>
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--bg-dark);
+    color: var(--text-main);
+    height: 100vh;
+    display: flex;
+    overflow: hidden;
+}
 
-            <div class="tool-group">
-                <select id="scale_mode">
-                    <option value="+0">Resize: None</option>
-                    <option value="+5">Resize: Width +5</option>
-                    <option value="+10">Resize: Width +10</option>
-                    <option value="+15">Resize: Width +15</option>
-                </select>
-                
-                <div class="input-with-label">
-                    <span>Batch Rotate (°):</span>
-                    <input type="number" id="rotation_angle" value="0" placeholder="0">
-                </div>
-            </div>
+.sidebar {
+    width: 260px;
+    background-color: #252526;
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 15px;
+    flex-shrink: 0;
+}
 
-            <div class="tool-group right">
-                <button id="processBtn" class="btn-primary">Process Batch</button>
-                <button id="copyOutputBtn" class="btn-success">Copy Output</button>
-            </div>
-        </div>
+.sidebar .header { margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+.sidebar h3 { font-size: 16px; margin-bottom: 10px; color: #fff; }
 
-        <div class="editor-layout">
-            <div class="map-container" id="routeCanvas">
-                <div class="map-overlay-hint">Scroll to Zoom • Drag to Pan • Click Point to Edit</div>
-                
-                <div id="wpContext" class="context-menu">
-                    <div class="menu-header">
-                        <span id="wpTitle">Waypoint</span>
-                        <span class="close-menu" onclick="closeWpMenu()">×</span>
-                    </div>
-                    
-                    <div id="wpMainOpts" class="menu-body">
-                        <button id="btnOptAdjust">Adjust Size</button>
-                        <button id="btnOptRotate">Rotate</button>
-                    </div>
+#routeList { list-style: none; flex: 1; overflow-y: auto; margin-bottom: 20px;}
+#routeList li {
+    background: var(--bg-panel);
+    margin-bottom: 8px;
+    padding: 8px 10px;
+    border-radius: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    font-size: 13px;
+}
+#routeList li:hover { background: #3e3e3e; }
 
-                    <div id="wpAdjustPanel" class="menu-body" style="display: none;">
-                        <div class="input-row">
-                            <label>W (Y):</label> <input type="number" id="inpWidth" step="0.5">
-                        </div>
-                        <div class="input-row">
-                            <label>H (X):</label> <input type="number" id="inpHeight" step="0.5">
-                        </div>
-                        <div class="input-row">
-                            <label>D (Z):</label> <input type="number" id="inpDepth" step="0.5">
-                        </div>
-                        <button id="btnBackAdjust" class="btn-secondary">Back</button>
-                    </div>
+.map-controls { border-top: 1px solid var(--border); padding-top: 15px; margin-bottom: 15px; }
+.status-text { font-size: 11px; margin-top: 5px; text-align: center; }
 
-                    <div id="wpRotatePanel" class="menu-body" style="display: none;">
-                        <div class="rotate-readout">Angle: <span id="rotateVal">0</span>°</div>
-                        
-                        <div class="slider-container">
-                            <input type="range" id="rotSlider" min="-180" max="180" value="0">
-                        </div>
-                        
-                        <button id="btnBackRotate" class="btn-secondary">Back</button>
-                    </div>
-                </div>
-            </div>
+.delete-route { color: #ff4d4d; font-weight: bold; padding: 0 5px; cursor: pointer; }
+.sidebar-footer { margin-top: auto; padding-top: 15px; border-top: 1px solid var(--border); }
 
-            <div class="json-panel">
-                <div class="json-box">
-                    <div class="box-header">
-                        <span>Input</span>
-                        <button onclick="clearJsonData()">Clear</button>
-                    </div>
-                    <textarea id="json_data" placeholder="Paste Route JSON here..."></textarea>
-                </div>
-                <div class="json-box">
-                    <div class="box-header">
-                        <span>Output</span>
-                        <button onclick="clearOutputField()">Clear</button>
-                    </div>
-                    <textarea id="output" readonly placeholder="Result will appear here..."></textarea>
-                </div>
-            </div>
-        </div>
-    </div>
+.main-content { 
+    flex: 1; 
+    display: flex; 
+    flex-direction: column; 
+    padding: 20px; 
+    min-width: 0; /* Allows content to shrink */
+}
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <script src="route.js"></script>
-    <script src="app.js"></script>
-</body>
-</html>
+.toolbar {
+    display: flex; 
+    gap: 15px; 
+    background: var(--bg-panel); 
+    padding: 12px 20px;
+    border-radius: 6px; 
+    margin-bottom: 15px; 
+    align-items: center; 
+    flex-wrap: wrap;
+    border: 1px solid var(--border);
+}
+.tool-group { display: flex; align-items: center; gap: 15px; }
+.tool-group.right { margin-left: auto; }
+.checkbox-wrapper { display: flex; align-items: center; gap: 6px; font-size: 13px; cursor: pointer; }
+.input-with-label { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.input-with-label input { width: 60px; padding: 4px; background: #111; border: 1px solid #555; color: #fff; border-radius: 3px; }
+select { background: #111; color: #fff; border: 1px solid #555; padding: 5px 8px; border-radius: 3px; }
+
+button { border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 13px; transition: filter 0.2s; }
+button:hover { filter: brightness(1.1); }
+.btn-primary { background-color: var(--accent); color: white; }
+.btn-success { background-color: #28a745; color: white; }
+.btn-danger { background-color: #d9534f; color: white; width: 100%; }
+.btn-secondary { background-color: #555; color: white; }
+.btn-small { font-size: 11px; padding: 4px 8px; background: #444; color: #ccc; }
+
+.editor-layout { 
+    display: flex; 
+    flex: 1; 
+    gap: 20px; 
+    min-height: 0; 
+}
+
+.map-container {
+    flex: 1; /* Changed to 1 to share space more evenly */
+    background: #0f0f0f;
+    background-image: radial-gradient(#333 1px, transparent 0);
+    background-size: 20px 20px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+    cursor: crosshair;
+}
+
+canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.map-overlay-hint {
+    position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.6);
+    padding: 4px 8px; border-radius: 4px; font-size: 11px; color: #aaa; pointer-events: none;
+    z-index: 10;
+}
+
+.json-panel { 
+    width: 350px; /* Fixed width for stability */
+    display: flex; 
+    flex-direction: column; 
+    gap: 15px; 
+    flex-shrink: 0;
+}
+.json-box { flex: 1; display: flex; flex-direction: column; background: var(--bg-panel); border-radius: 6px; border: 1px solid var(--border); padding: 10px; }
+.box-header { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 12px; color: var(--text-muted); font-weight: bold; }
+.box-header button { background: none; color: #666; padding: 0; font-size: 11px; text-decoration: underline; }
+textarea {
+    flex: 1; width: 100%; background: #111; border: 1px solid #333;
+    color: #ce9178; font-family: 'Consolas', monospace; font-size: 12px;
+    padding: 8px; resize: vertical; border-radius: 4px;
+}
+
+.context-menu {
+    position: absolute; display: none; background: #252526;
+    border: 1px solid #454545; box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    border-radius: 4px; width: 200px; z-index: 100;
+}
+.menu-header { background: #333; padding: 6px 10px; font-size: 12px; font-weight: bold; display: flex; justify-content: space-between; border-bottom: 1px solid #444; }
+.close-menu { cursor: pointer; font-size: 16px; line-height: 10px; }
+.menu-body { padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+.input-row { display: flex; justify-content: space-between; align-items: center; font-size: 12px; }
+.input-row input { width: 60px; background: #111; border: 1px solid #555; color: #fff; padding: 2px 5px; }
+.rotate-readout { text-align: center; font-size: 18px; font-weight: bold; color: #00bfff; margin-bottom: 5px; }
+
+.slider-container { padding: 5px 0; }
+input[type=range] { width: 100%; }
