@@ -195,15 +195,44 @@ document.addEventListener('DOMContentLoaded', function () {
     };
 
     // --- INTERACTION ---
-    canvas.addEventListener('wheel', (e) => {
-        e.preventDefault();
-        const zoomSpeed = 0.1;
-        const delta = -Math.sign(e.deltaY) * zoomSpeed;
-        const newZoom = Math.max(0.05, Math.min(view.zoom + delta, 5));
-        view.zoom = newZoom;
+canvas.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    const zoomSpeed = 0.1;
+    const delta = -Math.sign(e.deltaY) * zoomSpeed;
+    const newZoom = Math.max(0.05, Math.min(view.zoom + delta, 5));
+
+    // Calculate mouse position relative to center
+    const mouseX = e.offsetX - canvas.width / 2;
+    const mouseY = e.offsetY - canvas.height / 2;
+
+    // Adjust view offset to zoom toward mouse
+    view.x -= (mouseX - view.x) * (newZoom / view.zoom - 1);
+    view.y -= (mouseY - view.y) * (newZoom / view.zoom - 1);
+
+    view.zoom = newZoom;
+    draw();
+    closeMenu();
+});
+
+// --- New Function to Focus on Route ---
+window.MapVisualizer = {
+    loadFromOutput: () => {
+        const data = getRouteData();
+        if (data && data.waypoints && data.waypoints.length > 0) {
+            // Calculate average position to center the view
+            let avgX = 0, avgY = 0;
+            data.waypoints.forEach(wp => {
+                const pos = gameToScreen(wp.translation.x, wp.translation.y); // This uses raw game coords
+                // Since gameToScreen includes view.x/y, we calculate raw map offsets here instead
+            });
+            // Simplified: Reset view to center or calculated bounds
+            view.x = 0; 
+            view.y = 0;
+            view.zoom = 0.5; 
+        }
         draw();
-        closeMenu();
-    });
+    }
+};
 
     canvas.addEventListener('mousedown', (e) => {
         const mx = e.offsetX, my = e.offsetY;
