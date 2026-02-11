@@ -30,7 +30,7 @@
         <div class="toolbar">
             <div class="tool-group">
                 <label class="checkbox-wrapper">
-                    <input type="checkbox" id="reverse" checked>
+                    <input type="checkbox" id="reverse">
                     <span>Reverse Route</span>
                 </label>
                 <label class="checkbox-wrapper">
@@ -46,11 +46,6 @@
                     <option value="10">Resize: Width +10</option>
                     <option value="15">Resize: Width +15</option>
                 </select>
-                
-                <div class="input-with-label">
-                    <span>Batch Rotate (°):</span>
-                    <input type="number" id="rotation_angle" value="0" placeholder="0">
-                </div>
             </div>
 
             <div class="tool-group right">
@@ -69,13 +64,13 @@
                         <span class="close-menu" onclick="closeWpMenu()">×</span>
                     </div>
                     <div id="wpMainOpts" class="menu-body">
-                        <button id="btnOptAdjust">Adjust Size</button>
-                        <button id="btnOptRotate">Rotate</button>
+                        <button id="btnOptAdjust" class="btn-secondary">Adjust Size</button>
+                        <button id="btnOptRotate" class="btn-secondary">Rotate</button>
                     </div>
                     <div id="wpAdjustPanel" class="menu-body" style="display: none;">
-                        <div class="input-row"><label>W (Y):</label> <input type="number" id="inpWidth" step="0.5"></div>
-                        <div class="input-row"><label>H (X):</label> <input type="number" id="inpHeight" step="0.5"></div>
-                        <div class="input-row"><label>D (Z):</label> <input type="number" id="inpDepth" step="0.5"></div>
+                        <div class="input-row"><label>Width:</label> <input type="number" id="inpWidth" step="0.5"></div>
+                        <div class="input-row"><label>Height:</label> <input type="number" id="inpHeight" step="0.5"></div>
+                        <div class="input-row"><label>Depth:</label> <input type="number" id="inpDepth" step="0.5"></div>
                         <button id="btnBackAdjust" class="btn-secondary">Back</button>
                     </div>
                     <div id="wpRotatePanel" class="menu-body" style="display: none;">
@@ -103,4 +98,5 @@
     <script src="route.js"></script>
     <script src="app.js"></script>
 </body>
+
 </html>
