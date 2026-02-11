@@ -1,19 +1,16 @@
 document.addEventListener('DOMContentLoaded', () => {
     // 1. Initialize Route Processor UI
-    if (window.RouteProcessor) {
-        window.RouteProcessor.updateRouteList();
-        window.bindRouteProcessorUI();
+    // Remove "window." prefix or check binding function directly
+    if (typeof RouteProcessor !== 'undefined') {
+        RouteProcessor.updateRouteList();
+        bindRouteProcessorUI(); // bindRouteProcessorUI is a global function
     }
     
-    // 2. Initialize Map Visualizer (matches naming in route-processor.js)
+    // 2. Initialize Map Visualizer
     window.MapVisualizerInstance = window.MapVisualizer('routeCanvas', 'output');
     
     // 3. Setup Waypoint UI
-    if (window.setupWaypointUI) {
-        window.setupWaypointUI(window.MapVisualizerInstance);
+    if (typeof setupWaypointUI === 'function') {
+        setupWaypointUI(window.MapVisualizerInstance);
     }
 });
-
-// Helpers for index.html "Clear" buttons
-window.clearJsonData = () => { document.getElementById('json_data').value = ''; };
-window.clearOutputField = () => { document.getElementById('output').value = ''; };
