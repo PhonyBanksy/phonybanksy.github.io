@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MotorTown Route Editor</title>
@@ -47,6 +46,10 @@
                     <option value="10">Resize: Width +10</option>
                     <option value="15">Resize: Width +15</option>
                 </select>
+                <div class="input-with-label">
+                    <span>Rotate:</span>
+                    <input type="number" id="rotation_angle" value="0" step="90" style="width: 50px;">
+                </div>
             </div>
 
             <div class="tool-group right">
@@ -62,7 +65,7 @@
                 <div id="wpContext" class="context-menu">
                     <div class="menu-header">
                         <span id="wpTitle">Waypoint</span>
-                        <span class="close-menu" onclick="closeWpMenu()">×</span>
+                        <span class="close-menu" onclick="closeMenu()">×</span>
                     </div>
                     <div id="wpMainOpts" class="menu-body">
                         <button id="btnOptAdjust" class="btn-secondary">Adjust Size</button>
@@ -96,7 +99,10 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <script src="route.js?v=1.1"></script>
-    <script src="app.js?v=1.0"></script>
+    <script src="math-utils.js"></script>
+    <script src="map-visualizer.js"></script>
+    <script src="waypoint-ui.js"></script>
+    <script src="route-processor.js"></script>
+    <script src="main.js?ver=1.0"></script>
 </body>
 </html>
