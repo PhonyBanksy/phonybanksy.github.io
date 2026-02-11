@@ -18,7 +18,34 @@ body {
     display: flex;
     overflow: hidden;
 }
+/* Highlight for the active route */
+#routeList li.active-route {
+    border-left: 4px solid var(--accent);
+    background: #3e3e3e;
+    color: #fff;
+}
 
+/* Loading state styling */
+.loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    font-size: 14px;
+    color: white;
+    border-radius: 4px;
+}
+
+/* Ensure the JSON box remains relative for the overlay */
+.json-box {
+    position: relative;
+}
 @keyframes blink {
     0% { filter: brightness(1); transform: scale(1); }
     50% { filter: brightness(2); transform: scale(1.05); }

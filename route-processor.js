@@ -1,4 +1,6 @@
 const RouteProcessor = {
+    // ... (Keep existing process, triggerBlink, saveRouteToLocalStorage functions)
+
     process() {
         const inputField = document.getElementById('json_data');
         const outputField = document.getElementById('output');
@@ -26,13 +28,18 @@ const RouteProcessor = {
                     if (squareGates) {
                         waypoint.scale3D.x = waypoint.scale3D.y;
                     }
+                    if (squareGates) {
+                        waypoint.scale3D.x = waypoint.scale3D.y;
+                    }                    
+					if (!squareGates) {
+                        waypoint.scale3D.x = "1";
+                    }
 
                     let currentAngle = 0;
                     if (waypoint.rotation) {
                         currentAngle = MathUtils.toAngle(waypoint.rotation);
                     }
                     
-                    // Added +90 for MotorTown alignment
                     const newAngle = currentAngle + rotationBatchAngle + 90;
                     waypoint.rotation = MathUtils.toQuaternion(newAngle);
                 });
@@ -83,15 +90,16 @@ const RouteProcessor = {
         const list = document.getElementById('routeList');
         let routes = JSON.parse(localStorage.getItem('routes')) || [];
         list.innerHTML = routes.length ? '' : '<li>No saved routes</li>';
+        
         routes.forEach((route, index) => {
             const li = document.createElement('li');
+            li.dataset.index = index;
             li.innerHTML = `<span class="route-name">${route.routeName}</span><span class="delete-route">×</span>`;
+            
             li.querySelector('.route-name').onclick = () => {
-                const str = JSON.stringify(route.routeData, null, 2);
-                document.getElementById('json_data').value = str;
-                document.getElementById('output').value = str;
-                if (window.MapVisualizerInstance) window.MapVisualizerInstance.loadFromOutput();
+                this.loadRoute(route, li);
             };
+            
             li.querySelector('.delete-route').onclick = (e) => {
                 e.stopPropagation();
                 routes.splice(index, 1);
@@ -99,6 +107,35 @@ const RouteProcessor = {
                 this.updateRouteList();
             };
             list.appendChild(li);
+        });
+    },
+
+    loadRoute(route, element) {
+        // 1. Highlight the selected item immediately
+        document.querySelectorAll('#routeList li').forEach(el => el.classList.remove('active-route'));
+        element.classList.add('active-route');
+
+        // 2. Show loading state in the JSON panel
+        const inputContainer = document.querySelector('.json-box');
+        const loader = document.createElement('div');
+        loader.className = 'loading-overlay';
+        loader.textContent = 'Loading Route...';
+        inputContainer.appendChild(loader);
+
+        // 3. Process the data in the next frame to keep UI responsive
+        requestAnimationFrame(() => {
+            setTimeout(() => {
+                const str = JSON.stringify(route.routeData, null, 2);
+                document.getElementById('json_data').value = str;
+                document.getElementById('output').value = str;
+                
+                if (window.MapVisualizerInstance) {
+                    window.MapVisualizerInstance.loadFromOutput();
+                }
+                
+                // Remove loader
+                loader.remove();
+            }, 50); 
         });
     },
 
