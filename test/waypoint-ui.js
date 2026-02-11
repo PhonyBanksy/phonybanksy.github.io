@@ -1,4 +1,5 @@
-export function setupWaypointUI(visualizer) {
+// REMOVED 'export' keyword to fix syntax error
+function setupWaypointUI(visualizer) {
     const menu = document.getElementById('wpContext');
     const inpW = document.getElementById('inpWidth');
     const inpH = document.getElementById('inpHeight');
@@ -6,7 +7,6 @@ export function setupWaypointUI(visualizer) {
     const rotateDisplay = document.getElementById('rotateVal');
     const rotSlider = document.getElementById('rotSlider');
 
-    // Expose globally so HTML onclick and Canvas can see them
     window.openWaypointMenu = (index) => {
         visualizer.setActiveWaypoint(index);
         const wpMeta = visualizer.getWaypointsRendered().find(w => w.i === index);
@@ -30,7 +30,6 @@ export function setupWaypointUI(visualizer) {
         menu.style.display = 'none';
     };
 
-    // Submenu toggles
     document.getElementById('btnOptAdjust').onclick = () => {
         document.getElementById('wpMainOpts').style.display = 'none';
         document.getElementById('wpAdjustPanel').style.display = 'block';

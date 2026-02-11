@@ -5,13 +5,15 @@ document.addEventListener('DOMContentLoaded', () => {
         window.bindRouteProcessorUI();
     }
     
-    // 2. Initialize Map Visualizer (stored globally)
-    window.CurrentVisualizer = window.MapVisualizer('routeCanvas', 'output');
+    // 2. Initialize Map Visualizer (matches naming in route-processor.js)
+    window.MapVisualizerInstance = window.MapVisualizer('routeCanvas', 'output');
     
-    // 3. Setup Waypoint UI using the global visualizer
+    // 3. Setup Waypoint UI
     if (window.setupWaypointUI) {
-        window.setupWaypointUI(window.CurrentVisualizer);
+        window.setupWaypointUI(window.MapVisualizerInstance);
     }
-    
-    console.log('✓ App initialized (Standard Scripts)');
 });
+
+// Helpers for index.html "Clear" buttons
+window.clearJsonData = () => { document.getElementById('json_data').value = ''; };
+window.clearOutputField = () => { document.getElementById('output').value = ''; };
