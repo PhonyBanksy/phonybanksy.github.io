@@ -40,7 +40,7 @@ const RouteProcessor = {
                         currentAngle = MathUtils.toAngle(waypoint.rotation);
                     }
                     
-                    const newAngle = currentAngle + rotationBatchAngle + 90;
+                    const newAngle = currentAngle + rotationBatchAngle;
                     waypoint.rotation = MathUtils.toQuaternion(newAngle);
                 });
 
