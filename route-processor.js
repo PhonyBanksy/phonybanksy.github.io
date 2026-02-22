@@ -1,12 +1,15 @@
 const RouteProcessor = {
+    // ... (Keep existing process, triggerBlink, saveRouteToLocalStorage functions)
+
     process() {
         const inputField = document.getElementById('json_data');
         const outputField = document.getElementById('output');
         
-        const scaleFactor = parseInt(document.getElementById('scale_mode')?.value) || 0;
-        // The rotation angle is now ignored for the output generation
-        const reverseChecked = document.getElementById('reverse')?.checked || false;
-
+        const scaleFactor = parseFloat(document.getElementById('scale_mode')?.value) || 1;
+        const rotationBatchAngle = parseFloat(document.getElementById('rotation_angle')?.value) || 0;
+        const reverseChecked = document.getElementById('reverse')?.checked;
+        const squareGates = document.getElementById('boxes')?.checked;
+        
         try {
             const data = JSON.parse(inputField.value);
 
@@ -16,20 +19,50 @@ const RouteProcessor = {
                 }
 
                 data.waypoints.forEach(waypoint => {
-                    // Keep scale processing if intended
-                    if (waypoint.scale3D && typeof waypoint.scale3D.y === 'number') {
-                        waypoint.scale3D.y += scaleFactor;
+                    if (!waypoint.scale3D) waypoint.scale3D = { x: 1, y: 10, z: 1 };
+
+                    // Coerce to numbers (stored values may be strings)
+                    waypoint.scale3D.x = parseFloat(waypoint.scale3D.x) || 1;  // X = depth
+                    waypoint.scale3D.y = parseFloat(waypoint.scale3D.y) || 10; // Y = gate width
+                    waypoint.scale3D.z = parseFloat(waypoint.scale3D.z) || 1;  // Z = height
+
+                    // Scale: multiply Y (gate width) by scale factor
+                    waypoint.scale3D.y = Math.round(waypoint.scale3D.y * scaleFactor * 100) / 100;
+
+                    // Box Waypoints: scale X same as Y (no special multiplier)
+                    if (squareGates) {
+                        waypoint.scale3D.x = waypoint.scale3D.y;
                     }
 
-                    // REMOVED: waypoint.rotation.y += rotationBatchAngle;
-                    // This ensures the output JSON remains unrotated
+                    let currentAngle = 0;
+                    if (waypoint.rotation) {
+                        currentAngle = MathUtils.toAngle(waypoint.rotation);
+                    }
+                    
+                    const newAngle = currentAngle + rotationBatchAngle;
+                    waypoint.rotation = MathUtils.toQuaternion(newAngle);
                 });
 
-                outputField.value = JSON.stringify(data, null, 2);
-                this.triggerBlink(outputField);
+                const resultJson = JSON.stringify(data, null, 2);
+                outputField.value = resultJson;
+
+                let suffix = reverseChecked ? `(R) ` : '';
+                if (scaleFactor !== 1) suffix += `×${scaleFactor} `;
+                if (rotationBatchAngle !== 0) suffix += `Rot:${rotationBatchAngle}°`;
+                
+                const name = (data.routeName || "Unnamed") + ' ' + suffix;
+                this.saveRouteToLocalStorage(name, data);
+                
+                if (window.MapVisualizerInstance) {
+                    window.MapVisualizerInstance.loadFromOutput();
+                }
+
+                this.triggerBlink('processBtn');
+            } else {
+                outputField.value = 'Error: Input must contain a "waypoints" array.';
             }
-        } catch (e) {
-            console.error("Error processing JSON:", e);
+        } catch (error) {
+            outputField.value = 'JSON Parse Error: ' + error.message;
         }
     },
 

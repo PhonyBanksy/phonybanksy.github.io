@@ -5,7 +5,7 @@ const RouteProcessor = {
         const inputField = document.getElementById('json_data');
         const outputField = document.getElementById('output');
         
-        const scaleFactor = parseInt(document.getElementById('scale_mode')?.value) || 0;
+        const scaleFactor = parseFloat(document.getElementById('scale_mode')?.value) || 1;
         const rotationBatchAngle = parseFloat(document.getElementById('rotation_angle')?.value) || 0;
         const reverseChecked = document.getElementById('reverse')?.checked;
         const squareGates = document.getElementById('boxes')?.checked;
@@ -21,18 +21,17 @@ const RouteProcessor = {
                 data.waypoints.forEach(waypoint => {
                     if (!waypoint.scale3D) waypoint.scale3D = { x: 1, y: 10, z: 1 };
 
-                    if (typeof waypoint.scale3D.y === 'number') {
-                        waypoint.scale3D.y += scaleFactor;
-                    }
+                    // Coerce to numbers (stored values may be strings)
+                    waypoint.scale3D.x = parseFloat(waypoint.scale3D.x) || 1;  // X = depth
+                    waypoint.scale3D.y = parseFloat(waypoint.scale3D.y) || 10; // Y = gate width
+                    waypoint.scale3D.z = parseFloat(waypoint.scale3D.z) || 1;  // Z = height
 
+                    // Scale: multiply Y (gate width) by scale factor
+                    waypoint.scale3D.y = Math.round(waypoint.scale3D.y * scaleFactor * 100) / 100;
+
+                    // Box Waypoints: scale X same as Y (no special multiplier)
                     if (squareGates) {
                         waypoint.scale3D.x = waypoint.scale3D.y;
-                    }
-                    if (squareGates) {
-                        waypoint.scale3D.x = waypoint.scale3D.y;
-                    }                    
-					if (!squareGates) {
-                        waypoint.scale3D.x = "1";
                     }
 
                     let currentAngle = 0;
@@ -40,7 +39,7 @@ const RouteProcessor = {
                         currentAngle = MathUtils.toAngle(waypoint.rotation);
                     }
                     
-                    const newAngle = currentAngle + rotationBatchAngle + 90;
+                    const newAngle = currentAngle + rotationBatchAngle;
                     waypoint.rotation = MathUtils.toQuaternion(newAngle);
                 });
 
@@ -48,7 +47,7 @@ const RouteProcessor = {
                 outputField.value = resultJson;
 
                 let suffix = reverseChecked ? `(R) ` : '';
-                if (scaleFactor > 0) suffix += `W+${scaleFactor} `;
+                if (scaleFactor !== 1) suffix += `×${scaleFactor} `;
                 if (rotationBatchAngle !== 0) suffix += `Rot:${rotationBatchAngle}°`;
                 
                 const name = (data.routeName || "Unnamed") + ' ' + suffix;
