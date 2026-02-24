@@ -1,26 +1,23 @@
 /**
  * community.js
- * Drives the community route browser (community.html).
- * Explorer/Total Commander style: left filter panel, right sortable table,
- * bottom detail panel when a row is selected.
+ * Community route browser logic.
+ * Fix: "Load in Editor" uses sessionStorage; index.html reads it on load.
  */
 
-import { auth }                                    from './firebase-config.js';
-import { onAuthStateChanged }                      from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { auth } from './firebase-config.js';
 
 document.addEventListener('DOMContentLoaded', () => {
 
-  /* ── Wait for AuthUI to initialize ── */
   window.AuthUI?.init();
 
   /* ── State ── */
-  let _allRoutes   = [];
-  let _filtered    = [];
-  let _sortCol     = 'updatedAt';
-  let _sortDir     = 'desc';   // 'asc' | 'desc'
-  let _selectedId  = null;
+  let _allRoutes  = [];
+  let _filtered   = [];
+  let _sortCol    = 'updatedAt';
+  let _sortDir    = 'desc';
+  let _selectedId = null;
 
-  /* ── DOM refs ── */
+  /* ── DOM ── */
   const searchInput    = document.getElementById('searchInput');
   const authorInput    = document.getElementById('authorInput');
   const sortSelect     = document.getElementById('sortSelect');
@@ -42,11 +39,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const adminPanel     = document.getElementById('adminPanel');
   const btnShowAll     = document.getElementById('btnShowAll');
 
-  /* ── Load routes ── */
+  /* ── Load routes from Firestore ── */
   async function loadRoutes(showAll = false) {
     routeCount.textContent = 'Loading…';
     tbody.innerHTML = '<tr><td colspan="5" class="table-empty">Loading…</td></tr>';
-
     try {
       if (showAll && window.AuthUI?.isAdmin()) {
         _allRoutes = await window.FirestoreRoutes.getAllRoutes(window.AuthUI.getCurrentUser()?.uid);
@@ -55,22 +51,22 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       applyFilters();
     } catch (err) {
-      tbody.innerHTML = `<tr><td colspan="5" class="table-empty" style="color:#ff5555;">Error: ${escHtml(err.message)}</td></tr>`;
-      routeCount.textContent = 'Error loading routes';
+      tbody.innerHTML = `<tr><td colspan="5" class="table-empty" style="color:#d95050;">Error: ${escHtml(err.message)}</td></tr>`;
+      routeCount.textContent = 'Error';
     }
   }
 
-  /* ── Filter & sort ── */
+  /* ── Filter ── */
   function applyFilters() {
-    const search   = searchInput.value.trim().toLowerCase();
-    const author   = authorInput.value.trim().toLowerCase();
-    const myOnly   = chkMyRoutes.checked;
-    const uid      = window.AuthUI?.getCurrentUser()?.uid;
+    const search = searchInput.value.trim().toLowerCase();
+    const author = authorInput.value.trim().toLowerCase();
+    const myOnly = chkMyRoutes.checked;
+    const uid    = window.AuthUI?.getCurrentUser()?.uid;
 
     _filtered = _allRoutes.filter(r => {
-      if (myOnly && r.ownerUid !== uid)                                 return false;
-      if (search && !r.routeName.toLowerCase().includes(search))        return false;
-      if (author && !r.inGameName.toLowerCase().includes(author))       return false;
+      if (myOnly && r.ownerUid !== uid)                          return false;
+      if (search && !r.routeName?.toLowerCase().includes(search)) return false;
+      if (author && !r.inGameName?.toLowerCase().includes(author)) return false;
       return true;
     });
 
@@ -78,10 +74,10 @@ document.addEventListener('DOMContentLoaded', () => {
     renderTable();
   }
 
+  /* ── Sort ── */
   function sortRoutes() {
     _filtered.sort((a, b) => {
       let va = a[_sortCol], vb = b[_sortCol];
-      // Firestore Timestamps → number
       if (va?.seconds) va = va.seconds;
       if (vb?.seconds) vb = vb.seconds;
       if (typeof va === 'string') va = va.toLowerCase();
@@ -108,23 +104,22 @@ document.addEventListener('DOMContentLoaded', () => {
       if (route.id === _selectedId) tr.classList.add('selected');
       if (!route.isPublic) tr.classList.add('row-hidden');
 
-      const updatedAt = formatDate(route.updatedAt);
-
       tr.innerHTML = `
         <td class="col-name">
-          ${escHtml(route.routeName)}
+          ${escHtml(route.routeName || 'Unnamed')}
           ${!route.isPublic ? '<span class="badge-hidden">Hidden</span>' : ''}
         </td>
         <td class="col-author">${escHtml(route.inGameName || '—')}</td>
         <td class="col-wps">${route.waypointCount ?? '?'}</td>
-        <td class="col-date">${updatedAt}</td>
+        <td class="col-date">${formatDate(route.updatedAt)}</td>
         <td class="col-actions">
-          <button class="btn-ghost btn-xs btn-load-inline" data-id="${route.id}">Load</button>
+          <button class="btn-secondary btn-sm btn-load-inline" data-id="${route.id}">⬇</button>
         </td>
       `;
 
+      // Row click → select (but not if clicking the inline load button)
       tr.addEventListener('click', (e) => {
-        if (e.target.classList.contains('btn-load-inline')) {
+        if (e.target.closest('.btn-load-inline')) {
           loadRouteInEditor(route);
           return;
         }
@@ -133,25 +128,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
       tbody.appendChild(tr);
     });
-
-    // Re-highlight if the selected row is in the current results
-    if (_selectedId) {
-      const existingRow = tbody.querySelector(`tr[data-id="${_selectedId}"]`);
-      if (existingRow) existingRow.classList.add('selected');
-    }
   }
 
-  /* ── Select route (show detail panel) ── */
+  /* ── Select row → show detail panel ── */
   function selectRoute(route) {
     _selectedId = route.id;
 
-    // Highlight row
     tbody.querySelectorAll('tr').forEach(r => r.classList.remove('selected'));
     const row = tbody.querySelector(`tr[data-id="${route.id}"]`);
     if (row) row.classList.add('selected');
 
-    // Fill detail panel
-    detailName.textContent = route.routeName;
+    detailName.textContent = route.routeName || 'Unnamed';
     detailMeta.innerHTML = `
       <span class="meta-item">👤 ${escHtml(route.inGameName || 'Unknown')}</span>
       <span class="meta-item">📍 ${route.waypointCount ?? '?'} waypoints</span>
@@ -159,19 +146,16 @@ document.addEventListener('DOMContentLoaded', () => {
       <span class="meta-item">${route.isPublic ? '🌐 Public' : '🔒 Hidden'}</span>
     `;
 
-    // Show preview of first 5 waypoints to avoid massive JSON blobs
+    // Preview first 3 waypoints only
     const preview = route.routeData ? {
       routeName: route.routeData.routeName,
-      waypoints: route.routeData.waypoints?.slice(0, 5),
-      _note: route.waypointCount > 5 ? `... and ${route.waypointCount - 5} more waypoints` : undefined
-    } : null;
+      waypoints: `[ ${route.waypointCount} waypoints — use Load to get full data ]`
+    } : { note: 'No preview available' };
     detailJson.textContent = JSON.stringify(preview, null, 2);
 
-    // Show/hide owner & admin controls
-    const uid        = window.AuthUI?.getCurrentUser()?.uid;
-    const isOwner    = route.ownerUid === uid;
-    const isAdmin    = window.AuthUI?.isAdmin();
-
+    const uid     = window.AuthUI?.getCurrentUser()?.uid;
+    const isOwner = route.ownerUid === uid;
+    const isAdmin = window.AuthUI?.isAdmin();
     btnToggleVis.style.display   = (isOwner || isAdmin) ? 'inline-flex' : 'none';
     btnAdminDelete.style.display = isAdmin ? 'inline-flex' : 'none';
     btnToggleVis.textContent     = route.isPublic ? '🔒 Make Hidden' : '🌐 Make Public';
@@ -185,13 +169,17 @@ document.addEventListener('DOMContentLoaded', () => {
     tbody.querySelectorAll('tr').forEach(r => r.classList.remove('selected'));
   }
 
-  /* ── Load route into editor ── */
+  /* ── Load route in editor ── */
+  // Stores the full routeData in sessionStorage then navigates to index.html
+  // index.html reads it on DOMContentLoaded via the snippet in main.js
   function loadRouteInEditor(route) {
-    if (!route.routeData) { showToast('No route data available'); return; }
-    const json = JSON.stringify(route.routeData, null, 2);
-    sessionStorage.setItem('pendingRouteLoad', json);
-    window.location.href = 'index.html?load=community';
-    showToast('Opening in editor…');
+    if (!route?.routeData) { showToast('No route data'); return; }
+    try {
+      sessionStorage.setItem('communityRouteLoad', JSON.stringify(route.routeData));
+      window.location.href = 'index.html';
+    } catch (e) {
+      showToast('Could not load: ' + e.message);
+    }
   }
 
   /* ── Copy JSON ── */
@@ -219,10 +207,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!route) return;
     const uid = window.AuthUI?.getCurrentUser()?.uid;
     if (!uid) { showToast('Sign in first'); return; }
+    btnToggleVis.disabled = true;
     try {
-      btnToggleVis.disabled = true;
       await window.FirestoreRoutes.setRouteVisibility(route.id, !route.isPublic, uid);
       showToast(route.isPublic ? 'Route hidden' : 'Route is now public');
+      closeDetail();
       await loadRoutes();
     } catch (err) {
       showToast('Error: ' + err.message);
@@ -235,11 +224,11 @@ document.addEventListener('DOMContentLoaded', () => {
   async function adminDelete() {
     const route = _filtered.find(r => r.id === _selectedId);
     if (!route) return;
-    if (!confirm(`Admin delete "${route.routeName}" by ${route.inGameName}? This cannot be undone.`)) return;
+    if (!confirm(`Delete "${route.routeName}" by ${route.inGameName}? Cannot be undone.`)) return;
     const uid = window.AuthUI?.getCurrentUser()?.uid;
     try {
       await window.FirestoreRoutes.deleteRoute(route.id, uid);
-      showToast('Route deleted');
+      showToast('Deleted');
       closeDetail();
       await loadRoutes();
     } catch (err) {
@@ -247,16 +236,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  /* ── Column sort ── */
+  /* ── Column sort headers ── */
   document.querySelectorAll('th.sortable').forEach(th => {
     th.addEventListener('click', () => {
       const col = th.dataset.col;
-      if (_sortCol === col) {
-        _sortDir = _sortDir === 'asc' ? 'desc' : 'asc';
-      } else {
-        _sortCol = col;
-        _sortDir = col === 'updatedAt' ? 'desc' : 'asc';
-      }
+      _sortDir = (_sortCol === col && _sortDir === 'asc') ? 'desc' : 'asc';
+      if (_sortCol !== col) { _sortCol = col; _sortDir = col === 'updatedAt' ? 'desc' : 'asc'; }
       sortSelect.value = _sortCol;
       updateSortArrows();
       sortRoutes();
@@ -269,7 +254,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const arrow = th.querySelector('.sort-arrow');
       if (!arrow) return;
       if (th.dataset.col === _sortCol) {
-        arrow.textContent = _sortDir === 'asc' ? ' ▲' : ' ▼';
+        arrow.textContent = _sortDir === 'asc' ? '▲' : '▼';
         th.classList.add('sort-active');
       } else {
         arrow.textContent = '';
@@ -278,15 +263,14 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  /* ── Event wiring ── */
+  /* ── Wire buttons ── */
   btnApply.addEventListener('click', applyFilters);
   btnReset.addEventListener('click', () => {
     searchInput.value = '';
     authorInput.value = '';
     chkMyRoutes.checked = false;
+    _sortCol = 'updatedAt'; _sortDir = 'desc';
     sortSelect.value = 'updatedAt';
-    _sortCol = 'updatedAt';
-    _sortDir = 'desc';
     updateSortArrows();
     applyFilters();
   });
@@ -295,18 +279,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const route = _filtered.find(r => r.id === _selectedId);
     if (route) loadRouteInEditor(route);
   });
-  btnCopyRoute.addEventListener('click', copyRouteJson);
-  btnToggleVis.addEventListener('click', toggleVisibility);
+  btnCopyRoute.addEventListener('click',   copyRouteJson);
+  btnToggleVis.addEventListener('click',   toggleVisibility);
   btnAdminDelete.addEventListener('click', adminDelete);
   btnCloseDetail.addEventListener('click', closeDetail);
-  btnShowAll?.addEventListener('click', () => loadRoutes(true));
+  btnShowAll?.addEventListener('click',    () => loadRoutes(true));
 
-  // Enter key on filter inputs
-  [searchInput, authorInput].forEach(inp => {
-    inp.addEventListener('keydown', e => { if (e.key === 'Enter') applyFilters(); });
-  });
-
-  // Sort select dropdown (syncs with column clicks)
+  [searchInput, authorInput].forEach(inp =>
+    inp.addEventListener('keydown', e => { if (e.key === 'Enter') applyFilters(); })
+  );
   sortSelect.addEventListener('change', () => {
     _sortCol = sortSelect.value;
     updateSortArrows();
@@ -314,48 +295,24 @@ document.addEventListener('DOMContentLoaded', () => {
     renderTable();
   });
 
-  /* ── Auth state ── */
-  document.addEventListener('authStateChanged', (e) => {
-    const loggedIn = !!e.detail?.user;
-    if (window.AuthUI?.isAdmin()) {
-      adminPanel.style.display = 'block';
-    }
-    if (loggedIn) {
-      // Re-load so "My routes only" checkbox works
-      loadRoutes();
-    }
+  /* ── Auth state changes ── */
+  document.addEventListener('authStateChanged', () => {
+    adminPanel.style.display = window.AuthUI?.isAdmin() ? 'block' : 'none';
+    loadRoutes();
   });
-
-  /* ── Handle pending route load from community page ── */
-  // (This runs on index.html when redirected back from community)
-  if (window.location.search.includes('load=community')) {
-    const pending = sessionStorage.getItem('pendingRouteLoad');
-    if (pending) {
-      sessionStorage.removeItem('pendingRouteLoad');
-      // Populate editor fields
-      const inputEl  = document.getElementById('json_data');
-      const outputEl = document.getElementById('output');
-      if (inputEl)  inputEl.value  = pending;
-      if (outputEl) outputEl.value = pending;
-      if (window.MapVisualizerInstance) {
-        window.MapVisualizerInstance.loadFromOutput();
-      }
-      showToast('Community route loaded!');
-    }
-  }
 
   /* ── Helpers ── */
   function formatDate(ts) {
     if (!ts) return '—';
     const d = ts.seconds ? new Date(ts.seconds * 1000) : new Date(ts);
     if (isNaN(d)) return '—';
-    return d.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
+    return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
   }
 
   function escHtml(str) {
     return String(str)
-      .replace(/&/g, '&amp;').replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
   function showToast(msg) {
@@ -370,5 +327,4 @@ document.addEventListener('DOMContentLoaded', () => {
   /* ── Initial load ── */
   updateSortArrows();
   loadRoutes();
-
 });

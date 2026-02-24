@@ -7,31 +7,31 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;500;600;700;800&family=Barlow:wght@300;400;500&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="community.css" />
   <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
 </head>
 <body>
 <div id="app">
 
   <!-- ══ TOPBAR ══ -->
-  <header id="topbar" style="grid-column: 1 / -1;">
+  <header id="topbar">
     <div class="logo">
       <div class="logo-mark"></div>
       <span class="logo-text">Motor<em>Town</em> Community Routes</span>
     </div>
     <div class="vsep"></div>
     <div class="topbar-end">
-      <a href="index.html" class="btn-secondary btn-sm" style="text-decoration:none;">← Route Editor</a>
-      <span id="userDisplay" style="display:none; align-items:center; font-size:12px; color:var(--fg); font-family:var(--head); letter-spacing:.04em;"></span>
+      <a href="index.html" class="btn-secondary btn-sm">← Route Editor</a>
+      <span id="userDisplay" style="display:none; align-items:center; font-size:12px; color:var(--text); font-family:var(--head); letter-spacing:.04em;"></span>
       <button id="btnLogin"  class="btn-secondary btn-sm">🔑 Sign in with Google</button>
-      <button id="btnLogout" class="btn-danger btn-sm" style="display:none;">Sign Out</button>
+      <button id="btnLogout" class="btn-danger btn-sm"    style="display:none;">Sign Out</button>
     </div>
   </header>
 
-  <!-- ══ COMMUNITY BROWSER ══ -->
+  <!-- ══ BODY ══ -->
   <div id="community-layout">
 
-    <!-- LEFT: Filters / tree panel (Explorer left-pane style) -->
+    <!-- LEFT: Filters -->
     <aside id="community-left">
       <div class="panel-head">
         <span class="panel-title">Filters</span>
@@ -59,41 +59,42 @@
 
       <div class="filter-section">
         <label class="filter-label">Show</label>
-        <label class="check-wrap" style="margin:0;">
+        <label class="check-wrap">
           <input type="checkbox" id="chkMyRoutes" />
-          <span style="font-size:11px;">My routes only</span>
+          <span>My routes only</span>
         </label>
       </div>
 
-      <button id="btnApplyFilters" class="btn-primary btn-full" style="margin-top:12px;">🔍 Apply</button>
-      <button id="btnResetFilters" class="btn-ghost btn-full"   style="margin-top:4px;">Reset</button>
+      <div class="filter-actions">
+        <button id="btnApplyFilters" class="btn-primary btn-full">🔍 Apply</button>
+        <button id="btnResetFilters" class="btn-ghost btn-full">Reset</button>
+      </div>
 
-      <!-- Admin panel (only shown to admins) -->
-      <div id="adminPanel" style="display:none; margin-top:20px; border-top:1px solid var(--border); padding-top:12px;">
-        <div class="filter-label" style="color:var(--accent);">⭐ Admin Tools</div>
-        <button id="btnShowAll" class="btn-secondary btn-full" style="margin-top:8px;">Show Hidden Routes</button>
+      <!-- Admin panel -->
+      <div id="adminPanel" style="display:none;">
+        <div class="admin-title">⭐ Admin Tools</div>
+        <button id="btnShowAll" class="btn-secondary btn-full">Show All (incl. Hidden)</button>
       </div>
     </aside>
 
-    <!-- RIGHT: Route list (Explorer right-pane / Total Commander style) -->
+    <!-- RIGHT: Table + detail -->
     <main id="community-right">
-      <!-- Toolbar above table -->
+
       <div id="browser-toolbar">
         <span id="routeCount" class="browser-count">Loading…</span>
         <div style="flex:1;"></div>
         <button id="btnRefresh" class="btn-ghost btn-sm">↺ Refresh</button>
       </div>
 
-      <!-- Table header (sortable columns) -->
       <div id="route-table-wrap">
         <table id="route-table">
           <thead>
             <tr>
-              <th data-col="routeName"     class="sortable">Route Name <span class="sort-arrow"></span></th>
-              <th data-col="inGameName"    class="sortable">Author <span class="sort-arrow"></span></th>
-              <th data-col="waypointCount" class="sortable">WPs <span class="sort-arrow"></span></th>
-              <th data-col="updatedAt"     class="sortable">Updated <span class="sort-arrow"></span></th>
-              <th>Actions</th>
+              <th data-col="routeName"     class="sortable col-name">Route Name <span class="sort-arrow"></span></th>
+              <th data-col="inGameName"    class="sortable col-author">Author <span class="sort-arrow"></span></th>
+              <th data-col="waypointCount" class="sortable col-wps">WPs <span class="sort-arrow"></span></th>
+              <th data-col="updatedAt"     class="sortable col-date">Updated <span class="sort-arrow"></span></th>
+              <th class="col-actions">Load</th>
             </tr>
           </thead>
           <tbody id="routeTableBody">
@@ -102,30 +103,32 @@
         </table>
       </div>
 
-      <!-- Detail/preview panel (shown when a route is selected) -->
+      <!-- Detail panel (hidden until a row is selected) -->
       <div id="route-detail" style="display:none;">
         <div id="detail-header">
           <span id="detailName" class="detail-title"></span>
-          <button id="btnCloseDetail" class="btn-ghost btn-sm">✕</button>
+          <button id="btnCloseDetail" class="btn-ghost btn-sm">✕ Close</button>
         </div>
-        <div id="detail-meta"></div>
-        <div id="detail-actions">
-          <button id="btnLoadRoute"   class="btn-primary btn-sm">⬇ Load in Editor</button>
-          <button id="btnCopyRoute"   class="btn-ghost btn-sm">📋 Copy JSON</button>
-          <button id="btnToggleVis"   class="btn-secondary btn-sm" style="display:none;">👁 Toggle Visibility</button>
-          <button id="btnAdminDelete" class="btn-danger btn-sm"    style="display:none;">🗑 Delete (Admin)</button>
+        <div id="detail-body">
+          <div id="detail-meta"></div>
+          <div id="detail-actions">
+            <button id="btnLoadRoute"   class="btn-primary btn-sm">⬇ Load in Editor</button>
+            <button id="btnCopyRoute"   class="btn-ghost btn-sm">📋 Copy JSON</button>
+            <button id="btnToggleVis"   class="btn-secondary btn-sm" style="display:none;">👁 Toggle Visibility</button>
+            <button id="btnAdminDelete" class="btn-danger btn-sm"    style="display:none;">🗑 Delete</button>
+          </div>
+          <pre id="detailJson" class="detail-json"></pre>
         </div>
-        <pre id="detailJson" class="detail-json"></pre>
       </div>
-    </main>
 
+    </main>
   </div>
 </div>
 
 <div id="toast">Done!</div>
 
-<!-- Profile modal (reused from index.html) -->
-<div id="profileModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.7); z-index:1000; align-items:center; justify-content:center;">
+<!-- Profile modal -->
+<div id="profileModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.75); z-index:1000; align-items:center; justify-content:center;">
   <div class="modal-box">
     <h2 class="modal-title">Complete Your Profile</h2>
     <p class="modal-subtitle">Set your in-game and Discord names to share routes with the community.</p>
@@ -135,9 +138,9 @@
     </div>
     <div class="modal-field">
       <label for="inpDiscordName">Discord Username</label>
-      <input id="inpDiscordName" type="text" maxlength="64" placeholder="e.g. username#1234 or username" autocomplete="off" />
+      <input id="inpDiscordName" type="text" maxlength="64" placeholder="e.g. username or username#1234" autocomplete="off" />
     </div>
-    <p id="profileError" style="color:#ff5555; font-size:12px; min-height:16px; margin:4px 0;"></p>
+    <p id="profileError" style="color:#d95050; font-size:12px; min-height:16px; margin:0;"></p>
     <button id="btnSaveProfile" class="btn-primary btn-full">Save Profile</button>
   </div>
 </div>
