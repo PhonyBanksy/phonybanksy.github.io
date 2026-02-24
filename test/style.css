@@ -327,3 +327,24 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px;
   padding: 8px 18px; border-radius: 4px; z-index: 999; opacity: 0; transition: all .25s ease; pointer-events: none;
 }
 #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* Override the editor's #app grid for the community page */
+#app {
+  display: grid;
+  grid-template-rows: 42px 1fr;
+  grid-template-columns: 1fr;
+  height: 100vh;
+  overflow: hidden;
+}
+
+#topbar {
+  grid-row: 1;
+  grid-column: 1;
+}
+
+#community-layout {
+  grid-row: 2;
+  grid-column: 1;
+  height: 100%;
+  overflow: hidden;
+}
