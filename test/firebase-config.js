@@ -7,12 +7,12 @@
 
 // ── PASTE YOUR FIREBASE CONFIG HERE ──────────────────────────────────────────
 const firebaseConfig = {
-  apiKey: "AIzaSyAwcSXBzanQt4v_vOaFJ_0srcExJhd2grk",
-  authDomain: "okias-events.firebaseapp.com",
-  projectId: "okias-events",
-  storageBucket: "okias-events.firebasestorage.app",
-  messagingSenderId: "35652122565",
-  appId: "1:35652122565:web:af16d44360ed066baebdac"
+  apiKey: "AIzaSy...",
+  authDomain: "motortown-routes.firebaseapp.com",
+  projectId: "motortown-routes",
+  storageBucket: "motortown-routes.appspot.com",
+  messagingSenderId: "123456789",
+  appId: "1:123456789:web:abc123"
 };
 // ─────────────────────────────────────────────────────────────────────────────
 
