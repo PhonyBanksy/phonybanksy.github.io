@@ -1,21 +1,20 @@
-/**
- * firebase-config.js
- * Firebase SDK initialization.
- * IMPORTANT: Replace the firebaseConfig object below with YOUR project's config
- * from the Firebase Console (Project Settings → Your Apps → SDK setup).
- */
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
 
-// ── PASTE YOUR FIREBASE CONFIG HERE ──────────────────────────────────────────
+// Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSy...",
-  authDomain: "motortown-routes.firebaseapp.com",
-  projectId: "motortown-routes",
-  storageBucket: "motortown-routes.appspot.com",
-  messagingSenderId: "123456789",
-  appId: "1:123456789:web:abc123"
+  apiKey: "AIzaSyAwcSXBzanQt4v_vOaFJ_0srcExJhd2grk",
+  authDomain: "okias-events.firebaseapp.com",
+  projectId: "okias-events",
+  storageBucket: "okias-events.firebasestorage.app",
+  messagingSenderId: "35652122565",
+  appId: "1:35652122565:web:af16d44360ed066baebdac"
 };
-// ─────────────────────────────────────────────────────────────────────────────
 
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
 import { initializeApp }              from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFirestore }               from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
