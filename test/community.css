@@ -1,0 +1,285 @@
+/**
+ * community.css
+ * Styles for community.html — the Explorer/Total Commander style route browser.
+ * Imports and extends style.css variables.
+ */
+
+/* ── Layout ── */
+#community-layout {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  height: calc(100vh - 42px);   /* subtract topbar height */
+  overflow: hidden;
+}
+
+/* ── Left filter panel ── */
+#community-left {
+  background: var(--panel, #1e1e1e);
+  border-right: 1px solid var(--border, #333);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 16px;
+}
+
+.filter-section {
+  padding: 10px 12px 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.filter-label {
+  font-family: var(--head, 'Barlow Condensed', sans-serif);
+  font-size: 10px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--muted, #888);
+}
+
+.filter-input {
+  background: var(--input-bg, #252525);
+  border: 1px solid var(--border, #333);
+  border-radius: 3px;
+  color: var(--fg, #e0e0e0);
+  font-size: 12px;
+  padding: 5px 7px;
+  font-family: var(--mono, 'Share Tech Mono', monospace);
+  outline: none;
+  transition: border-color .15s;
+}
+.filter-input:focus { border-color: var(--accent, #4fc3f7); }
+
+select.filter-input { cursor: pointer; }
+
+/* ── Right route browser ── */
+#community-right {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--bg, #141414);
+}
+
+#browser-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: var(--panel, #1e1e1e);
+  border-bottom: 1px solid var(--border, #333);
+  flex-shrink: 0;
+}
+
+.browser-count {
+  font-family: var(--head, 'Barlow Condensed', sans-serif);
+  font-size: 12px;
+  color: var(--muted, #888);
+  letter-spacing: .04em;
+}
+
+/* ── Route table ── */
+#route-table-wrap {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+#route-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  font-family: var(--body, 'Barlow', sans-serif);
+}
+
+#route-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--panel, #1e1e1e);
+}
+
+#route-table th {
+  padding: 7px 10px;
+  text-align: left;
+  font-family: var(--head, 'Barlow Condensed', sans-serif);
+  font-size: 11px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--muted, #888);
+  border-bottom: 1px solid var(--border, #333);
+  white-space: nowrap;
+  user-select: none;
+}
+
+th.sortable { cursor: pointer; }
+th.sortable:hover { color: var(--fg, #e0e0e0); }
+th.sort-active { color: var(--accent, #4fc3f7); }
+
+.sort-arrow { font-size: 9px; }
+
+#route-table td {
+  padding: 6px 10px;
+  border-bottom: 1px solid rgba(255,255,255,.04);
+  vertical-align: middle;
+  color: var(--fg, #e0e0e0);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 260px;
+}
+
+#route-table tbody tr {
+  cursor: pointer;
+  transition: background .1s;
+}
+#route-table tbody tr:hover    { background: rgba(255,255,255,.04); }
+#route-table tbody tr.selected { background: rgba(79,195,247,.12); }
+#route-table tbody tr.row-hidden { opacity: .55; font-style: italic; }
+
+.col-wps   { width: 52px;  text-align: center; font-family: var(--mono, monospace); color: var(--muted, #888); }
+.col-date  { width: 100px; font-size: 11px; color: var(--muted, #888); }
+.col-actions { width: 60px; text-align: center; }
+
+.table-empty {
+  text-align: center;
+  color: var(--muted, #888);
+  padding: 32px 0;
+  font-style: italic;
+}
+
+.badge-hidden {
+  display: inline-block;
+  background: rgba(255,100,100,.15);
+  color: #ff7777;
+  border: 1px solid rgba(255,100,100,.3);
+  border-radius: 3px;
+  font-size: 9px;
+  padding: 0 4px;
+  margin-left: 5px;
+  vertical-align: middle;
+  font-family: var(--head, 'Barlow Condensed', sans-serif);
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+/* ── Inline load button in table ── */
+.btn-load-inline {
+  font-size: 10px;
+  padding: 2px 7px;
+  opacity: .7;
+  transition: opacity .15s;
+}
+.btn-load-inline:hover { opacity: 1; }
+
+/* ── Detail panel ── */
+#route-detail {
+  background: var(--panel, #1e1e1e);
+  border-top: 1px solid var(--border, #333);
+  padding: 12px 14px;
+  flex-shrink: 0;
+  max-height: 42%;
+  overflow-y: auto;
+}
+
+#detail-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.detail-title {
+  font-family: var(--head, 'Barlow Condensed', sans-serif);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  color: var(--fg, #e0e0e0);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#detail-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.meta-item {
+  font-size: 11px;
+  color: var(--muted, #888);
+  background: rgba(255,255,255,.05);
+  border: 1px solid var(--border, #333);
+  border-radius: 3px;
+  padding: 2px 7px;
+}
+
+#detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.detail-json {
+  font-family: var(--mono, 'Share Tech Mono', monospace);
+  font-size: 10px;
+  color: #ce9178;
+  background: rgba(0,0,0,.3);
+  border: 1px solid var(--border, #333);
+  border-radius: 3px;
+  padding: 8px 10px;
+  max-height: 130px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+/* ── Extra small button variant ── */
+.btn-xs {
+  font-size: 10px !important;
+  padding: 2px 7px !important;
+  height: auto !important;
+}
+
+/* ── Admin panel in sidebar ── */
+#adminPanel .filter-label { margin-bottom: 2px; }
+
+/* ── Modal box (same as index.html, duplicated for self-contained page) ── */
+.modal-box {
+  background: var(--panel, #1e1e1e);
+  border: 1px solid var(--border, #333);
+  border-radius: 6px;
+  padding: 28px 32px;
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.modal-title    { font-family: var(--head,'Barlow Condensed',sans-serif); font-size:22px; font-weight:700; margin:0; }
+.modal-subtitle { font-size:12px; color:var(--muted,'#888'); margin:0; }
+.modal-field    { display:flex; flex-direction:column; gap:4px; }
+.modal-field label { font-size:11px; color:var(--muted,'#888'); text-transform:uppercase; letter-spacing:.06em; }
+.modal-field input {
+  background: var(--input-bg,'#252525');
+  border: 1px solid var(--border,'#333');
+  border-radius: 3px;
+  color: var(--fg,'#e0e0e0');
+  font-size: 13px;
+  padding: 7px 9px;
+  font-family: var(--body,'Barlow',sans-serif);
+  outline: none;
+  transition: border-color .15s;
+}
+.modal-field input:focus { border-color: var(--accent,'#4fc3f7'); }
+
+/* ── Cloud save badge in sidebar ── */
+.cloud-badge {
+  font-size: 9px;
+  color: var(--accent, #4fc3f7);
+  margin-left: 3px;
+  opacity: .7;
+}
