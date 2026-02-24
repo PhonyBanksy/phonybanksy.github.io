@@ -15,7 +15,6 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-import { initializeApp }              from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFirestore }               from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
