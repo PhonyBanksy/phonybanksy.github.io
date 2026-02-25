@@ -89,6 +89,7 @@
         <span id="routeCount" class="browser-count">Loading…</span>
         <div style="flex:1;"></div>
         <button id="btnRefresh" class="btn-ghost btn-sm">↺ Refresh</button>
+        <button id="btnLeaderboard" class="btn-ghost btn-sm" title="Bean Leaderboard">🫘 Leaderboard</button>
       </div>
 
       <div id="route-table-wrap">
@@ -152,6 +153,18 @@
     </div>
     <p id="profileError" style="color:#d95050; font-size:12px; min-height:16px; margin:0;"></p>
     <button id="btnSaveProfile" class="btn-primary btn-full">Save Profile</button>
+  </div>
+</div>
+
+
+<div id="leaderboardModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.82); z-index:500; align-items:center; justify-content:center;">
+  <div id="leaderboardBox">
+    <div id="lb-header">
+      <span id="lb-title">🫘 Bean Leaderboard</span>
+      <button id="btnCloseLb" class="btn-ghost btn-sm">✕</button>
+    </div>
+    <div id="lb-subtitle">Top 10 bean farmers in the MotorTown community</div>
+    <div id="lb-list"><div class="lb-loading">Loading…</div></div>
   </div>
 </div>
 

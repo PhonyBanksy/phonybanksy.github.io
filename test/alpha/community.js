@@ -60,6 +60,22 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnShowAll     = document.getElementById('btnShowAll');
   const catFilterBar   = document.getElementById('catFilterBar');
 
+
+  /* ── Bean rank tiers (rank 1 = best) ── */
+  const BEAN_RANKS = [
+    { rank: 1,  min: 1,    icon: '🥇', label: 'Bean Baron',      color: '#FFD700' },
+    { rank: 2,  min: 1,    icon: '🥈', label: 'Bean Magnate',    color: '#C0C0C0' },
+    { rank: 3,  min: 1,    icon: '🥉', label: 'Bean Tycoon',     color: '#CD7F32' },
+    { rank: 4,  min: 1,    icon: '🌱', label: 'Bean Merchant',   color: '#8bc34a' },
+    { rank: 5,  min: 1,    icon: '🌿', label: 'Bean Trader',     color: '#4caf50' },
+    { rank: 6,  min: 1,    icon: '🫘', label: 'Bean Marketeer',  color: '#26c6da' },
+    { rank: 7,  min: 1,    icon: '🪴', label: 'Bean Seller',     color: '#4fc3f7' },
+    { rank: 8,  min: 1,    icon: '🌾', label: 'Bean Grower',     color: '#9c6aff' },
+    { rank: 9,  min: 1,    icon: '🪣', label: 'Bean Picker',     color: '#f5a623' },
+    { rank: 10, min: 1,    icon: '🌰', label: 'Bean Farmer',     color: '#a0826d' },
+  ];
+  const ADMIN_RANK = { icon: '🌿', label: 'Bean Sprout', color: '#27c26b' };
+
   /* ── Category config ── */
   const CATS = ['Sprint','Circuit','Endurance','Offroad','Dakar','Hills','Technical','Speed'];
   const CAT_CLASSES = {
@@ -289,6 +305,22 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  function getAuthorRankBadge(inGameName) {
+    if (!inGameName || !_allRoutes.length) return '';
+    // Tally total beans per author from loaded routes
+    const totals = {};
+    _allRoutes.forEach(r => {
+      const key = r.inGameName || '';
+      if (!key) return;
+      totals[key] = (totals[key] || 0) + (Number(r.totalBeans) || 0);
+    });
+    const sorted = Object.entries(totals).sort((a, b) => b[1] - a[1]);
+    const pos = sorted.findIndex(([name]) => name === inGameName);
+    if (pos === -1 || totals[inGameName] === 0) return '';
+    const rank = BEAN_RANKS[Math.min(pos, BEAN_RANKS.length - 1)];
+    return `<span class="bean-rank-badge" style="color:${rank.color};border-color:${rank.color}30;background:${rank.color}12;" title="${rank.label} · 🫘 ${totals[inGameName]} total beans">${rank.icon}</span>`;
+  }
+
   function buildRouteRow(route, isAdmin, isChild) {
     const tr = document.createElement('tr');
     tr.dataset.id = route.id;
@@ -325,7 +357,12 @@ document.addEventListener('DOMContentLoaded', () => {
           ${catHtml ? `<span class="col-name-tags">${catHtml}</span>` : ''}
         </div>
       </td>
-      <td class="col-author">${escHtml(route.inGameName || '—')}</td>
+      <td class="col-author">
+        <div class="author-cell">
+          ${escHtml(route.inGameName || '—')}
+          ${getAuthorRankBadge(route.inGameName)}
+        </div>
+      </td>
       <td class="col-wps">${route.waypointCount ?? '?'}</td>
       <td class="col-rating">${beansHtml}</td>
       <td class="col-date">${formatDate(route.updatedAt)}</td>
@@ -725,6 +762,63 @@ document.addEventListener('DOMContentLoaded', () => {
       showToast('Deleted'); closeDetail(); await loadRoutes();
     } catch (err) { showToast('Error: ' + err.message); }
   }
+
+
+  /* ── LEADERBOARD ── */
+
+  function getBeanRankForPosition(pos, isAdminUser) {
+    if (isAdminUser) return ADMIN_RANK;
+    return BEAN_RANKS[Math.min(pos, BEAN_RANKS.length - 1)] || BEAN_RANKS[BEAN_RANKS.length - 1];
+  }
+
+  function renderBeanRankBadge(rank) {
+    return `<span class="bean-rank-badge" style="color:${rank.color};border-color:${rank.color}20;background:${rank.color}15;" title="${rank.label}">${rank.icon} ${rank.label}</span>`;
+  }
+
+  async function openLeaderboard() {
+    const modal = document.getElementById('leaderboardModal');
+    const list  = document.getElementById('lb-list');
+    if (!modal || !list) return;
+    modal.style.display = 'flex';
+    list.innerHTML = '<div class="lb-loading">Loading…</div>';
+
+    try {
+      const board = await window.FirestoreRoutes.getLeaderboard();
+      if (!board.length) {
+        list.innerHTML = '<div class="lb-loading">No bean data yet — start rating routes!</div>';
+        return;
+      }
+      list.innerHTML = '';
+      board.forEach((entry, i) => {
+        const rank = BEAN_RANKS[i] || BEAN_RANKS[BEAN_RANKS.length - 1];
+        const isTop3 = i < 3;
+        const row = document.createElement('div');
+        row.className = 'lb-row' + (isTop3 ? ' lb-top3' : '');
+        row.innerHTML = `
+          <span class="lb-pos" style="color:${rank.color};">${rank.icon}</span>
+          <span class="lb-name">${escHtml(entry.inGameName)}</span>
+          <span class="lb-rank-label" style="color:${rank.color};">${rank.label}</span>
+          <span class="lb-beans">🫘 ${entry.totalBeans}</span>
+          <span class="lb-routes">${entry.routeCount} route${entry.routeCount !== 1 ? 's' : ''}</span>
+        `;
+        list.appendChild(row);
+      });
+    } catch (err) {
+      list.innerHTML = `<div class="lb-loading" style="color:#d95050;">Error: ${escHtml(err.message)}</div>`;
+    }
+  }
+
+  // Wire leaderboard button
+  document.getElementById('btnLeaderboard')?.addEventListener('click', openLeaderboard);
+  document.getElementById('btnCloseLb')?.addEventListener('click', () => {
+    const modal = document.getElementById('leaderboardModal');
+    if (modal) modal.style.display = 'none';
+  });
+  document.getElementById('leaderboardModal')?.addEventListener('click', (e) => {
+    if (e.target === document.getElementById('leaderboardModal')) {
+      e.target.style.display = 'none';
+    }
+  });
 
   /* ── Sort ── */
   document.querySelectorAll('th.sortable').forEach(th => {
