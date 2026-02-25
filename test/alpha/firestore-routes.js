@@ -28,6 +28,7 @@ function validateRouteData(routeData) {
     return { ok: false, error: 'Route must have at least one waypoint.' };
   if (routeData.waypoints.length > MAX_WP)
     return { ok: false, error: `Too many waypoints (max ${MAX_WP}).` };
+
   const cleanWaypoints = routeData.waypoints.map((wp, i) => {
     if (!wp || typeof wp !== 'object') throw new Error(`Waypoint ${i} is not an object.`);
     const rot = wp.rotation, tr = wp.translation, sc = wp.scale3D;
@@ -36,10 +37,10 @@ function validateRouteData(routeData) {
     return {
       rotation:    { x: Number(rot.x)||0, y: Number(rot.y)||0, z: Number(rot.z)||0, w: Number(rot.w)??1 },
       translation: { x: Number(tr.x)||0,  y: Number(tr.y)||0,  z: Number(tr.z)||0 },
-      scale3D: sc ? { x: Number(sc.x)||1, y: Number(sc.y)||10, z: Number(sc.z)||1 }
-                  : { x: 1, y: 10, z: 1 }
+      scale3D: sc ? { x: Number(sc.x)||1, y: Number(sc.y)||10, z: Number(sc.z)||1 } : { x: 1, y: 10, z: 1 }
     };
   });
+
   return { ok: true, data: {
     routeName: String(routeData.routeName || 'Unnamed').slice(0, MAX_NAME),
     waypoints: cleanWaypoints
@@ -58,7 +59,6 @@ function cleanCats(categories) {
 
 window.FirestoreRoutes = {
 
-  /* ── SAVE ── */
   async saveRoute({ routeName, routeData, isPublic = true, uid, inGameName, routeId = null, categories = [] }) {
     if (!uid) throw new Error('Must be logged in to save routes.');
     const now = Date.now();
@@ -80,8 +80,7 @@ window.FirestoreRoutes = {
     if (routeId) {
       const existing = await getDoc(doc(db, ROUTES_COL, routeId));
       if (!existing.exists()) throw new Error('Route not found.');
-      if (existing.data().ownerUid !== uid && !window.AuthUI?.isAdmin())
-        throw new Error('Permission denied.');
+      if (existing.data().ownerUid !== uid && !window.AuthUI?.isAdmin()) throw new Error('Permission denied.');
       await setDoc(doc(db, ROUTES_COL, routeId), payload, { merge: true });
       savedId = routeId;
     } else {
@@ -93,7 +92,6 @@ window.FirestoreRoutes = {
     return savedId;
   },
 
-  /* ── ADMIN UPDATE (name / tags / visibility on any route) ── */
   async adminUpdateRoute(routeId, fields) {
     if (!window.AuthUI?.isAdmin()) throw new Error('Admin only.');
     const updates = { updatedAt: serverTimestamp() };
@@ -104,48 +102,45 @@ window.FirestoreRoutes = {
     await setDoc(doc(db, ROUTES_COL, routeId), updates, { merge: true });
   },
 
-  /* ── DELETE ── */
   async deleteRoute(routeId, uid) {
     if (!uid) throw new Error('Must be logged in.');
     const snap = await getDoc(doc(db, ROUTES_COL, routeId));
     if (!snap.exists()) throw new Error('Route not found.');
-    if (snap.data().ownerUid !== uid && !window.AuthUI?.isAdmin())
-      throw new Error('Permission denied.');
+    if (snap.data().ownerUid !== uid && !window.AuthUI?.isAdmin()) throw new Error('Permission denied.');
     await deleteDoc(doc(db, ROUTES_COL, routeId));
   },
 
-  /* ── VISIBILITY ── */
   async setRouteVisibility(routeId, isPublic, uid) {
     if (!uid) throw new Error('Must be logged in.');
     const snap = await getDoc(doc(db, ROUTES_COL, routeId));
     if (!snap.exists()) throw new Error('Route not found.');
-    if (snap.data().ownerUid !== uid && !window.AuthUI?.isAdmin())
-      throw new Error('Permission denied.');
+    if (snap.data().ownerUid !== uid && !window.AuthUI?.isAdmin()) throw new Error('Permission denied.');
     await setDoc(doc(db, ROUTES_COL, routeId), { isPublic: Boolean(isPublic), updatedAt: serverTimestamp() }, { merge: true });
   },
 
-  /* ── FETCH ── */
   async getMyRoutes(uid) {
     if (!uid) return [];
     const snap = await getDocs(query(collection(db, ROUTES_COL), where('ownerUid','==',uid), orderBy('updatedAt','desc')));
     return snap.docs.map(d => ({ id: d.id, ...d.data() }));
   },
+
   async getPublicRoutes({ limitCount = 200 } = {}) {
     const snap = await getDocs(query(collection(db, ROUTES_COL), where('isPublic','==',true), orderBy('updatedAt','desc'), limit(limitCount)));
     return snap.docs.map(d => ({ id: d.id, ...d.data() }));
   },
+
   async getRoute(routeId) {
     const snap = await getDoc(doc(db, ROUTES_COL, routeId));
     if (!snap.exists()) throw new Error('Route not found.');
     return { id: snap.id, ...snap.data() };
   },
+
   async getAllRoutes() {
     if (!window.AuthUI?.isAdmin()) throw new Error('Admin only.');
     const snap = await getDocs(collection(db, ROUTES_COL));
     return snap.docs.map(d => ({ id: d.id, ...d.data() }));
   },
 
-  /* ── DOWNLOAD TRACKING ── */
   async recordDownload(routeId, uid) {
     if (!uid || !routeId) return;
     const ref = doc(db, ROUTES_COL, routeId, 'downloads', uid);
@@ -158,7 +153,7 @@ window.FirestoreRoutes = {
           const cur = routeSnap.data().downloadCount || 0;
           await updateDoc(doc(db, ROUTES_COL, routeId), { downloadCount: cur + 1 });
         }
-      } catch (_) { /* non-critical */ }
+      } catch (_) {}
     }
   },
 
@@ -170,11 +165,6 @@ window.FirestoreRoutes = {
     } catch (_) { return false; }
   },
 
-  /* ── RATINGS ──
-     totalBeans = raw sum of all ratings (e.g. 2 votes: 1+5=6 beans total)
-     avgRating  = mean (3.0)
-     ratingCount = number of votes (2)
-  ── */
   async rateRoute(routeId, rating, uid) {
     if (!uid) throw new Error('Must be logged in.');
     const routeRef = doc(db, ROUTES_COL, routeId);
@@ -192,11 +182,9 @@ window.FirestoreRoutes = {
     let runningTotal = (routeData.avgRating || 0) * count;
 
     if (oldRating !== null) {
-      // Update existing rating
       runningTotal = runningTotal - oldRating + rating;
       totalBeans = totalBeans - oldRating + rating;
     } else {
-      // New rating
       count += 1;
       runningTotal += rating;
       totalBeans += rating;
@@ -204,16 +192,8 @@ window.FirestoreRoutes = {
 
     const avgRating = count > 0 ? Math.round((runningTotal / count) * 10) / 10 : 0;
 
-    // Save user's rating
     await setDoc(ratingRef, { rating, uid, updatedAt: serverTimestamp() });
-
-    // Update route aggregates
-    await updateDoc(routeRef, {
-      avgRating,
-      ratingCount: count,
-      totalBeans,
-      updatedAt: serverTimestamp()
-    });
+    await updateDoc(routeRef, { avgRating, ratingCount: count, totalBeans, updatedAt: serverTimestamp() });
   },
 
   async getMyRating(routeId, uid) {
@@ -224,7 +204,6 @@ window.FirestoreRoutes = {
     } catch (_) { return null; }
   },
 
-  /* ── FAVORITES ── */
   async toggleFavorite(routeId, uid) {
     if (!uid) throw new Error('Must be logged in.');
     const favRef = doc(db, 'users', uid, 'favorites', routeId);
@@ -240,12 +219,7 @@ window.FirestoreRoutes = {
     return snap.docs.map(d => d.id);
   },
 
-  /* ── ADMIN SELF-PROMOTE ── */
   getAdminInstructions(uid) {
-    return `To set yourself as admin:
-1. Go to: https://console.firebase.google.com/project/okias-events/firestore
-2. Browse to: users → ${uid || '(your UID shown after login)'}
-3. Click the "role" field and change "user" → "admin"
-4. Save, then refresh this page.`;
+    return `To set yourself as admin:\n1. Go to: https://console.firebase.google.com/project/okias-events/firestore\n2. Browse to: users → ${uid || '(your UID shown after login)'}\n3. Click the "role" field and change "user" → "admin"\n4. Save, then refresh this page.`;
   }
 };
