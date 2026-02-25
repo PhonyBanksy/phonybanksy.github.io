@@ -67,11 +67,12 @@ window.MapVisualizer = function (canvasContainerId = 'routeCanvas', outputFieldI
     const zoomX = (w - padding * 2) / routeW;
     const zoomY = (h - padding * 2) / routeH;
     view.zoom = Math.max(0.05, Math.min(zoomX, zoomY, 5));
-    // Centre of route in screen coords at zoom=1
+    // cx/cy are screen coords at zoom=1 (view.x=0,view.y=0).
+    // map coord = screen_coord - canvas/2. To centre: view.x = -(mapCoord * zoom)
     const cx = (minX + maxX) / 2;
     const cy = (minY + maxY) / 2;
-    view.x = w / 2 - cx * view.zoom;
-    view.y = h / 2 - cy * view.zoom;
+    view.x = -(cx - w / 2) * view.zoom;
+    view.y = -(cy - h / 2) * view.zoom;
   };
 
   /* ── INSTANCE ── */

@@ -49,32 +49,45 @@ document.addEventListener('DOMContentLoaded', () => {
       btn.classList.toggle('on', cats.includes(btn.dataset.cat));
     });
   };
-  const pending = sessionStorage.getItem('communityRouteLoad');
-  if (pending) {
+  // Community route handoff from community.html — must run AFTER main-overrides.js
+  // so the route tree override of saveRouteToLocalStorage is in place.
+  // main-overrides.js is injected on window.load, so we wait for that too.
+  const _pendingCommunityRoute = sessionStorage.getItem('communityRouteLoad');
+  if (_pendingCommunityRoute) {
     sessionStorage.removeItem('communityRouteLoad');
-    try {
-      const routeData = JSON.parse(pending);
-      const str = JSON.stringify(routeData, null, 2);
-      const inputEl  = document.getElementById('json_data');
-      const outputEl = document.getElementById('output');
-      if (inputEl)  inputEl.value  = str;
-      if (outputEl) outputEl.value = str;
-      // Wait a tick for MapVisualizerInstance to be ready
+    window.addEventListener('load', () => {
+      // Give main-overrides.js one tick to finish executing after the load event
       setTimeout(() => {
-        if (window.MapVisualizerInstance) window.MapVisualizerInstance.loadFromOutput();
-        if (window.reflectRouteCategories) window.reflectRouteCategories(routeData);
-        if (RouteProcessor?.updateStateIndicators) RouteProcessor.updateStateIndicators(routeData._routeState || null);
-        // Switch to JSON tab so user can see it
-        document.querySelectorAll('.tab').forEach(b => b.classList.remove('on'));
-        document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('on'));
-        const jsonTab = document.querySelector('[data-pane="pane-json"]');
-        if (jsonTab) { jsonTab.classList.add('on'); document.getElementById('pane-json').classList.add('on'); }
-        // Show toast
-        const t = document.getElementById('toast');
-        if (t) { t.textContent = 'Community route loaded!'; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2500); }
-      }, 100);
-    } catch (e) {
-      console.warn('Failed to load community route:', e);
-    }
+        try {
+          const routeData = JSON.parse(_pendingCommunityRoute);
+          const str = JSON.stringify(routeData, null, 2);
+          const inputEl  = document.getElementById('json_data');
+          const outputEl = document.getElementById('output');
+          if (inputEl)  inputEl.value  = str;
+          if (outputEl) outputEl.value = str;
+
+          // Register in the sidebar tree (uses the overridden saveRouteToLocalStorage)
+          const routeName = routeData.routeName || 'Community Route';
+          if (typeof RouteProcessor !== 'undefined') {
+            RouteProcessor.saveRouteToLocalStorage(routeName, routeData);
+          }
+
+          if (window.MapVisualizerInstance) window.MapVisualizerInstance.loadFromOutput();
+          if (window.reflectRouteCategories) window.reflectRouteCategories(routeData);
+          if (RouteProcessor?.updateStateIndicators) RouteProcessor.updateStateIndicators(routeData._routeState || null);
+
+          // Show the map/process tab so user sees it
+          document.querySelectorAll('.tab').forEach(b => b.classList.remove('on'));
+          document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('on'));
+          const processTab = document.querySelector('[data-pane="pane-process"]');
+          if (processTab) { processTab.classList.add('on'); document.getElementById('pane-process').classList.add('on'); }
+
+          const t = document.getElementById('toast');
+          if (t) { t.textContent = 'Community route loaded!'; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2500); }
+        } catch (e) {
+          console.warn('Failed to load community route:', e);
+        }
+      }, 50);
+    });
   }
 });
