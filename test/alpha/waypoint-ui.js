@@ -36,24 +36,21 @@ window.openWaypointMenu = (index) => {
             menu.style.display = 'none';
         }
     });
+    // btnOptAdjust / btnBackAdjust are optional UI elements — guard against null
     const btnOptAdjust  = document.getElementById('btnOptAdjust');
     const btnBackAdjust = document.getElementById('btnBackAdjust');
-    if (btnOptAdjust) {
-        btnOptAdjust.onclick = () => {
-            const main = document.getElementById('wpMainOpts');
-            const adj  = document.getElementById('wpAdjustPanel');
-            if (main) main.style.display = 'none';
-            if (adj)  adj.style.display  = 'block';
-        };
-    }
-    if (btnBackAdjust) {
-        btnBackAdjust.onclick = () => {
-            const main = document.getElementById('wpMainOpts');
-            const adj  = document.getElementById('wpAdjustPanel');
-            if (adj)  adj.style.display  = 'none';
-            if (main) main.style.display = 'flex';
-        };
-    }
+    if (btnOptAdjust) btnOptAdjust.onclick = () => {
+        const main = document.getElementById('wpMainOpts');
+        const adj  = document.getElementById('wpAdjustPanel');
+        if (main) main.style.display = 'none';
+        if (adj)  adj.style.display  = 'block';
+    };
+    if (btnBackAdjust) btnBackAdjust.onclick = () => {
+        const adj  = document.getElementById('wpAdjustPanel');
+        const main = document.getElementById('wpMainOpts');
+        if (adj)  adj.style.display  = 'none';
+        if (main) main.style.display = 'flex';
+    };
 
     const updateDims = () => {
         const idx = visualizer.getActiveWaypoint();
