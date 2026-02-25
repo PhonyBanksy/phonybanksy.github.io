@@ -1,19 +1,19 @@
 /**
  * auth-ui.js
- * Handles Google Sign-In, logout, and the first-time profile setup modal
- * (where the user sets their in-game name and Discord username).
+ * Handles Google Sign-In (redirect flow), logout, and the first-time profile setup modal.
+ * Uses signInWithRedirect to avoid popup-blocked issues on most browsers/hosts.
  *
  * Exposes: window.AuthUI = { init, getCurrentUser, isAdmin }
  */
 
-import { auth, db, provider }                              from './firebase-config.js';
-import { signInWithPopup, signOut, onAuthStateChanged }    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { doc, getDoc, setDoc, serverTimestamp }            from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { auth, db, provider }                                                 from './firebase-config.js';
+import { signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { doc, getDoc, setDoc, serverTimestamp }                               from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-// ── Sanitize helper (strips HTML, limits length) ─────────────────────────────
+// ── Sanitize helper ───────────────────────────────────────────────────────────
 function sanitize(str, maxLen = 64) {
   return String(str)
-    .replace(/[<>"'&]/g, '')   // strip injection chars
+    .replace(/[<>"'&]/g, '')
     .trim()
     .slice(0, maxLen);
 }
@@ -41,18 +41,23 @@ window.AuthUI = {
     btnSaveProfile = document.getElementById('btnSaveProfile');
     profileError   = document.getElementById('profileError');
 
-    if (!btnLogin) return;   // auth UI not present on this page
+    if (!btnLogin) return;
 
     btnLogin.addEventListener('click',  () => loginWithGoogle());
     btnLogout.addEventListener('click', () => logout());
-    btnSaveProfile.addEventListener('click', () => saveProfile());
+    if (btnSaveProfile) btnSaveProfile.addEventListener('click', () => saveProfile());
 
-    // Allow closing modal by clicking backdrop
-    profileModal.addEventListener('click', (e) => {
-      if (e.target === profileModal && _currentUserDoc?.inGameName) {
-        profileModal.style.display = 'none';
-      }
-    });
+    // Allow closing modal by clicking backdrop (only if profile already set)
+    if (profileModal) {
+      profileModal.addEventListener('click', (e) => {
+        if (e.target === profileModal && _currentUserDoc?.inGameName) {
+          profileModal.style.display = 'none';
+        }
+      });
+    }
+
+    // Handle result from a previous signInWithRedirect call
+    handleRedirectResult();
 
     // React to auth state changes
     onAuthStateChanged(auth, async (user) => {
@@ -71,19 +76,30 @@ window.AuthUI = {
   }
 };
 
-// ── Google Sign-In ────────────────────────────────────────────────────────────
+// ── Google Sign-In (redirect — avoids popup-blocked) ─────────────────────────
 async function loginWithGoogle() {
   try {
-    btnLogin.disabled = true;
-    btnLogin.textContent = 'Signing in…';
-    await signInWithPopup(auth, provider);
-    // onAuthStateChanged handles the rest
+    btnLogin.disabled    = true;
+    btnLogin.textContent = 'Redirecting…';
+    await signInWithRedirect(auth, provider);
+    // Browser will navigate away; onAuthStateChanged fires on return
   } catch (err) {
-    console.error('Login failed:', err);
-    btnLogin.disabled = false;
+    console.error('Login redirect failed:', err);
+    btnLogin.disabled    = false;
     btnLogin.textContent = '🔑 Sign in with Google';
-    if (err.code !== 'auth/popup-closed-by-user') {
-      alert('Sign-in failed: ' + err.message);
+    alert('Sign-in failed: ' + err.message);
+  }
+}
+
+// ── Handle redirect result on page load ───────────────────────────────────────
+async function handleRedirectResult() {
+  try {
+    await getRedirectResult(auth);
+    // If we came back from Google redirect, onAuthStateChanged fires automatically
+  } catch (err) {
+    // Ignore cancelled-popup errors; log anything else
+    if (err.code !== 'auth/cancelled-popup-request') {
+      console.warn('Redirect result:', err.code, err.message);
     }
   }
 }
@@ -95,17 +111,15 @@ async function logout() {
 
 // ── User document management ──────────────────────────────────────────────────
 async function loadOrCreateUserDoc(user) {
-  const ref     = doc(db, 'users', user.uid);
-  const snap    = await getDoc(ref);
+  const ref  = doc(db, 'users', user.uid);
+  const snap = await getDoc(ref);
 
   if (snap.exists()) {
     _currentUserDoc = snap.data();
-    // Show profile modal if they haven't set names yet
     if (!_currentUserDoc.inGameName || !_currentUserDoc.discordName) {
       showProfileModal();
     }
   } else {
-    // First login: create document with default role
     const newDoc = {
       googleDisplayName: sanitize(user.displayName || '', 128),
       email:             user.email || '',
@@ -122,27 +136,22 @@ async function loadOrCreateUserDoc(user) {
 
 // ── Profile modal ─────────────────────────────────────────────────────────────
 function showProfileModal() {
-  inpIngameName.value  = _currentUserDoc.inGameName  || '';
-  inpDiscordName.value = _currentUserDoc.discordName || '';
-  profileError.textContent = '';
+  if (!profileModal) return;
+  if (inpIngameName)  inpIngameName.value  = _currentUserDoc.inGameName  || '';
+  if (inpDiscordName) inpDiscordName.value = _currentUserDoc.discordName || '';
+  if (profileError)   profileError.textContent = '';
   profileModal.style.display = 'flex';
-  inpIngameName.focus();
+  if (inpIngameName) inpIngameName.focus();
 }
 
 async function saveProfile() {
-  const ingame  = sanitize(inpIngameName.value,  64);
-  const discord = sanitize(inpDiscordName.value, 64);
+  const ingame  = sanitize(inpIngameName?.value  || '', 64);
+  const discord = sanitize(inpDiscordName?.value || '', 64);
 
-  if (!ingame) {
-    profileError.textContent = 'In-game name is required.';
-    return;
-  }
-  if (!discord) {
-    profileError.textContent = 'Discord username is required.';
-    return;
-  }
+  if (!ingame)  { if (profileError) profileError.textContent = 'In-game name is required.';  return; }
+  if (!discord) { if (profileError) profileError.textContent = 'Discord username is required.'; return; }
 
-  btnSaveProfile.disabled = true;
+  btnSaveProfile.disabled    = true;
   btnSaveProfile.textContent = 'Saving…';
 
   try {
@@ -153,9 +162,9 @@ async function saveProfile() {
     showToast(`Welcome, ${ingame}!`);
     document.dispatchEvent(new CustomEvent('profileUpdated', { detail: _currentUserDoc }));
   } catch (err) {
-    profileError.textContent = 'Save failed: ' + err.message;
+    if (profileError) profileError.textContent = 'Save failed: ' + err.message;
   } finally {
-    btnSaveProfile.disabled = false;
+    btnSaveProfile.disabled    = false;
     btnSaveProfile.textContent = 'Save Profile';
   }
 }
@@ -164,12 +173,11 @@ async function saveProfile() {
 function updateTopbarUI(loggedIn) {
   if (!btnLogin) return;
   if (loggedIn) {
-    btnLogin.style.display   = 'none';
-    btnLogout.style.display  = 'inline-flex';
+    btnLogin.style.display    = 'none';
+    btnLogout.style.display   = 'inline-flex';
     userDisplay.style.display = 'inline-flex';
     const name = _currentUserDoc?.inGameName || _currentUser?.displayName || 'User';
-    userDisplay.textContent = '👤 ' + name;
-    if (AuthUI.isAdmin()) userDisplay.textContent += ' ⭐';
+    userDisplay.textContent = '👤 ' + name + (window.AuthUI.isAdmin() ? ' ⭐' : '');
   } else {
     btnLogin.style.display    = 'inline-flex';
     btnLogout.style.display   = 'none';
@@ -179,7 +187,7 @@ function updateTopbarUI(loggedIn) {
   }
 }
 
-// ── Toast helper (re-use existing toast if available) ─────────────────────────
+// ── Toast helper ──────────────────────────────────────────────────────────────
 function showToast(msg) {
   const t = document.getElementById('toast');
   if (!t) return;
