@@ -68,17 +68,17 @@
           <option value="2">×2</option>
         </select>
       </label>
-      
+
       <div class="vsep"></div>
-      
-      <div class="topbar-align-group">
-        <span class="toolbar-label">Auto-Align:</span>
-        <input type="number" id="aaFrom" class="topbar-num-input" placeholder="From" title="Start Waypoint Index" />
-        <input type="number" id="aaTo"   class="topbar-num-input" placeholder="To"   title="End Waypoint Index" />
-        <button id="btnAutoAlign" class="btn-primary btn-sm" title="Align waypoints in range using angle bisectors">⟳ Align</button>
+
+      <div style="display:flex; align-items:center; gap:5px; background:rgba(255,255,255,0.03); padding:2px 6px; border-radius:4px; border:1px solid var(--border2);">
+        <span style="font-family:var(--head); font-size:10px; color:var(--muted); text-transform:uppercase; font-weight:700;">Align</span>
+        <input type="number" id="aaFrom" style="width:40px; height:22px; font-size:11px;" placeholder="From" />
+        <input type="number" id="aaTo"   style="width:40px; height:22px; font-size:11px;" placeholder="To" />
+        <button id="btnAutoAlignTop" class="btn-primary btn-sm" style="padding: 2px 8px;">⟳ Run</button>
       </div>
 
-      <div id="routeStateBadges" style="display:flex;gap:4px;align-items:center;"></div>
+      <div id="routeStateBadges" style="display:flex;gap:4px;align-items:center; margin-left:10px;"></div>
       <input type="number" id="rotation_angle" value="0" style="display:none;" />
     </div>
 
@@ -145,6 +145,7 @@
           <textarea id="routeDescription" maxlength="280" rows="2" placeholder="Short description shown in Community…" style="background:var(--panel);border:1px solid var(--border2);border-radius:3px;color:var(--text);font-size:12px;padding:6px 8px;font-family:var(--body);outline:none;resize:vertical;min-height:44px;transition:border-color .15s;"></textarea>
           <span id="descCharCount" style="font-family:var(--mono);font-size:9px;color:var(--border2);text-align:right;">0 / 280</span>
         </div>
+        
         <div>
           <div class="sg-title" style="margin-bottom:8px;">Route Category</div>
           <div id="routeCatEditor" class="route-cat-row" style="background:var(--panel);border-radius:4px;border:1px solid var(--border2);">
@@ -162,7 +163,19 @@
         <div>
           <div class="sg-title" style="margin-bottom:10px;">How to Use</div>
           <div style="display:flex;flex-direction:column;gap:8px;">
+            <div style="display:flex;gap:10px;align-items:flex-start;padding:8px;background:var(--panel);border-radius:4px;border-left:3px solid var(--accent);">
+              <span style="font-family:var(--head);font-size:18px;font-weight:900;color:var(--accent);line-height:1;flex-shrink:0;">1</span>
+              <div style="font-size:12px;color:var(--text);line-height:1.6;"><strong>Sign in</strong> with Google to save routes to the cloud.</div>
             </div>
+            <div style="display:flex;gap:10px;align-items:flex-start;padding:8px;background:var(--panel);border-radius:4px;border-left:3px solid #4fc3f7;">
+              <span style="font-family:var(--head);font-size:18px;font-weight:900;color:#4fc3f7;line-height:1;flex-shrink:0;">2</span>
+              <div style="font-size:12px;color:var(--text);line-height:1.6;">Click <strong>⬇ Import to Website</strong> after copying your route JSON from the game.</div>
+            </div>
+            <div style="display:flex;gap:10px;align-items:flex-start;padding:8px;background:var(--panel);border-radius:4px;border-left:3px solid #9c6aff;">
+              <span style="font-family:var(--head);font-size:18px;font-weight:900;color:#9c6aff;line-height:1;flex-shrink:0;">3</span>
+              <div style="font-size:12px;color:var(--text);line-height:1.6;">Set options like <strong>Scale ×2</strong> or <strong>Reverse</strong> in the top toolbar.</div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -175,9 +188,41 @@
     </div>
 
     <div class="tab-pane" id="pane-json">
+      <div class="json-tab-wrap">
+        <div class="json-box">
+          <div class="box-header">
+            <span class="box-header-label">Input</span>
+            <button class="btn-ghost btn-sm" onclick="document.getElementById('json_data').value=''">Clear</button>
+          </div>
+          <textarea id="json_data" placeholder="Paste your route JSON here…"></textarea>
+        </div>
+        <div class="json-divider"></div>
+        <div class="json-box">
+          <div class="box-header">
+            <span class="box-header-label">Output</span>
+            <button class="btn-ghost btn-sm" id="copyOutputBtn">Copy</button>
+          </div>
+          <textarea id="output" placeholder="Processed output will appear here…" style="color:#ce9178;"></textarea>
+        </div>
       </div>
+    </div>
 
   </aside>
+</div>
+
+<div id="profileModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.7); z-index:1000; align-items:center; justify-content:center;">
+  <div class="modal-box">
+    <h2 class="modal-title">Complete Your Profile</h2>
+    <div class="modal-field">
+      <label>In-Game Name</label>
+      <input id="inpIngameName" type="text" maxlength="64" />
+    </div>
+    <div class="modal-field">
+      <label>Discord Username</label>
+      <input id="inpDiscordName" type="text" maxlength="64" />
+    </div>
+    <button id="btnSaveProfile" class="btn-primary btn-full">Save Profile</button>
+  </div>
 </div>
 
 <div id="toast">Done!</div>
@@ -191,5 +236,18 @@
 <script src="auto-align.js"></script>
 <script src="main.js"></script>
 
+<script type="module" src="firebase-config.js"></script>
+<script type="module" src="auth-ui.js"></script>
+<script type="module" src="firestore-routes.js"></script>
+<script type="module">
+  document.addEventListener('DOMContentLoaded', () => { window.AuthUI?.init(); });
+</script>
+<script>
+  window.addEventListener('load', () => {
+    const s = document.createElement('script');
+    s.src = 'main-overrides.js';
+    document.body.appendChild(s);
+  });
+</script>
 </body>
 </html>
