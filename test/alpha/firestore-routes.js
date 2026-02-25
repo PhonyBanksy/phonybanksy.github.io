@@ -183,60 +183,50 @@ window.FirestoreRoutes = {
      ratingCount = number of votes (2)
   ── */
   
-	async function rateRoute(routeId, userId, rating) {
-    const routeRef = doc(db, 'routes', routeId);
-    const ratingRef = doc(db, 'routes', routeId, 'ratings', userId);
-    
+  /* ── RATINGS ──
+     totalBeans = raw sum of all ratings (e.g. 2 votes: 1+5=6 beans total)
+     avgRating  = mean (3.0)
+     ratingCount = number of votes (2)
+  ── */
+  async rateRoute(routeId, rating, uid) {
+    if (!uid) throw new Error('Must be logged in.');
+    const routeRef = doc(db, ROUTES_COL, routeId);
+    const ratingRef = doc(db, ROUTES_COL, routeId, 'ratings', uid);
+
     const routeSnap = await getDoc(routeRef);
+    if (!routeSnap.exists()) throw new Error('Route not found.');
+
     const oldRatingSnap = await getDoc(ratingRef);
-    
-    let routeData = routeSnap.data();
+    const oldRating = oldRatingSnap.exists() ? oldRatingSnap.data().rating : null;
+
+    const routeData = routeSnap.data();
+    let count = routeData.ratingCount || 0;
     let totalBeans = routeData.totalBeans || 0;
-    let voteCount = routeData.voteCount || 0;
+    let runningTotal = (routeData.avgRating || 0) * count;
 
-    if (oldRatingSnap.exists()) {
-        const oldRating = oldRatingSnap.data().rating;
-        totalBeans = totalBeans - oldRating + rating;
+    if (oldRating !== null) {
+      // Update existing rating
+      runningTotal = runningTotal - oldRating + rating;
+      totalBeans = totalBeans - oldRating + rating;
     } else {
-        totalBeans += rating;
-        voteCount += 1;
+      // New rating
+      count += 1;
+      runningTotal += rating;
+      totalBeans += rating;
     }
 
-    await setDoc(ratingRef, { rating, updatedAt: serverTimestamp() });
+    const avgRating = count > 0 ? Math.round((runningTotal / count) * 10) / 10 : 0;
+
+    // Save user's rating
+    await setDoc(ratingRef, { rating, uid, updatedAt: serverTimestamp() });
+
+    // Update route aggregates
     await updateDoc(routeRef, {
-        totalBeans: totalBeans,
-        voteCount: voteCount,
-        avgRating: totalBeans / voteCount
+      avgRating,
+      ratingCount: count,
+      totalBeans,
+      updatedAt: serverTimestamp()
     });
-	
-	}
-    // Update aggregates on route (ONLY these 4 fields — matches isRatingAggregateUpdate rule)
-    const routeSnap = await getDoc(routeRef);
-    if (routeSnap.exists()) {
-      const d          = routeSnap.data();
-      let count        = d.ratingCount  || 0;
-      let totalBeans   = d.totalBeans   || 0;
-      let runningTotal = (d.avgRating   || 0) * count;
-
-      if (oldRating !== null) {
-        // Updating existing vote
-        runningTotal = runningTotal - oldRating + rating;
-        totalBeans   = totalBeans   - oldRating + rating;
-      } else {
-        // New vote
-        count        += 1;
-        runningTotal += rating;
-        totalBeans   += rating;
-      }
-      const avgRating = count > 0 ? Math.round((runningTotal / count) * 10) / 10 : 0;
-      // updateDoc only touches these fields → passes isRatingAggregateUpdate() Firestore rule
-      await updateDoc(routeRef, {
-        avgRating,
-        ratingCount: count,
-        totalBeans,
-        updatedAt: serverTimestamp()
-      });
-    }
   },
 
   async getMyRating(routeId, uid) {
