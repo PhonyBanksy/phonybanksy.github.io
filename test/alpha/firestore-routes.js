@@ -78,22 +78,22 @@ window.FirestoreRoutes = {
     };
     let savedId;
     if (routeId) {
+      // Update a specific known document
       const existing = await getDoc(doc(db, ROUTES_COL, routeId));
       if (!existing.exists()) throw new Error('Route not found.');
       if (existing.data().ownerUid !== uid && !window.AuthUI?.isAdmin()) throw new Error('Permission denied.');
       await setDoc(doc(db, ROUTES_COL, routeId), payload, { merge: true });
       savedId = routeId;
     } else {
-      // Check for existing doc with same owner + routeName to avoid duplicates.
-      // If found, update it (preserving ratings/favorites which are subcollections).
+      // No routeId given — upsert by ownerUid + routeName to avoid duplicates.
+      // Ratings and favorites live in subcollections and are untouched by setDoc.
       const dupSnap = await getDocs(query(
         collection(db, ROUTES_COL),
-        where('ownerUid',   '==', uid),
-        where('routeName',  '==', payload.routeName),
+        where('ownerUid',  '==', uid),
+        where('routeName', '==', payload.routeName),
         limit(1)
       ));
       if (!dupSnap.empty) {
-        // Update existing — ratings and favorites live in subcollections so they're untouched
         savedId = dupSnap.docs[0].id;
         await setDoc(doc(db, ROUTES_COL, savedId), payload, { merge: true });
       } else {

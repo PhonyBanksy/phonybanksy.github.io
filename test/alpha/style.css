@@ -64,6 +64,9 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .route-parent:hover { border-color: var(--muted); }
 .route-parent.active { border-color: rgba(232,64,12,.5); background: rgba(232,64,12,.06); }
 
+/* Local-only (unsynced) route — subtle dashed border */
+.route-local { border-style: dashed !important; opacity: 0.85; }
+
 .route-parent-load {
   flex: 1; display: flex; align-items: center; gap: 7px;
   padding: 7px 8px; cursor: pointer; background: none; border: none;
