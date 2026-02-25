@@ -406,56 +406,98 @@ a.btn-secondary, a.btn-ghost { text-decoration: none; }
 }
 .modal-field input:focus { border-color: rgba(232,64,12,.5); }
 
-/* ── CATEGORY TAGS (shared with style.css) ── */
+/* ── CATEGORY TAGS ── */
 .route-tag {
   font-family: var(--mono); font-size: 9px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
   padding: 1px 6px; border-radius: 10px; border: 1px solid; cursor: default; white-space: nowrap; display: inline-block;
 }
-.tag-sprint    { color: #f5a623; border-color: rgba(245,166,35,.4);  background: rgba(245,166,35,.08); }
-.tag-circuit   { color: #4fc3f7; border-color: rgba(79,195,247,.4);  background: rgba(79,195,247,.08); }
-.tag-endurance { color: #9c6aff; border-color: rgba(156,106,255,.4); background: rgba(156,106,255,.08); }
-.tag-offroad   { color: #8bc34a; border-color: rgba(139,195,74,.4);  background: rgba(139,195,74,.08); }
-.tag-dakar     { color: #ff9800; border-color: rgba(255,152,0,.4);   background: rgba(255,152,0,.08); }
-.tag-hills     { color: #26c6da; border-color: rgba(38,198,218,.4);  background: rgba(38,198,218,.08); }
-.tag-technical { color: #ef5350; border-color: rgba(239,83,80,.4);   background: rgba(239,83,80,.08); }
-.tag-speed     { color: #27c26b; border-color: rgba(39,194,107,.4);  background: rgba(39,194,107,.08); }
+.tag-sprint    { color: #f5a623; border-color: rgba(245,166,35,.5);  background: rgba(245,166,35,.12); }
+.tag-circuit   { color: #4fc3f7; border-color: rgba(79,195,247,.5);  background: rgba(79,195,247,.12); }
+.tag-endurance { color: #9c6aff; border-color: rgba(156,106,255,.5); background: rgba(156,106,255,.12); }
+.tag-offroad   { color: #8bc34a; border-color: rgba(139,195,74,.5);  background: rgba(139,195,74,.12); }
+.tag-dakar     { color: #ff9800; border-color: rgba(255,152,0,.5);   background: rgba(255,152,0,.12); }
+.tag-hills     { color: #26c6da; border-color: rgba(38,198,218,.5);  background: rgba(38,198,218,.12); }
+.tag-technical { color: #ef5350; border-color: rgba(239,83,80,.5);   background: rgba(239,83,80,.12); }
+.tag-speed     { color: #27c26b; border-color: rgba(39,194,107,.5);  background: rgba(39,194,107,.12); }
 
-/* Category toggle filter buttons */
+/* Category toggle filter buttons — colored even when off, brighter when on */
 .cat-toggle {
   font-family: var(--head); font-size: 9px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
-  padding: 2px 7px; border-radius: 10px; cursor: pointer; transition: all .15s; border: 1px solid var(--border2);
-  background: none; color: var(--muted); white-space: nowrap;
+  padding: 3px 8px; border-radius: 10px; cursor: pointer; transition: all .15s; border: 1px solid;
+  white-space: nowrap;
 }
-.cat-toggle.on.tag-sprint    { background: rgba(245,166,35,.3);  border-color: rgba(245,166,35,.7); color: #f5a623; }
-.cat-toggle.on.tag-circuit   { background: rgba(79,195,247,.3);  border-color: rgba(79,195,247,.7); color: #4fc3f7; }
-.cat-toggle.on.tag-endurance { background: rgba(156,106,255,.3); border-color: rgba(156,106,255,.7); color: #9c6aff; }
-.cat-toggle.on.tag-offroad   { background: rgba(139,195,74,.3);  border-color: rgba(139,195,74,.7); color: #8bc34a; }
-.cat-toggle.on.tag-dakar     { background: rgba(255,152,0,.3);   border-color: rgba(255,152,0,.7); color: #ff9800; }
-.cat-toggle.on.tag-hills     { background: rgba(38,198,218,.3);  border-color: rgba(38,198,218,.7); color: #26c6da; }
-.cat-toggle.on.tag-technical { background: rgba(239,83,80,.3);   border-color: rgba(239,83,80,.7); color: #ef5350; }
-.cat-toggle.on.tag-speed     { background: rgba(39,194,107,.3);  border-color: rgba(39,194,107,.7); color: #27c26b; }
+/* OFF state: dimmed but still colored so you can read them */
+.cat-toggle.tag-sprint    { color: rgba(245,166,35,.55);  border-color: rgba(245,166,35,.25);  background: rgba(245,166,35,.04); }
+.cat-toggle.tag-circuit   { color: rgba(79,195,247,.55);  border-color: rgba(79,195,247,.25);  background: rgba(79,195,247,.04); }
+.cat-toggle.tag-endurance { color: rgba(156,106,255,.55); border-color: rgba(156,106,255,.25); background: rgba(156,106,255,.04); }
+.cat-toggle.tag-offroad   { color: rgba(139,195,74,.55);  border-color: rgba(139,195,74,.25);  background: rgba(139,195,74,.04); }
+.cat-toggle.tag-dakar     { color: rgba(255,152,0,.55);   border-color: rgba(255,152,0,.25);   background: rgba(255,152,0,.04); }
+.cat-toggle.tag-hills     { color: rgba(38,198,218,.55);  border-color: rgba(38,198,218,.25);  background: rgba(38,198,218,.04); }
+.cat-toggle.tag-technical { color: rgba(239,83,80,.55);   border-color: rgba(239,83,80,.25);   background: rgba(239,83,80,.04); }
+.cat-toggle.tag-speed     { color: rgba(39,194,107,.55);  border-color: rgba(39,194,107,.25);  background: rgba(39,194,107,.04); }
+/* ON state: full bright */
+.cat-toggle.on.tag-sprint    { color: #f5a623; border-color: rgba(245,166,35,.8);  background: rgba(245,166,35,.2); }
+.cat-toggle.on.tag-circuit   { color: #4fc3f7; border-color: rgba(79,195,247,.8);  background: rgba(79,195,247,.2); }
+.cat-toggle.on.tag-endurance { color: #9c6aff; border-color: rgba(156,106,255,.8); background: rgba(156,106,255,.2); }
+.cat-toggle.on.tag-offroad   { color: #8bc34a; border-color: rgba(139,195,74,.8);  background: rgba(139,195,74,.2); }
+.cat-toggle.on.tag-dakar     { color: #ff9800; border-color: rgba(255,152,0,.8);   background: rgba(255,152,0,.2); }
+.cat-toggle.on.tag-hills     { color: #26c6da; border-color: rgba(38,198,218,.8);  background: rgba(38,198,218,.2); }
+.cat-toggle.on.tag-technical { color: #ef5350; border-color: rgba(239,83,80,.8);   background: rgba(239,83,80,.2); }
+.cat-toggle.on.tag-speed     { color: #27c26b; border-color: rgba(39,194,107,.8);  background: rgba(39,194,107,.2); }
+.cat-toggle:hover { filter: brightness(1.25); }
 
 /* ── BEAN RATING ── */
-.col-rating { width: 120px; }
-.bean-rating { display: inline-flex; gap: 1px; align-items: center; }
-.bean { font-size: 12px; line-height: 1; opacity: .25; transition: opacity .1s, transform .1s; user-select: none; }
+.col-rating { width: 130px; }
+.bean-rating { display: inline-flex; gap: 1px; align-items: center; pointer-events: none; }
+.bean { font-size: 12px; line-height: 1; opacity: .2; transition: opacity .1s, transform .1s; user-select: none; }
 .bean.filled { opacity: 1; }
-.bean-count  { font-family: var(--mono); font-size: 10px; color: var(--muted); margin-left: 3px; }
-#detailRatingWrap .bean { font-size: 18px; cursor: pointer; }
-#detailRatingWrap .bean:hover { transform: scale(1.25); }
+.bean-count  { font-family: var(--mono); font-size: 10px; color: var(--muted); margin-left: 4px; }
+
+/* Detail panel beans */
+.beans-detail-wrap { display: flex; flex-direction: column; gap: 5px; }
+.beans-row { display: flex; align-items: center; gap: 2px; }
+.beans-row .bean { font-size: 18px; }
+.beans-total { display: flex; align-items: center; gap: 8px; }
+.beans-total-label { font-family: var(--mono); font-size: 13px; color: var(--text); }
+.beans-total-sub   { font-family: var(--head); font-size: 10px; color: var(--muted); letter-spacing: .08em; text-transform: uppercase; }
+
+/* Interactive rating */
+.bean-interactive-wrap { display: flex; flex-direction: column; gap: 4px; }
+.bean-interactive { display: flex; gap: 3px; cursor: pointer; }
+.bean-btn { font-size: 20px; opacity: .2; transition: opacity .1s, transform .12s; cursor: pointer; }
+.bean-btn.filled { opacity: 1; }
+.bean-btn:hover { transform: scale(1.3); }
+.bean-rating-hint { font-size: 10px; color: var(--muted); font-family: var(--head); letter-spacing: .06em; }
+
+/* Gate message (must download first) */
+.bean-gate-msg {
+  font-size: 11px; color: var(--muted); font-style: italic;
+  padding: 6px 8px; background: var(--panel); border-radius: 4px;
+  border: 1px solid var(--border2);
+}
 
 /* ── FAV BUTTON ── */
 .btn-fav {
   display: inline-flex; align-items: center; justify-content: center; gap: 4px;
   background: none; border: 1px solid var(--border2); border-radius: 3px;
-  color: var(--muted); font-size: 12px; padding: 3px 9px; cursor: pointer;
+  color: var(--muted); padding: 3px 9px; cursor: pointer;
   transition: all .15s; line-height: 1; font-family: var(--head); font-weight: 700;
   font-size: 10px; letter-spacing: .06em; text-transform: uppercase;
 }
-.btn-fav:hover { border-color: #e8c000; color: #e8c000; background: rgba(232,192,0,.08); filter: none; }
+.btn-fav:hover { border-color: #e8c000; color: #e8c000; background: rgba(232,192,0,.08); }
 .btn-fav.faved { border-color: #e8c000; color: #e8c000; background: rgba(232,192,0,.12); }
 
-/* ── TABLE ADJUSTMENTS ── */
-.col-name { min-width: 160px; }
-.col-actions { width: 90px !important; }
+/* ── TABLE NAME CELL — tags on same line, pushed to right ── */
+.col-name { min-width: 180px; }
+.col-name-inner {
+  display: flex; align-items: center; gap: 6px; flex-wrap: nowrap; width: 100%;
+}
+.route-name-text {
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-shrink: 1; min-width: 0;
+}
+.col-name-tags {
+  display: flex; gap: 3px; flex-shrink: 0; margin-left: auto; align-items: center;
+}
+.meta-tags { display: flex; gap: 4px; flex-wrap: wrap; width: 100%; margin-top: 4px; }
+.col-actions { width: 70px !important; }
 
