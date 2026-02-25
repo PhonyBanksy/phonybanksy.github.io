@@ -176,12 +176,6 @@ window.FirestoreRoutes = {
       return snap.exists();
     } catch (_) { return false; }
   },
-
-  /* ── RATINGS ──
-     totalBeans = raw sum of all ratings (e.g. 2 votes: 1+5=6 beans total)
-     avgRating  = mean (3.0)
-     ratingCount = number of votes (2)
-  ── */
   
   /* ── RATINGS ──
      totalBeans = raw sum of all ratings (e.g. 2 votes: 1+5=6 beans total)
