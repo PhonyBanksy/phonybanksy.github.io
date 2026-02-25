@@ -107,6 +107,8 @@ window.MapVisualizer = function (canvasContainerId = 'routeCanvas', outputFieldI
       activeWpIndex = index;
     },
 
+    getActiveWaypoint: () => activeWpIndex,
+
     draw: () => {
       canvas.width  = container.clientWidth;
       canvas.height = container.clientHeight;

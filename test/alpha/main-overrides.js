@@ -548,6 +548,14 @@
     copyText(text);
   };
 
+  /* ── AUTO-ALIGN ── */
+  if (window.AutoAlign && window.MapVisualizerInstance) {
+    window.AutoAlign.init(window.MapVisualizerInstance);
+  }
+  document.getElementById('btnAutoAlign')?.addEventListener('click', () => {
+    window.AutoAlign?.openPanel();
+  });
+
   /* ── DESCRIPTION CHAR COUNTER ── */
   const descTextarea = document.getElementById('routeDescription');
   const descCounter  = document.getElementById('descCharCount');
