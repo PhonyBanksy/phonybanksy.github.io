@@ -7,7 +7,7 @@ function setupWaypointUI(visualizer) {
     const rotateDisplay = document.getElementById('rotateVal');
     const rotSlider = document.getElementById('rotSlider');
 
-    window.openWaypointMenu = (index) => {
+window.openWaypointMenu = (index) => {
         visualizer.setActiveWaypoint(index);
         const wpMeta = visualizer.getWaypointsRendered().find(w => w.i === index);
         if (!wpMeta) return;
@@ -19,17 +19,23 @@ function setupWaypointUI(visualizer) {
         const data = visualizer.getRouteData();
         const wp = data.waypoints[index];
         const s = wp.scale3D || { x: 1, y: 10, z: 1 };
-        inpW.value = s.y; inpH.value = s.x; inpD.value = s.z;
         
-        const angle = Math.round(visualizer.toAngle(wp.rotation));
+        // Sync inputs with waypoint data
+        inpW.value = s.y; 
+        inpH.value = s.x; 
+        inpD.value = s.z;
+        
+        const angle = Math.round(visualizer.toAngle(wp.rotationQuat || { x:0, y:0, z:0, w:1 }));
         rotSlider.value = angle;
-        rotateDisplay.textContent = angle;
+        rotateDisplay.textContent = angle + '°';
     };
 
-    window.closeMenu = () => {
-        menu.style.display = 'none';
-    };
-
+    // Close menu when clicking outside
+    document.addEventListener('mousedown', (e) => {
+        if (menu && !menu.contains(e.target) && !e.target.classList.contains('wp-node')) {
+            menu.style.display = 'none';
+        }
+    });
     document.getElementById('btnOptAdjust').onclick = () => {
         document.getElementById('wpMainOpts').style.display = 'none';
         document.getElementById('wpAdjustPanel').style.display = 'block';

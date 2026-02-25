@@ -76,6 +76,29 @@ document.addEventListener('DOMContentLoaded', () => {
       catFilterBar.appendChild(btn);
     });
   }
+  
+btnLoadRoute.addEventListener('click', async () => {
+    if (!_selectedRoute) return;
+
+    // 1. Track download to unlock voting
+    const user = window.AuthUI?.getCurrentUser();
+    if (user) {
+        await window.FirestoreRoutes.trackDownload(_selectedId, user.uid);
+    }
+
+    // 2. Load into the editor (RouteProcessor)
+    const jsonStr = JSON.stringify(_selectedRoute, null, 2);
+    document.getElementById('json_data').value = jsonStr;
+    
+    // 3. Trigger Processor and Switch Tab
+    RouteProcessor.process(); 
+    document.querySelector('.tab[data-pane="editor"]').click();
+    
+    // 4. Update Visualizer
+    if (window.MapVisualizerInstance) {
+        window.MapVisualizerInstance.loadRoute(_selectedRoute);
+    }
+});
 
   /* ── Load routes ── */
   async function loadRoutes(showAll = false) {

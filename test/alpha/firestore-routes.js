@@ -182,23 +182,34 @@ window.FirestoreRoutes = {
      avgRating  = mean (3.0)
      ratingCount = number of votes (2)
   ── */
-  async rateRoute(routeId, rating, uid) {
-    if (!uid) throw new Error('Must be logged in to rate.');
-    if (rating < 1 || rating > 5) throw new Error('Rating must be 1–5.');
+  
+	async function rateRoute(routeId, userId, rating) {
+    const routeRef = doc(db, 'routes', routeId);
+    const ratingRef = doc(db, 'routes', routeId, 'ratings', userId);
+    
+    const routeSnap = await getDoc(routeRef);
+    const oldRatingSnap = await getDoc(ratingRef);
+    
+    let routeData = routeSnap.data();
+    let totalBeans = routeData.totalBeans || 0;
+    let voteCount = routeData.voteCount || 0;
 
-    // Download gate
-    const downloaded = await this.hasDownloaded(routeId, uid);
-    if (!downloaded) throw new Error('You must load this route in the editor before rating it.');
+    if (oldRatingSnap.exists()) {
+        const oldRating = oldRatingSnap.data().rating;
+        totalBeans = totalBeans - oldRating + rating;
+    } else {
+        totalBeans += rating;
+        voteCount += 1;
+    }
 
-    const ratingRef = doc(db, ROUTES_COL, routeId, 'ratings', uid);
-    const routeRef  = doc(db, ROUTES_COL, routeId);
-
-    const existingSnap = await getDoc(ratingRef);
-    const oldRating = existingSnap.exists() ? existingSnap.data().rating : null;
-
-    // Upsert user's rating doc
-    await setDoc(ratingRef, { rating, uid, updatedAt: serverTimestamp() });
-
+    await setDoc(ratingRef, { rating, updatedAt: serverTimestamp() });
+    await updateDoc(routeRef, {
+        totalBeans: totalBeans,
+        voteCount: voteCount,
+        avgRating: totalBeans / voteCount
+    });
+	
+	}
     // Update aggregates on route (ONLY these 4 fields — matches isRatingAggregateUpdate rule)
     const routeSnap = await getDoc(routeRef);
     if (routeSnap.exists()) {

@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 2. Map visualizer
   window.MapVisualizerInstance = window.MapVisualizer('routeCanvas', 'output');
-
+  setupWaypointUI(window.MapVisualizerInstance);
   // 3. Tab switching
   document.querySelectorAll('.tab').forEach(btn => {
     btn.addEventListener('click', () => {
