@@ -49,5 +49,6 @@ document.addEventListener('DOMContentLoaded', () => {
       btn.classList.toggle('on', cats.includes(btn.dataset.cat));
     });
   };
-  // Community route handoff handled in main-overrides.js after all overrides are wired
+  // Community route handoff is handled at the bottom of main-overrides.js,
+  // after saveRouteToLocalStorage has been overridden and the tree is ready.
 });

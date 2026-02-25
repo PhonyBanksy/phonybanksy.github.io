@@ -36,14 +36,24 @@ window.openWaypointMenu = (index) => {
             menu.style.display = 'none';
         }
     });
-    document.getElementById('btnOptAdjust').onclick = () => {
-        document.getElementById('wpMainOpts').style.display = 'none';
-        document.getElementById('wpAdjustPanel').style.display = 'block';
-    };
-    document.getElementById('btnBackAdjust').onclick = () => {
-        document.getElementById('wpAdjustPanel').style.display = 'none';
-        document.getElementById('wpMainOpts').style.display = 'flex';
-    };
+    const btnOptAdjust  = document.getElementById('btnOptAdjust');
+    const btnBackAdjust = document.getElementById('btnBackAdjust');
+    if (btnOptAdjust) {
+        btnOptAdjust.onclick = () => {
+            const main = document.getElementById('wpMainOpts');
+            const adj  = document.getElementById('wpAdjustPanel');
+            if (main) main.style.display = 'none';
+            if (adj)  adj.style.display  = 'block';
+        };
+    }
+    if (btnBackAdjust) {
+        btnBackAdjust.onclick = () => {
+            const main = document.getElementById('wpMainOpts');
+            const adj  = document.getElementById('wpAdjustPanel');
+            if (adj)  adj.style.display  = 'none';
+            if (main) main.style.display = 'flex';
+        };
+    }
 
     const updateDims = () => {
         const idx = visualizer.getActiveWaypoint();

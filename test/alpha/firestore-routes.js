@@ -84,9 +84,23 @@ window.FirestoreRoutes = {
       await setDoc(doc(db, ROUTES_COL, routeId), payload, { merge: true });
       savedId = routeId;
     } else {
-      payload.createdAt = serverTimestamp();
-      const ref = await addDoc(collection(db, ROUTES_COL), payload);
-      savedId = ref.id;
+      // Check for existing doc with same owner + routeName to avoid duplicates.
+      // If found, update it (preserving ratings/favorites which are subcollections).
+      const dupSnap = await getDocs(query(
+        collection(db, ROUTES_COL),
+        where('ownerUid',   '==', uid),
+        where('routeName',  '==', payload.routeName),
+        limit(1)
+      ));
+      if (!dupSnap.empty) {
+        // Update existing — ratings and favorites live in subcollections so they're untouched
+        savedId = dupSnap.docs[0].id;
+        await setDoc(doc(db, ROUTES_COL, savedId), payload, { merge: true });
+      } else {
+        payload.createdAt = serverTimestamp();
+        const ref = await addDoc(collection(db, ROUTES_COL), payload);
+        savedId = ref.id;
+      }
     }
     _lastSaveTime = Date.now();
     return savedId;
