@@ -237,7 +237,7 @@ document.addEventListener('DOMContentLoaded', () => {
       html += `<span class="bean bean-btn ${myRating && i <= myRating ? 'filled' : ''}" data-val="${i}" title="${i} bean${i>1?'s':''}">🫘</span>`;
     }
     html += '</div>';
-    html += `<div class="bean-rating-hint">${myRating ? `Your rating: ${myRating} 🫘` : 'Click to rate'}</div>`;
+    html += `<div class="bean-rating-hint">${myRating ? `Your rating: ${myRating} 🫘` : 'How many beans does it deserve?'}</div>`;
     html += '</div>';
     return html;
   }
@@ -307,26 +307,39 @@ document.addEventListener('DOMContentLoaded', () => {
     const ratingWrap = document.getElementById('detailRatingWrap');
     if (ratingWrap) {
       if (uid && !isOwner) {
-        _myRating = await window.FirestoreRoutes?.getMyRating?.(route.id, uid) ?? null;
-        
-        // FIX: Check local storage AND firestore for downloads
-        const canRate = _myDownloads.has(route.id) || await window.FirestoreRoutes?.hasDownloaded?.(route.id, uid);
-        
+        // Show aggregate + loading placeholder first
+        let html = renderBeansDetail(route.avgRating||0, route.ratingCount||0, route.totalBeans||0);
+        html += '<div style="margin-top:8px;border-top:1px solid var(--border);padding-top:8px;text-align:right;width:100%;">';
+        html += '<div style="font-size:10px;color:var(--muted);font-family:var(--head);letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px;">Your Rating</div>';
+        html += '<div id="ratingWidgetSlot" style="min-height:28px;"></div>';
+        html += '</div>';
+        ratingWrap.innerHTML = html;
+        ratingWrap.style.display = 'flex';
+
+        // Resolve both async checks in parallel, then render interactive widget
+        const [myRatingResult, hasDownloadedResult] = await Promise.all([
+          window.FirestoreRoutes?.getMyRating?.(route.id, uid).catch(() => null) ?? Promise.resolve(null),
+          window.FirestoreRoutes?.hasDownloaded?.(route.id, uid).catch(() => false) ?? Promise.resolve(false)
+        ]);
+
+        _myRating = myRatingResult;
+        const canRate = _myDownloads.has(route.id) || hasDownloadedResult;
+
         if (canRate) {
           _myDownloads.add(route.id);
           localStorage.setItem('mt_downloads', JSON.stringify([..._myDownloads]));
         }
 
-        // Show aggregate + interactive rating
-        let html = renderBeansDetail(route.avgRating||0, route.ratingCount||0, route.totalBeans||0);
-        html += '<div style="margin-top:8px;border-top:1px solid var(--border);padding-top:8px;text-align:right;width:100%;">';
-        html += '<div style="font-size:10px;color:var(--muted);font-family:var(--head);letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px;">Your Rating</div>';
-        html += renderInteractiveBeans(_myRating, canRate);
-        html += '</div>';
-        ratingWrap.innerHTML = html;
-        ratingWrap.style.display = 'flex';
+        // If user has already rated but hasn't "downloaded" via our tracking,
+        // still allow rating (they clearly played it)
+        const canRateFinal = canRate || (_myRating !== null);
 
-        // Wire bean clicks for interaction
+        const slot = ratingWrap.querySelector('#ratingWidgetSlot');
+        if (slot) {
+          slot.outerHTML = renderInteractiveBeans(_myRating, canRateFinal);
+        }
+
+        // Wire bean clicks — query after DOM is updated
         const interactiveWrap = ratingWrap.querySelector('.bean-interactive');
         if (interactiveWrap) {
           const btns = interactiveWrap.querySelectorAll('.bean-btn');
@@ -336,14 +349,10 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             b.addEventListener('click', () => submitRating(route.id, parseInt(b.dataset.val)));
           });
-          
           interactiveWrap.addEventListener('mouseleave', () => {
-            btns.forEach((bb, j) => bb.classList.toggle('filled', !!(_myRating && j < _myRating)));
+            btns.forEach((bb, j) => bb.classList.toggle('filled', !!(_myRating && j + 1 <= _myRating)));
           });
         }
-      } else if (uid && isOwner) {
-        ratingWrap.innerHTML = renderBeansDetail(route.avgRating||0, route.ratingCount||0, route.totalBeans||0);
-        ratingWrap.style.display = 'flex';
       } else {
         ratingWrap.innerHTML = renderBeansDetail(route.avgRating||0, route.ratingCount||0, route.totalBeans||0);
         ratingWrap.style.display = 'flex';
