@@ -12,7 +12,8 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const ROUTES_COL  = 'routes';
-const MAX_NAME    = 128;
+const MAX_NAME    = 24;
+const MAX_DESC    = 280;
 const MAX_WP      = 500;
 const MIN_SAVE_MS = 5000;
 const VALID_CATS  = ['Sprint','Circuit','Endurance','Offroad','Dakar','Hills','Technical','Speed'];
@@ -51,6 +52,10 @@ function sanitizeName(str) {
   return String(str || '').replace(/[<>"'&]/g, '').trim().slice(0, MAX_NAME) || 'Unnamed';
 }
 
+function sanitizeDesc(str) {
+  return String(str || '').replace(/[<>"'&]/g, '').trim().slice(0, MAX_DESC);
+}
+
 function cleanCats(categories) {
   return Array.isArray(categories)
     ? categories.filter(c => VALID_CATS.includes(c)).slice(0, 8)
@@ -59,7 +64,7 @@ function cleanCats(categories) {
 
 window.FirestoreRoutes = {
 
-  async saveRoute({ routeName, routeData, isPublic = true, uid, inGameName, routeId = null, categories = [] }) {
+  async saveRoute({ routeName, routeData, isPublic = true, uid, inGameName, routeId = null, categories = [], description = '' }) {
     if (!uid) throw new Error('Must be logged in to save routes.');
     const now = Date.now();
     if (now - _lastSaveTime < MIN_SAVE_MS) throw new Error('Saving too fast — please wait a moment.');
@@ -70,6 +75,7 @@ window.FirestoreRoutes = {
       characterId:   uid,
       inGameName:    sanitizeName(inGameName),
       routeName:     sanitizeName(routeName),
+      description:   sanitizeDesc(description),
       routeData:     validation.data,
       isPublic:      Boolean(isPublic),
       waypointCount: validation.data.waypoints.length,
@@ -111,6 +117,7 @@ window.FirestoreRoutes = {
     const updates = { updatedAt: serverTimestamp() };
     if (fields.routeName  !== undefined) updates.routeName  = sanitizeName(fields.routeName);
     if (fields.inGameName !== undefined) updates.inGameName = sanitizeName(fields.inGameName);
+    if (fields.description!== undefined) updates.description= sanitizeDesc(fields.description);
     if (fields.isPublic   !== undefined) updates.isPublic   = Boolean(fields.isPublic);
     if (fields.categories !== undefined) updates.categories = cleanCats(fields.categories);
     await setDoc(doc(db, ROUTES_COL, routeId), updates, { merge: true });
@@ -134,8 +141,9 @@ window.FirestoreRoutes = {
 
   async getMyRoutes(uid) {
     if (!uid) return [];
-    const snap = await getDocs(query(collection(db, ROUTES_COL), where('ownerUid','==',uid), orderBy('updatedAt','desc')));
-    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const snap = await getDocs(query(collection(db, ROUTES_COL), where('ownerUid','==',uid)));
+    return snap.docs.map(d => ({ id: d.id, ...d.data() }))
+      .sort((a, b) => (b.updatedAt?.seconds || 0) - (a.updatedAt?.seconds || 0));
   },
 
   async getPublicRoutes({ limitCount = 200 } = {}) {

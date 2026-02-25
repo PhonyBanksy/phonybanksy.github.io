@@ -321,6 +321,7 @@ document.addEventListener('DOMContentLoaded', () => {
             ${escHtml(route.routeName || 'Unnamed')}
             ${!route.isPublic ? '<span class="badge-hidden">Hidden</span>' : ''}
           </span>
+          ${route.description ? `<span class="route-description-text">${escHtml(route.description)}</span>` : ''}
           ${catHtml ? `<span class="col-name-tags">${catHtml}</span>` : ''}
         </div>
       </td>
@@ -568,6 +569,10 @@ document.addEventListener('DOMContentLoaded', () => {
           <input id="aemInGameName" type="text" maxlength="64" value="${escHtml(route.inGameName||'')}" />
         </div>
         <div class="modal-field" style="margin-top:10px;">
+          <label>Description <span style="font-weight:400;color:var(--muted);">(280 chars)</span></label>
+          <textarea id="aemDescription" maxlength="280" rows="2" style="background:var(--input-bg,#252525);border:1px solid var(--border,#333);border-radius:3px;color:var(--fg,#e0e0e0);font-size:12px;padding:7px 10px;font-family:var(--body,'Barlow',sans-serif);outline:none;resize:vertical;min-height:48px;width:100%;transition:border-color .15s;">${escHtml(route.description||'')}</textarea>
+        </div>
+        <div class="modal-field" style="margin-top:10px;">
           <label>Visibility</label>
           <label class="check-wrap" style="margin-top:4px;">
             <input type="checkbox" id="aemIsPublic" ${route.isPublic?'checked':''} />
@@ -599,6 +604,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const inGameName = modal.querySelector('#aemInGameName').value.trim();
       const isPublic   = modal.querySelector('#aemIsPublic').checked;
       const categories = [...modal.querySelectorAll('.aem-cat.on')].map(b => b.dataset.cat);
+      const description = modal.querySelector('#aemDescription')?.value?.trim() || '';
       const errEl      = modal.querySelector('#aemError');
 
       if (!routeName) { errEl.textContent = 'Route name required.'; return; }
@@ -608,14 +614,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const uid = window.AuthUI?.getCurrentUser()?.uid;
         const isAdmin = window.AuthUI?.isAdmin();
         if (isAdmin) {
-          await window.FirestoreRoutes.adminUpdateRoute(route.id, { routeName, inGameName, isPublic, categories });
+          await window.FirestoreRoutes.adminUpdateRoute(route.id, { routeName, inGameName, isPublic, categories, description });
         } else {
           await window.FirestoreRoutes.saveRoute({
             routeName, isPublic, uid,
             inGameName: inGameName || route.inGameName,
             routeId: route.id,
             routeData: route.routeData,
-            categories
+            categories,
+            description
           });
         }
         modal.remove();

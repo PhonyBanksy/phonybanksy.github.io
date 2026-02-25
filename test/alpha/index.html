@@ -139,6 +139,12 @@
           </label>
         </div>
 
+        <!-- Route Description -->
+        <div id="routeDescRow" style="display:flex;flex-direction:column;gap:4px;padding:8px 0;border-bottom:1px solid var(--border);">
+          <label style="font-family:var(--head);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);">Description <span style="color:var(--border2);font-weight:400;">(optional · 280 chars)</span></label>
+          <textarea id="routeDescription" maxlength="280" rows="2" placeholder="Short description shown in Community…" style="background:var(--panel);border:1px solid var(--border2);border-radius:3px;color:var(--text);font-size:12px;padding:6px 8px;font-family:var(--body);outline:none;resize:vertical;min-height:44px;transition:border-color .15s;"></textarea>
+          <span id="descCharCount" style="font-family:var(--mono);font-size:9px;color:var(--border2);text-align:right;">0 / 280</span>
+        </div>
         <!-- Route Category Tags -->
         <div>
           <div class="sg-title" style="margin-bottom:8px;">Route Category</div>

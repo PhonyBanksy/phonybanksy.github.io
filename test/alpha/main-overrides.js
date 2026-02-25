@@ -384,6 +384,7 @@
     const isPublicEl = document.getElementById('chkRoutePublic');
     const isPublic   = isPublicEl ? isPublicEl.checked : true;
     const categories = [...document.querySelectorAll('.cat-toggle.on')].map(b => b.dataset.cat);
+    const description = (document.getElementById('routeDescription')?.value || '').trim();
 
     try {
       const savedId = await window.FirestoreRoutes.saveRoute({
@@ -393,7 +394,8 @@
         uid:        user.uid,
         inGameName: userDoc?.inGameName || '',
         routeId:    existingId || null,
-        categories
+        categories,
+        description
       });
 
       if (vi === -1) {
@@ -462,6 +464,7 @@
       const isPublicEl = document.getElementById('chkRoutePublic');
       const isPublic   = isPublicEl ? isPublicEl.checked : true;
       const categories = [...document.querySelectorAll('.cat-toggle.on')].map(b => b.dataset.cat);
+      const description = (document.getElementById('routeDescription')?.value || '').trim();
       try {
         const savedId = await window.FirestoreRoutes.saveRoute({
           routeName:  variantLabel,
@@ -470,7 +473,8 @@
           uid:        user.uid,
           inGameName: userDoc?.inGameName || '',
           routeId:    group.variants[vi]?.firestoreId || null,
-          categories
+          categories,
+          description
         });
         group.variants[vi].firestoreId = savedId;
         showToast('Saved to cloud ☁');
@@ -543,6 +547,17 @@
     if (!text) { showToast('No output to export yet'); return; }
     copyText(text);
   };
+
+  /* ── DESCRIPTION CHAR COUNTER ── */
+  const descTextarea = document.getElementById('routeDescription');
+  const descCounter  = document.getElementById('descCharCount');
+  if (descTextarea && descCounter) {
+    descTextarea.addEventListener('input', () => {
+      const len = descTextarea.value.length;
+      descCounter.textContent = `${len} / 280`;
+      descCounter.style.color = len > 250 ? (len >= 280 ? '#d95050' : '#f5a623') : 'var(--border2)';
+    });
+  }
 
   /* ── AUTH STATE CHANGES ── */
 

@@ -490,10 +490,11 @@ a.btn-secondary, a.btn-ghost { text-decoration: none; }
 /* ── TABLE NAME CELL — tags on same line, pushed to right ── */
 .col-name { min-width: 180px; }
 .col-name-inner {
-  display: flex; align-items: center; gap: 6px; flex-wrap: nowrap; width: 100%;
+  display: flex; align-items: center; gap: 4px; flex-wrap: wrap; width: 100%;
 }
 .route-name-text {
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-shrink: 1; min-width: 0;
+  max-width: 100%;
 }
 .col-name-tags {
   display: flex; gap: 3px; flex-shrink: 0; margin-left: auto; align-items: center;
@@ -577,4 +578,18 @@ a.btn-secondary, a.btn-ghost { text-decoration: none; }
 }
 #bulkBar .btn-danger {
   animation: none;
+}
+
+/* ── ROUTE DESCRIPTION IN TABLE ── */
+.route-description-text {
+  font-size: 10px;
+  color: var(--muted);
+  font-family: var(--body);
+  font-style: italic;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 220px;
+  flex-shrink: 1;
+  min-width: 0;
 }
