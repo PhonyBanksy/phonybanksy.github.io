@@ -501,3 +501,80 @@ a.btn-secondary, a.btn-ghost { text-decoration: none; }
 .meta-tags { display: flex; gap: 4px; flex-wrap: wrap; width: 100%; margin-top: 4px; }
 .col-actions { width: 70px !important; }
 
+
+/* ── CREATOR GROUP ROWS ── */
+.creator-group-header td {
+  padding: 0;
+  background: var(--surface);
+  border-top: 1px solid var(--border2);
+  border-bottom: none;
+}
+.creator-group-toggle {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  width: 100%;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 7px 12px;
+  color: var(--text);
+  font-family: var(--head);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  transition: background .12s;
+}
+.creator-group-toggle:hover {
+  background: rgba(255,255,255,.04);
+}
+.creator-chevron {
+  font-size: 10px;
+  color: var(--muted);
+  width: 10px;
+  flex-shrink: 0;
+}
+.creator-avatar {
+  font-size: 13px;
+  flex-shrink: 0;
+}
+.creator-name {
+  color: var(--text);
+  flex: 1;
+}
+.creator-route-count {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--muted);
+  font-weight: 400;
+  letter-spacing: .06em;
+  text-transform: none;
+  margin-left: auto;
+  background: var(--panel);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  padding: 1px 7px;
+}
+.creator-child-row td {
+  background: rgba(255,255,255,.015);
+}
+.creator-child-row td:first-child {
+  padding-left: 28px;
+}
+
+/* ── ADMIN CHECKBOX COLUMN ── */
+.col-check input[type="checkbox"] {
+  accent-color: var(--accent);
+  cursor: pointer;
+  width: 14px;
+  height: 14px;
+}
+
+/* ── BULK ACTION BAR ── */
+#bulkBar {
+  gap: 6px;
+}
+#bulkBar .btn-danger {
+  animation: none;
+}

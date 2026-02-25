@@ -2,7 +2,7 @@
  * community.js
  * Community route browser.
  * Features: categories, bean ratings, favorites, download-gated voting,
- * total-bean display, admin tools (rename/delete/edit tags/self-promote)
+ * total-bean display, admin multi-select delete, grouped-by-creator view.
  */
 
 import { auth } from './firebase-config.js';
@@ -21,8 +21,15 @@ document.addEventListener('DOMContentLoaded', () => {
   let _myFavorites     = new Set();
   let _myRating        = null;
   let _activeCatFilter = null;
-  
-  // FIX: Safely load previously downloaded routes from local storage
+  let _selectedIds     = new Set(); // admin multi-select
+
+  // Group display mode: 'flat' | 'byCreator'
+  let _groupMode = 'byCreator';
+
+  // Expanded creator groups
+  let _expandedCreators = new Set();
+
+  // Safely load previously downloaded routes from local storage
   let _myDownloads = new Set();
   try {
     const stored = localStorage.getItem('mt_downloads');
@@ -83,15 +90,87 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  /* ── Inject admin multi-select toolbar into browser-toolbar ── */
+  const toolbar = document.getElementById('browser-toolbar');
+  if (toolbar) {
+    // Group mode toggle
+    const groupToggle = document.createElement('button');
+    groupToggle.id = 'btnGroupMode';
+    groupToggle.className = 'btn-ghost btn-sm';
+    groupToggle.textContent = '👤 By Creator';
+    groupToggle.title = 'Toggle grouping';
+    groupToggle.addEventListener('click', () => {
+      _groupMode = _groupMode === 'byCreator' ? 'flat' : 'byCreator';
+      groupToggle.textContent = _groupMode === 'byCreator' ? '📋 Flat List' : '👤 By Creator';
+      renderTable();
+    });
+    toolbar.appendChild(groupToggle);
+
+    // Admin bulk-delete bar (hidden until selections made)
+    const bulkBar = document.createElement('div');
+    bulkBar.id = 'bulkBar';
+    bulkBar.style.cssText = 'display:none;align-items:center;gap:6px;margin-left:auto;';
+    bulkBar.innerHTML = `
+      <span id="bulkCount" style="font-family:var(--mono);font-size:10px;color:var(--muted);"></span>
+      <button id="btnBulkDelete" class="btn-danger btn-sm">🗑 Delete Selected</button>
+      <button id="btnBulkClear" class="btn-ghost btn-sm">✕ Clear</button>
+    `;
+    toolbar.appendChild(bulkBar);
+
+    document.getElementById('btnBulkDelete')?.addEventListener('click', bulkDelete);
+    document.getElementById('btnBulkClear')?.addEventListener('click', () => {
+      _selectedIds.clear();
+      updateBulkBar();
+      renderTable();
+    });
+  }
+
+  function updateBulkBar() {
+    const bar = document.getElementById('bulkBar');
+    const countEl = document.getElementById('bulkCount');
+    if (!bar) return;
+    const isAdmin = window.AuthUI?.isAdmin();
+    if (_selectedIds.size > 0 && isAdmin) {
+      bar.style.display = 'flex';
+      if (countEl) countEl.textContent = `${_selectedIds.size} selected`;
+    } else {
+      bar.style.display = 'none';
+    }
+  }
+
+  async function bulkDelete() {
+    if (!_selectedIds.size) return;
+    const uid = window.AuthUI?.getCurrentUser()?.uid;
+    if (!uid || !window.AuthUI?.isAdmin()) { showToast('Admin only'); return; }
+    if (!confirm(`Permanently delete ${_selectedIds.size} route(s)? Cannot be undone.`)) return;
+
+    const ids = [..._selectedIds];
+    let failed = 0;
+    for (const id of ids) {
+      try {
+        await window.FirestoreRoutes.deleteRoute(id, uid);
+      } catch (err) {
+        console.error('Delete failed for', id, err);
+        failed++;
+      }
+    }
+    _selectedIds.clear();
+    updateBulkBar();
+    if (failed) showToast(`Done — ${failed} failed`);
+    else showToast(`Deleted ${ids.length} route(s)`);
+    closeDetail();
+    await loadRoutes();
+  }
+
   /* ── Load routes ── */
   async function loadRoutes(showAll = false) {
     routeCount.textContent = 'Loading…';
-    tbody.innerHTML = '<tr><td colspan="6" class="table-empty">Loading…</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" class="table-empty">Loading…</td></tr>';
     try {
       if (showAll && window.AuthUI?.isAdmin()) {
         _allRoutes = await window.FirestoreRoutes.getAllRoutes();
       } else {
-        _allRoutes = await window.FirestoreRoutes.getPublicRoutes({ limitCount: 200 });
+        _allRoutes = await window.FirestoreRoutes.getPublicRoutes({ limitCount: 300 });
       }
       const uid = window.AuthUI?.getCurrentUser()?.uid;
       if (uid && window.FirestoreRoutes?.getMyFavorites) {
@@ -100,7 +179,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       applyFilters();
     } catch (err) {
-      tbody.innerHTML = `<tr><td colspan="6" class="table-empty" style="color:#d95050;">Error: ${escHtml(err.message)}</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="7" class="table-empty" style="color:#d95050;">Error: ${escHtml(err.message)}</td></tr>`;
       routeCount.textContent = 'Error';
     }
   }
@@ -142,55 +221,140 @@ document.addEventListener('DOMContentLoaded', () => {
   /* ── Render table ── */
   function renderTable() {
     routeCount.textContent = `${_filtered.length} route${_filtered.length !== 1 ? 's' : ''}`;
+    const isAdmin = window.AuthUI?.isAdmin();
+
     if (!_filtered.length) {
-      tbody.innerHTML = '<tr><td colspan="6" class="table-empty">No routes found.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="7" class="table-empty">No routes found.</td></tr>';
       return;
     }
+
     tbody.innerHTML = '';
+
+    if (_groupMode === 'byCreator') {
+      renderGroupedByCreator(isAdmin);
+    } else {
+      renderFlat(isAdmin);
+    }
+  }
+
+  function renderGroupedByCreator(isAdmin) {
+    // Group routes by ownerUid
+    const groups = new Map(); // ownerUid → { inGameName, routes[] }
     _filtered.forEach(route => {
-      const tr = document.createElement('tr');
-      tr.dataset.id = route.id;
-      if (route.id === _selectedId) tr.classList.add('selected');
-      if (!route.isPublic) tr.classList.add('row-hidden');
+      const key = route.ownerUid || 'unknown';
+      if (!groups.has(key)) {
+        groups.set(key, { inGameName: route.inGameName || 'Unknown', routes: [] });
+      }
+      groups.get(key).routes.push(route);
+    });
 
-      const cats = (route.categories || []).slice(0, 4);
-      const catHtml = cats.map(c =>
-        `<span class="route-tag ${CAT_CLASSES[c]||''}">${escHtml(c)}</span>`
-      ).join('');
+    groups.forEach((group, ownerUid) => {
+      const isExpanded = _expandedCreators.has(ownerUid);
+      const routes = group.routes;
 
-      const isFav = _myFavorites.has(route.id);
-      const beansHtml = renderBeansCompact(route.avgRating||0, route.ratingCount||0, route.totalBeans||0);
-
-      tr.innerHTML = `
-        <td class="col-name">
-          <div class="col-name-inner">
-            <span class="route-name-text">
-              ${escHtml(route.routeName || 'Unnamed')}
-              ${!route.isPublic ? '<span class="badge-hidden">Hidden</span>' : ''}
-            </span>
-            ${catHtml ? `<span class="col-name-tags">${catHtml}</span>` : ''}
-          </div>
-        </td>
-        <td class="col-author">${escHtml(route.inGameName || '—')}</td>
-        <td class="col-wps">${route.waypointCount ?? '?'}</td>
-        <td class="col-rating">${beansHtml}</td>
-        <td class="col-date">${formatDate(route.updatedAt)}</td>
-        <td class="col-actions">
-          <button class="btn-fav ${isFav?'faved':''}" data-id="${route.id}" title="${isFav?'Unfavorite':'Favorite'}">⭐</button>
-          <button class="btn-secondary btn-sm btn-load-inline" data-id="${route.id}" title="Load in Editor">⬇</button>
+      // Creator header row
+      const headerTr = document.createElement('tr');
+      headerTr.className = 'creator-group-header';
+      headerTr.innerHTML = `
+        <td colspan="${isAdmin ? 7 : 6}" class="creator-group-cell">
+          <button class="creator-group-toggle" data-uid="${escHtml(ownerUid)}">
+            <span class="creator-chevron">${isExpanded ? '▾' : '▸'}</span>
+            <span class="creator-avatar">👤</span>
+            <span class="creator-name">${escHtml(group.inGameName)}</span>
+            <span class="creator-route-count">${routes.length} route${routes.length !== 1 ? 's' : ''}</span>
+          </button>
         </td>
       `;
+      headerTr.querySelector('.creator-group-toggle').addEventListener('click', () => {
+        if (_expandedCreators.has(ownerUid)) {
+          _expandedCreators.delete(ownerUid);
+        } else {
+          _expandedCreators.add(ownerUid);
+        }
+        renderTable();
+      });
+      tbody.appendChild(headerTr);
 
-      tr.querySelector('.btn-fav').addEventListener('click', e => { e.stopPropagation(); toggleFav(route.id); });
-      tr.querySelector('.btn-load-inline').addEventListener('click', e => { e.stopPropagation(); loadRouteInEditor(route); });
-      tr.addEventListener('click', () => selectRoute(route));
-      tbody.appendChild(tr);
+      if (isExpanded) {
+        routes.forEach(route => {
+          tbody.appendChild(buildRouteRow(route, isAdmin, true));
+        });
+      }
     });
+  }
+
+  function renderFlat(isAdmin) {
+    _filtered.forEach(route => {
+      tbody.appendChild(buildRouteRow(route, isAdmin, false));
+    });
+  }
+
+  function buildRouteRow(route, isAdmin, isChild) {
+    const tr = document.createElement('tr');
+    tr.dataset.id = route.id;
+    if (route.id === _selectedId) tr.classList.add('selected');
+    if (!route.isPublic) tr.classList.add('row-hidden');
+    if (isChild) tr.classList.add('creator-child-row');
+
+    const cats = (route.categories || []).slice(0, 4);
+    const catHtml = cats.map(c =>
+      `<span class="route-tag ${CAT_CLASSES[c]||''}">${escHtml(c)}</span>`
+    ).join('');
+
+    const isFav = _myFavorites.has(route.id);
+    const beansHtml = renderBeansCompact(route.avgRating||0, route.ratingCount||0, route.totalBeans||0);
+    const isChecked = _selectedIds.has(route.id);
+
+    // Admin checkbox cell
+    const checkboxCell = isAdmin
+      ? `<td class="col-check" style="width:28px;text-align:center;padding:0 4px;">
+           <input type="checkbox" class="route-select-chk" data-id="${route.id}" ${isChecked ? 'checked' : ''} />
+         </td>`
+      : '';
+
+    tr.innerHTML = `
+      ${checkboxCell}
+      <td class="col-name">
+        <div class="col-name-inner">
+          <span class="route-name-text">
+            ${isChild ? '<span style="color:var(--muted);margin-right:4px;">↳</span>' : ''}
+            ${escHtml(route.routeName || 'Unnamed')}
+            ${!route.isPublic ? '<span class="badge-hidden">Hidden</span>' : ''}
+          </span>
+          ${catHtml ? `<span class="col-name-tags">${catHtml}</span>` : ''}
+        </div>
+      </td>
+      <td class="col-author">${escHtml(route.inGameName || '—')}</td>
+      <td class="col-wps">${route.waypointCount ?? '?'}</td>
+      <td class="col-rating">${beansHtml}</td>
+      <td class="col-date">${formatDate(route.updatedAt)}</td>
+      <td class="col-actions">
+        <button class="btn-fav ${isFav?'faved':''}" data-id="${route.id}" title="${isFav?'Unfavorite':'Favorite'}">⭐</button>
+        <button class="btn-secondary btn-sm btn-load-inline" data-id="${route.id}" title="Load in Editor">⬇</button>
+      </td>
+    `;
+
+    if (isAdmin) {
+      tr.querySelector('.route-select-chk').addEventListener('change', (e) => {
+        e.stopPropagation();
+        if (e.target.checked) _selectedIds.add(route.id);
+        else _selectedIds.delete(route.id);
+        updateBulkBar();
+      });
+    }
+
+    tr.querySelector('.btn-fav').addEventListener('click', e => { e.stopPropagation(); toggleFav(route.id); });
+    tr.querySelector('.btn-load-inline').addEventListener('click', e => { e.stopPropagation(); loadRouteInEditor(route); });
+    tr.addEventListener('click', (e) => {
+      if (e.target.classList.contains('route-select-chk')) return;
+      selectRoute(route);
+    });
+
+    return tr;
   }
 
   /* ── Bean display helpers ── */
 
-  // Compact inline: filled beans + "3.4 avg" or "— " if no votes
   function renderBeansCompact(avg, count, totalBeans) {
     const full = Math.round(avg);
     let html = '<span class="bean-rating">';
@@ -206,7 +370,6 @@ document.addEventListener('DOMContentLoaded', () => {
     return html;
   }
 
-  // Detail panel: avg stars + total bean pile
   function renderBeansDetail(avg, count, totalBeans) {
     const full = Math.round(avg);
     let html = '<div class="beans-detail-wrap" style="align-items: flex-end;">';
@@ -226,7 +389,6 @@ document.addEventListener('DOMContentLoaded', () => {
     return html;
   }
 
-  // Interactive rating widget
   function renderInteractiveBeans(myRating, canRate) {
     if (!canRate) {
       return `<div class="bean-gate-msg" style="text-align: right;">⬇ Load this route in the editor first to unlock rating</div>`;
@@ -259,11 +421,15 @@ document.addEventListener('DOMContentLoaded', () => {
       `<span class="route-tag ${CAT_CLASSES[c]||''}">${escHtml(c)}</span>`
     ).join('');
 
+    // Show creator ID for traceability
+    const creatorId = route.ownerUid ? `<span class="meta-item" title="Creator UID: ${escHtml(route.ownerUid)}" style="font-family:var(--mono);font-size:9px;color:var(--muted);">🆔 ${escHtml(route.ownerUid.slice(0,12))}…</span>` : '';
+
     detailMeta.innerHTML = `
       <span class="meta-item">👤 ${escHtml(route.inGameName || 'Unknown')}</span>
       <span class="meta-item">📍 ${route.waypointCount ?? '?'} waypoints</span>
       <span class="meta-item">🕐 ${formatDate(route.updatedAt)}</span>
       <span class="meta-item">${route.isPublic ? '🌐 Public' : '🔒 Hidden'}</span>
+      ${creatorId}
       ${catHtml ? `<div class="meta-tags">${catHtml}</div>` : ''}
     `;
 
@@ -307,7 +473,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const ratingWrap = document.getElementById('detailRatingWrap');
     if (ratingWrap) {
       if (uid && !isOwner) {
-        // Show aggregate + loading placeholder first
         let html = renderBeansDetail(route.avgRating||0, route.ratingCount||0, route.totalBeans||0);
         html += '<div style="margin-top:8px;border-top:1px solid var(--border);padding-top:8px;text-align:right;width:100%;">';
         html += '<div style="font-size:10px;color:var(--muted);font-family:var(--head);letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px;">Your Rating</div>';
@@ -316,7 +481,6 @@ document.addEventListener('DOMContentLoaded', () => {
         ratingWrap.innerHTML = html;
         ratingWrap.style.display = 'flex';
 
-        // Resolve both async checks in parallel, then render interactive widget
         const [myRatingResult, hasDownloadedResult] = await Promise.all([
           window.FirestoreRoutes?.getMyRating?.(route.id, uid).catch(() => null) ?? Promise.resolve(null),
           window.FirestoreRoutes?.hasDownloaded?.(route.id, uid).catch(() => false) ?? Promise.resolve(false)
@@ -330,8 +494,6 @@ document.addEventListener('DOMContentLoaded', () => {
           localStorage.setItem('mt_downloads', JSON.stringify([..._myDownloads]));
         }
 
-        // If user has already rated but hasn't "downloaded" via our tracking,
-        // still allow rating (they clearly played it)
         const canRateFinal = canRate || (_myRating !== null);
 
         const slot = ratingWrap.querySelector('#ratingWidgetSlot');
@@ -339,7 +501,6 @@ document.addEventListener('DOMContentLoaded', () => {
           slot.outerHTML = renderInteractiveBeans(_myRating, canRateFinal);
         }
 
-        // Wire bean clicks — query after DOM is updated
         const interactiveWrap = ratingWrap.querySelector('.bean-interactive');
         if (interactiveWrap) {
           const btns = interactiveWrap.querySelectorAll('.bean-btn');
@@ -469,7 +630,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // FIX: Restored the missing showAdminPromoModal function
   function showAdminPromoModal() {
     const uid = window.AuthUI?.getCurrentUser()?.uid;
     const instructions = window.FirestoreRoutes?.getAdminInstructions?.(uid) ||
@@ -501,22 +661,23 @@ document.addEventListener('DOMContentLoaded', () => {
     tbody.querySelectorAll('tr').forEach(r => r.classList.remove('selected'));
   }
 
-function loadRouteInEditor(route) {
-  // 1. Save the full JSON data to a temporary 'transfer' key
-  localStorage.setItem('mt_transfer_json', JSON.stringify(route.routeData));
-  
-  // 2. Mark as downloaded (keep your existing logic)
-  let downloads = JSON.parse(localStorage.getItem('mt_downloads') |
+  function loadRouteInEditor(route) {
+    // Save the full JSON data to a temporary 'transfer' key
+    localStorage.setItem('mt_transfer_json', JSON.stringify(route.routeData));
 
-| '');
-  if (!downloads.includes(route.id)) {
-    downloads.push(route.id);
-    localStorage.setItem('mt_downloads', JSON.stringify(downloads));
+    // Track download for rating gating
+    const uid = window.AuthUI?.getCurrentUser()?.uid;
+    if (uid && window.FirestoreRoutes?.recordDownload) {
+      window.FirestoreRoutes.recordDownload(route.id, uid).catch(() => {});
+    }
+
+    _myDownloads.add(route.id);
+    try {
+      localStorage.setItem('mt_downloads', JSON.stringify([..._myDownloads]));
+    } catch(e) {}
+
+    window.location.href = 'index.html';
   }
-
-  // 3. Now redirect to the editor
-  window.location.href = 'index.html';
-}
 
   function copyRouteJson() {
     const route = _filtered.find(r => r.id === _selectedId);
