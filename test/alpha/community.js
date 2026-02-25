@@ -22,8 +22,12 @@ document.addEventListener('DOMContentLoaded', () => {
   let _myRating        = null;
   let _activeCatFilter = null;
   
-  // FIX: Load previously downloaded routes from local storage so it remembers instantly across page loads
-  let _myDownloads     = new Set(JSON.parse(localStorage.getItem('mt_downloads') || '[]'));
+  // FIX: Safely load previously downloaded routes from local storage
+  let _myDownloads = new Set();
+  try {
+    const stored = localStorage.getItem('mt_downloads');
+    if (stored) _myDownloads = new Set(JSON.parse(stored));
+  } catch(e) { console.warn('Could not parse local downloads', e); }
 
   /* ── DOM ── */
   const searchInput    = document.getElementById('searchInput');
@@ -456,6 +460,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // FIX: Restored the missing showAdminPromoModal function
   function showAdminPromoModal() {
     const uid = window.AuthUI?.getCurrentUser()?.uid;
     const instructions = window.FirestoreRoutes?.getAdminInstructions?.(uid) ||
@@ -493,7 +498,6 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       const uid = window.AuthUI?.getCurrentUser()?.uid;
       
-      // FIX: Ensure network request has time to run, and fallback to local storage instantly
       if (uid) {
         _myDownloads.add(route.id);
         localStorage.setItem('mt_downloads', JSON.stringify([..._myDownloads]));
