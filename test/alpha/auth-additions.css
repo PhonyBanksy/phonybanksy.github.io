@@ -1,0 +1,81 @@
+/**
+ * auth-additions.css
+ * Append these rules to the bottom of your existing style.css.
+ * They add modal styles, cloud badge, and visibility toggle row.
+ */
+
+/* ── Profile setup modal ── */
+.modal-box {
+  background: var(--panel, #1e1e1e);
+  border: 1px solid var(--border, #333);
+  border-radius: 6px;
+  padding: 28px 32px;
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: 0 8px 40px rgba(0,0,0,.6);
+}
+
+.modal-title {
+  font-family: var(--head, 'Barlow Condensed', sans-serif);
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0;
+  color: var(--fg, #e0e0e0);
+  letter-spacing: .03em;
+}
+
+.modal-subtitle {
+  font-size: 12px;
+  color: var(--muted, #888);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.modal-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.modal-field label {
+  font-size: 10px;
+  font-family: var(--head, 'Barlow Condensed', sans-serif);
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: var(--muted, #888);
+}
+
+.modal-field input {
+  background: var(--input-bg, #252525);
+  border: 1px solid var(--border, #333);
+  border-radius: 3px;
+  color: var(--fg, #e0e0e0);
+  font-size: 13px;
+  padding: 8px 10px;
+  font-family: var(--body, 'Barlow', sans-serif);
+  outline: none;
+  transition: border-color .15s;
+}
+
+.modal-field input:focus {
+  border-color: var(--accent, #4fc3f7);
+}
+
+/* ── Cloud badge in route sidebar ── */
+.cloud-badge {
+  font-size: 9px;
+  color: var(--accent, #4fc3f7);
+  margin-left: 3px;
+  opacity: .7;
+  pointer-events: none;
+}
+
+/* ── Visibility toggle row in process panel ── */
+#routeVisibilityRow {
+  padding: 6px 0 8px;
+  border-bottom: 1px solid var(--border, #333);
+  margin-bottom: 4px;
+}
