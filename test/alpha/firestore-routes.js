@@ -101,8 +101,6 @@ window.FirestoreRoutes = {
     if (fields.inGameName !== undefined) updates.inGameName = sanitizeName(fields.inGameName);
     if (fields.isPublic   !== undefined) updates.isPublic   = Boolean(fields.isPublic);
     if (fields.categories !== undefined) updates.categories = cleanCats(fields.categories);
-    // Admin update uses setDoc+merge so it bypasses the content-update ownership check
-    // (handled by admin-only Firestore rule)
     await setDoc(doc(db, ROUTES_COL, routeId), updates, { merge: true });
   },
 
@@ -147,18 +145,13 @@ window.FirestoreRoutes = {
     return snap.docs.map(d => ({ id: d.id, ...d.data() }));
   },
 
-  /* ── DOWNLOAD TRACKING ──
-     Must be called when user loads a route into editor.
-     Required before rating is allowed.
-  ── */
+  /* ── DOWNLOAD TRACKING ── */
   async recordDownload(routeId, uid) {
     if (!uid || !routeId) return;
     const ref = doc(db, ROUTES_COL, routeId, 'downloads', uid);
     const snap = await getDoc(ref);
     if (!snap.exists()) {
       await setDoc(ref, { uid, downloadedAt: serverTimestamp() });
-      // Bump downloadCount on route doc (only aggregated field, passes isRatingAggregateUpdate rule if we add it — OR use setDoc+merge which is owner-gated... better approach: route-level only the rater aggregates. For downloadCount use setDoc+merge as admin or just track without updating parent)
-      // Note: downloadCount update is best-effort only — not required for gate logic
       try {
         const routeSnap = await getDoc(doc(db, ROUTES_COL, routeId));
         if (routeSnap.exists()) {
@@ -175,8 +168,8 @@ window.FirestoreRoutes = {
       const snap = await getDoc(doc(db, ROUTES_COL, routeId, 'downloads', uid));
       return snap.exists();
     } catch (_) { return false; }
-  },
-  
+  }, // <--- THIS COMMA IS REQUIRED TO PREVENT THE ERROR YOU GOT
+
   /* ── RATINGS ──
      totalBeans = raw sum of all ratings (e.g. 2 votes: 1+5=6 beans total)
      avgRating  = mean (3.0)
@@ -247,11 +240,7 @@ window.FirestoreRoutes = {
     return snap.docs.map(d => d.id);
   },
 
-  /* ── ADMIN SELF-PROMOTE ──
-     Because Firestore rules require role=admin to already be set for admin writes,
-     self-promotion must be done via Firebase Console. This function gives clear instructions.
-     Steps: Firebase Console → Firestore → users → <your UID> → edit role field → "admin"
-  ── */
+  /* ── ADMIN SELF-PROMOTE ── */
   getAdminInstructions(uid) {
     return `To set yourself as admin:
 1. Go to: https://console.firebase.google.com/project/okias-events/firestore
