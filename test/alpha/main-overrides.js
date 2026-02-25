@@ -539,44 +539,59 @@
   /* ── INITIAL RENDER ── */
   renderTree();
 
-  /* ── COMMUNITY ROUTE HANDOFF ── */
-  // This runs here — AFTER saveRouteToLocalStorage is overridden — so the route
-  // lands in the sidebar tree correctly and the map renders immediately.
-  (function handleCommunityRouteLoad() {
+  /* ── COMMUNITY ROUTE HANDOFF ──────────────────────────────────────────────
+   * This MUST run here, at the bottom of main-overrides.js, AFTER:
+   *   - RouteProcessor.saveRouteToLocalStorage has been overridden (so the
+   *     route lands in the sidebar tree)
+   *   - window.MapVisualizerInstance exists (created in main.js DOMContentLoaded)
+   * We use requestAnimationFrame so the canvas has been laid out and has real
+   * pixel dimensions before fitToWaypoints is called.
+   * ─────────────────────────────────────────────────────────────────────── */
+  (function applyCommunityRoute() {
     const raw = sessionStorage.getItem('communityRouteLoad');
     if (!raw) return;
     sessionStorage.removeItem('communityRouteLoad');
 
     let routeData;
-    try { routeData = JSON.parse(raw); }
-    catch (e) { console.warn('communityRouteLoad: bad JSON', e); return; }
+    try {
+      routeData = JSON.parse(raw);
+    } catch (e) {
+      console.warn('communityRouteLoad: invalid JSON', e);
+      return;
+    }
 
+    if (!routeData || !Array.isArray(routeData.waypoints)) {
+      console.warn('communityRouteLoad: missing waypoints');
+      return;
+    }
+
+    // 1. Put the JSON into both textareas so the editor has it
     const str      = JSON.stringify(routeData, null, 2);
     const inputEl  = document.getElementById('json_data');
     const outputEl = document.getElementById('output');
-    if (inputEl)  inputEl.value  = str;
+    if (inputEl)  inputEl.value = str;
     if (outputEl) outputEl.value = str;
 
-    // Save into the sidebar tree (override is now in place)
-    const routeName = routeData.routeName || 'Community Route';
-    RouteProcessor.saveRouteToLocalStorage(routeName, routeData);
+    // 2. Register in the sidebar tree — saveRouteToLocalStorage is now
+    //    overridden above so this correctly builds the grouped tree entry
+    RouteProcessor.saveRouteToLocalStorage(routeData.routeName || 'Community Route', routeData);
 
-    // Reflect categories + state badges
+    // 3. Reflect category tags and state badges
     if (window.reflectRouteCategories) window.reflectRouteCategories(routeData);
-    if (RouteProcessor?.updateStateIndicators) RouteProcessor.updateStateIndicators(routeData._routeState || null);
+    if (RouteProcessor.updateStateIndicators) RouteProcessor.updateStateIndicators(routeData._routeState || null);
 
-    // Give the canvas a frame to measure its size, then load + fit
+    // 4. Let the browser finish layout so the canvas has real dimensions,
+    //    then load the route into the map visualizer
     requestAnimationFrame(() => {
       if (window.MapVisualizerInstance) window.MapVisualizerInstance.loadFromOutput();
 
-      // Switch to Process tab so the user sees the map
+      // 5. Make sure the Process tab (with the map) is visible
       document.querySelectorAll('.tab').forEach(b => b.classList.remove('on'));
       document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('on'));
-      const processTab = document.querySelector('[data-pane="pane-process"]');
-      if (processTab) {
-        processTab.classList.add('on');
-        document.getElementById('pane-process').classList.add('on');
-      }
+      const processTab = document.querySelector('.tab[data-pane="pane-process"]');
+      const processPane = document.getElementById('pane-process');
+      if (processTab)  processTab.classList.add('on');
+      if (processPane) processPane.classList.add('on');
 
       showToast('Community route loaded!');
     });
