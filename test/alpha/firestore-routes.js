@@ -168,7 +168,7 @@ window.FirestoreRoutes = {
       const snap = await getDoc(doc(db, ROUTES_COL, routeId, 'downloads', uid));
       return snap.exists();
     } catch (_) { return false; }
-  }, // <--- THIS COMMA IS REQUIRED TO PREVENT THE ERROR YOU GOT
+  },
 
   /* ── RATINGS ──
      totalBeans = raw sum of all ratings (e.g. 2 votes: 1+5=6 beans total)
