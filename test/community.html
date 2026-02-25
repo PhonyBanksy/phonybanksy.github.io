@@ -13,7 +13,6 @@
 <body>
 <div id="app">
 
-  <!-- ══ TOPBAR ══ -->
   <header id="topbar">
     <div class="logo">
       <div class="logo-mark"></div>
@@ -28,10 +27,8 @@
     </div>
   </header>
 
-  <!-- ══ BODY ══ -->
   <div id="community-layout">
 
-    <!-- LEFT: Filters -->
     <aside id="community-left">
       <div class="panel-head">
         <span class="panel-title">Filters</span>
@@ -63,6 +60,15 @@
           <input type="checkbox" id="chkMyRoutes" />
           <span>My routes only</span>
         </label>
+        <label class="check-wrap" style="margin-top:4px;">
+          <input type="checkbox" id="chkFavsOnly" />
+          <span>⭐ Favourites only</span>
+        </label>
+      </div>
+
+      <div class="filter-section">
+        <label class="filter-label">Category</label>
+        <div id="catFilterBar" style="display:flex;flex-wrap:wrap;gap:3px;"></div>
       </div>
 
       <div class="filter-actions">
@@ -70,31 +76,33 @@
         <button id="btnResetFilters" class="btn-ghost btn-full">Reset</button>
       </div>
 
-      <!-- Admin panel -->
       <div id="adminPanel" style="display:none;">
         <div class="admin-title">⭐ Admin Tools</div>
         <button id="btnShowAll" class="btn-secondary btn-full">Show All (incl. Hidden)</button>
       </div>
     </aside>
 
-    <!-- RIGHT: Table + detail -->
     <main id="community-right">
 
       <div id="browser-toolbar">
         <span id="routeCount" class="browser-count">Loading…</span>
         <div style="flex:1;"></div>
         <button id="btnRefresh" class="btn-ghost btn-sm">↺ Refresh</button>
+        <button id="btnLeaderboard" class="btn-ghost btn-sm" title="Bean Leaderboard">🫘 Leaderboard</button>
       </div>
 
       <div id="route-table-wrap">
         <table id="route-table">
           <thead>
             <tr>
+              <th class="col-check admin-only-col" style="width:24px;padding:0 4px;"></th>
               <th data-col="routeName"     class="sortable col-name">Route Name <span class="sort-arrow"></span></th>
               <th data-col="inGameName"    class="sortable col-author">Author <span class="sort-arrow"></span></th>
               <th data-col="waypointCount" class="sortable col-wps">WPs <span class="sort-arrow"></span></th>
+              <th data-col="downloadCount" class="sortable col-dl">⬇ DL <span class="sort-arrow"></span></th>
+              <th data-col="avgRating"     class="sortable col-rating">Rating <span class="sort-arrow"></span></th>
               <th data-col="updatedAt"     class="sortable col-date">Updated <span class="sort-arrow"></span></th>
-              <th class="col-actions">Load</th>
+              <th class="col-actions">Actions</th>
             </tr>
           </thead>
           <tbody id="routeTableBody">
@@ -103,21 +111,26 @@
         </table>
       </div>
 
-      <!-- Detail panel (hidden until a row is selected) -->
       <div id="route-detail" style="display:none;">
         <div id="detail-header">
           <span id="detailName" class="detail-title"></span>
           <button id="btnCloseDetail" class="btn-ghost btn-sm">✕ Close</button>
         </div>
         <div id="detail-body">
-          <div id="detail-meta"></div>
-          <div id="detail-actions">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 15px; flex-wrap: wrap;">
+            <div id="detail-meta" style="flex: 1; min-width: 200px;"></div>
+            <div id="detailRatingWrap" style="display:none; flex-direction:column; gap:3px; align-items: flex-end; text-align: right;"></div>
+          </div>
+          
+          <div id="detail-actions" style="margin-top: 10px;">
             <button id="btnLoadRoute"   class="btn-primary btn-sm">⬇ Load in Editor</button>
             <button id="btnCopyRoute"   class="btn-ghost btn-sm">📋 Copy JSON</button>
+            <button id="btnDetailFav"   class="btn-fav" style="display:none;">☆ Favourite</button>
             <button id="btnToggleVis"   class="btn-secondary btn-sm" style="display:none;">👁 Toggle Visibility</button>
             <button id="btnAdminDelete" class="btn-danger btn-sm"    style="display:none;">🗑 Delete</button>
           </div>
-          <pre id="detailJson" class="detail-json"></pre>
+          
+          <pre id="detailJson" class="detail-json" style="margin-top: 10px;"></pre>
         </div>
       </div>
 
@@ -127,7 +140,6 @@
 
 <div id="toast">Done!</div>
 
-<!-- Profile modal -->
 <div id="profileModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.75); z-index:1000; align-items:center; justify-content:center;">
   <div class="modal-box">
     <h2 class="modal-title">Complete Your Profile</h2>
@@ -142,6 +154,18 @@
     </div>
     <p id="profileError" style="color:#d95050; font-size:12px; min-height:16px; margin:0;"></p>
     <button id="btnSaveProfile" class="btn-primary btn-full">Save Profile</button>
+  </div>
+</div>
+
+
+<div id="leaderboardModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.82); z-index:500; align-items:center; justify-content:center;">
+  <div id="leaderboardBox">
+    <div id="lb-header">
+      <span id="lb-title">🫘 Bean Leaderboard</span>
+      <button id="btnCloseLb" class="btn-ghost btn-sm">✕</button>
+    </div>
+    <div id="lb-subtitle">Top 10 bean farmers in the MotorTown community</div>
+    <div id="lb-list"><div class="lb-loading">Loading…</div></div>
   </div>
 </div>
 

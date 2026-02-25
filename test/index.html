@@ -41,6 +41,10 @@
   <aside id="sidebar-left">
     <div class="panel-head">
       <span class="panel-title">Routes</span>
+      <span class="route-legend">
+        <span title="Saved locally (cache only)">💾 cache</span>
+        <span title="Saved to cloud">☁ cloud</span>
+      </span>
     </div>
     <div id="route-tree">
       <div class="sidebar-empty" id="route-empty">
@@ -59,7 +63,7 @@
       </div>
       <div class="vsep"></div>
       <label class="check-wrap"><input type="checkbox" id="reverse" /> Reverse</label>
-      <label class="check-wrap"><input type="checkbox" id="boxes" /> Box Waypoints</label>
+      <label class="check-wrap"><input type="checkbox" id="boxes" /> Box Gates</label>
       <div class="vsep"></div>
       <label class="check-wrap">
         <span style="color:var(--muted);font-size:11px;font-family:var(--head);letter-spacing:.06em;text-transform:uppercase;">Scale</span>
@@ -68,6 +72,7 @@
           <option value="2">×2</option>
         </select>
       </label>
+      <div id="routeStateBadges" style="display:flex;gap:4px;align-items:center;"></div>
       <input type="number" id="rotation_angle" value="0" style="display:none;" />
     </div>
 
@@ -134,17 +139,83 @@
           </label>
         </div>
 
+        <!-- Route Description -->
+        <div id="routeDescRow" style="display:flex;flex-direction:column;gap:4px;padding:8px 0;border-bottom:1px solid var(--border);">
+          <label style="font-family:var(--head);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);">Description <span style="color:var(--border2);font-weight:400;">(optional · 280 chars)</span></label>
+          <textarea id="routeDescription" maxlength="280" rows="2" placeholder="Short description shown in Community…" style="background:var(--panel);border:1px solid var(--border2);border-radius:3px;color:var(--text);font-size:12px;padding:6px 8px;font-family:var(--body);outline:none;resize:vertical;min-height:44px;transition:border-color .15s;"></textarea>
+          <span id="descCharCount" style="font-family:var(--mono);font-size:9px;color:var(--border2);text-align:right;">0 / 280</span>
+        </div>
+        <!-- Route Category Tags -->
         <div>
-          <div class="sg-title" style="margin-bottom:8px;">How to use</div>
-          <p class="step-hint">
-            1. <strong>Sign in</strong> with Google (top-right) to save routes to the cloud and share with the community.<br><br>
-            2. Click <strong>Import to Website</strong> to paste your copied route JSON.<br><br>
-            3. Set <strong>Scale</strong>, <strong>Box Waypoints</strong>, or <strong>Reverse</strong> in the toolbar.<br><br>
-            4. Hit <em>Process Event</em> — result appears on the map and in the JSON tab.<br><br>
-            5. Click a waypoint on the map (or use the Inspector dropdown) to edit its properties.<br><br>
-            6. Click <strong>Save Changes</strong> — routes sync to the cloud automatically when signed in.<br><br>
-            7. Visit <a href="community.html" style="color:var(--accent);">Community Routes</a> to browse and load other players' routes.
-          </p>
+          <div class="sg-title" style="margin-bottom:8px;">Route Category</div>
+          <div id="routeCatEditor" class="route-cat-row" style="background:var(--panel);border-radius:4px;border:1px solid var(--border2);">
+            <button class="cat-toggle tag-sprint"    data-cat="Sprint">Sprint</button>
+            <button class="cat-toggle tag-circuit"   data-cat="Circuit">Circuit</button>
+            <button class="cat-toggle tag-endurance" data-cat="Endurance">Endurance</button>
+            <button class="cat-toggle tag-offroad"   data-cat="Offroad">Offroad</button>
+            <button class="cat-toggle tag-dakar"     data-cat="Dakar">Dakar</button>
+            <button class="cat-toggle tag-hills"     data-cat="Hills">Hills</button>
+            <button class="cat-toggle tag-technical" data-cat="Technical">Technical</button>
+            <button class="cat-toggle tag-speed"     data-cat="Speed">Speed</button>
+          </div>
+        </div>
+
+        <div>
+          <div class="sg-title" style="margin-bottom:10px;">How to Use</div>
+
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div style="display:flex;gap:10px;align-items:flex-start;padding:8px;background:var(--panel);border-radius:4px;border-left:3px solid var(--accent);">
+              <span style="font-family:var(--head);font-size:18px;font-weight:900;color:var(--accent);line-height:1;flex-shrink:0;">1</span>
+              <div style="font-size:12px;color:var(--text);line-height:1.6;">
+                <strong style="color:var(--text);">Sign in</strong> with Google <em style="color:var(--muted);font-style:normal;">(top-right)</em> to save routes to the cloud and share with the community.
+              </div>
+            </div>
+
+            <div style="display:flex;gap:10px;align-items:flex-start;padding:8px;background:var(--panel);border-radius:4px;border-left:3px solid #4fc3f7;">
+              <span style="font-family:var(--head);font-size:18px;font-weight:900;color:#4fc3f7;line-height:1;flex-shrink:0;">2</span>
+              <div style="font-size:12px;color:var(--text);line-height:1.6;">
+                Click <strong>⬇ Import to Website</strong> — it reads your clipboard. Copy your route JSON from the game first, then click the button.
+              </div>
+            </div>
+
+            <div style="display:flex;gap:10px;align-items:flex-start;padding:8px;background:var(--panel);border-radius:4px;border-left:3px solid #9c6aff;">
+              <span style="font-family:var(--head);font-size:18px;font-weight:900;color:#9c6aff;line-height:1;flex-shrink:0;">3</span>
+              <div style="font-size:12px;color:var(--text);line-height:1.6;">
+                <strong>Set options</strong> in the toolbar above the map:<br>
+                <span style="color:var(--muted);">• <strong style="color:var(--text);">Scale ×2</strong> — doubles all gate widths (safe: won't double if already doubled)<br>
+                • <strong style="color:var(--text);">Box Gates</strong> — makes depth equal to width<br>
+                • <strong style="color:var(--text);">Reverse</strong> — reverses waypoint order</span>
+              </div>
+            </div>
+
+            <div style="display:flex;gap:10px;align-items:flex-start;padding:8px;background:var(--panel);border-radius:4px;border-left:3px solid var(--green);">
+              <span style="font-family:var(--head);font-size:18px;font-weight:900;color:var(--green);line-height:1;flex-shrink:0;">4</span>
+              <div style="font-size:12px;color:var(--text);line-height:1.6;">
+                Hit <strong style="color:var(--accent);">▶ Process Event</strong> — the result appears on the map and in the JSON tab. State badges <span style="font-family:var(--mono);font-size:10px;background:rgba(156,106,255,.2);color:#9c6aff;padding:1px 5px;border-radius:3px;">×2</span> show what's been applied.
+              </div>
+            </div>
+
+            <div style="display:flex;gap:10px;align-items:flex-start;padding:8px;background:var(--panel);border-radius:4px;border-left:3px solid #f5a623;">
+              <span style="font-family:var(--head);font-size:18px;font-weight:900;color:#f5a623;line-height:1;flex-shrink:0;">5</span>
+              <div style="font-size:12px;color:var(--text);line-height:1.6;">
+                Click a waypoint on the map or use the <strong>Inspector dropdown</strong> above to edit individual gate Width, Depth, Height, and rotation.
+              </div>
+            </div>
+
+            <div style="display:flex;gap:10px;align-items:flex-start;padding:8px;background:var(--panel);border-radius:4px;border-left:3px solid var(--green);">
+              <span style="font-family:var(--head);font-size:18px;font-weight:900;color:var(--green);line-height:1;flex-shrink:0;">6</span>
+              <div style="font-size:12px;color:var(--text);line-height:1.6;">
+                Click <strong>💾 Save Changes</strong> to persist edits. Routes auto-sync to the cloud when you're signed in.
+              </div>
+            </div>
+
+            <div style="display:flex;gap:10px;align-items:flex-start;padding:8px;background:var(--panel);border-radius:4px;border-left:3px solid #4fc3f7;">
+              <span style="font-family:var(--head);font-size:18px;font-weight:900;color:#4fc3f7;line-height:1;flex-shrink:0;">7</span>
+              <div style="font-size:12px;color:var(--text);line-height:1.6;">
+                Visit <a href="community.html" style="color:var(--accent);text-decoration:none;font-weight:700;">🌐 Community Routes</a> to browse, rate, and load other players' routes.
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -153,6 +224,7 @@
         <button id="importFromWebBtn" class="btn-import btn-full">⬇ Import to Website</button>
         <button id="exportToWebBtn"   class="btn-success btn-full">⬆ Export from Website</button>
         <button id="processBtn"       class="btn-primary btn-full">▶ Process Event</button>
+        <button id="btnAutoAlign"       class="btn-secondary btn-full">⟳ Auto-Align Gates</button>
         <button id="saveCacheBtn"     class="btn-secondary btn-full">💾 Save to Cache</button>
       </div>
     </div>
@@ -205,7 +277,9 @@
 <script src="math-utils.js"></script>
 <script src="route-processor.js"></script>
 <script src="map-visualizer.js"></script>
+<script src="waypoint-ui.js"></script>
 <script src="inspector.js"></script>
+<script src="auto-align.js"></script>
 <script src="main.js"></script>
 
 <!-- Firebase modules loaded as ES modules -->

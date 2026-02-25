@@ -41,6 +41,40 @@ window.MapVisualizer = function (canvasContainerId = 'routeCanvas', outputFieldI
     };
   };
 
+  /* ── FIT VIEW TO WAYPOINTS ── */
+  const fitToWaypoints = (waypoints) => {
+    if (!waypoints || waypoints.length === 0) return;
+    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+    waypoints.forEach(wp => {
+      const p = gameToScreen(wp.translation.x, wp.translation.y);
+      if (p.x < minX) minX = p.x; if (p.x > maxX) maxX = p.x;
+      if (p.y < minY) minY = p.y; if (p.y > maxY) maxY = p.y;
+    });
+    // Reset view to identity first so gameToScreen works correctly
+    view.x = 0; view.y = 0; view.zoom = 1;
+    // Recalculate with base zoom=1
+    minX = Infinity; maxX = -Infinity; minY = Infinity; maxY = -Infinity;
+    waypoints.forEach(wp => {
+      const p = gameToScreen(wp.translation.x, wp.translation.y);
+      if (p.x < minX) minX = p.x; if (p.x > maxX) maxX = p.x;
+      if (p.y < minY) minY = p.y; if (p.y > maxY) maxY = p.y;
+    });
+    const w = canvas.width  || container.clientWidth;
+    const h = canvas.height || container.clientHeight;
+    const routeW = maxX - minX || 1;
+    const routeH = maxY - minY || 1;
+    const padding = 80;
+    const zoomX = (w - padding * 2) / routeW;
+    const zoomY = (h - padding * 2) / routeH;
+    view.zoom = Math.max(0.05, Math.min(zoomX, zoomY, 5));
+    // cx/cy are screen coords at zoom=1 (view.x=0,view.y=0).
+    // map coord = screen_coord - canvas/2. To centre: view.x = -(mapCoord * zoom)
+    const cx = (minX + maxX) / 2;
+    const cy = (minY + maxY) / 2;
+    view.x = -(cx - w / 2) * view.zoom;
+    view.y = -(cy - h / 2) * view.zoom;
+  };
+
   /* ── INSTANCE ── */
   const instance = {
     loadFromOutput: () => {
@@ -48,6 +82,12 @@ window.MapVisualizer = function (canvasContainerId = 'routeCanvas', outputFieldI
       const data = instance.getRouteData();
       if (window.Inspector && data && data.waypoints) {
         window.Inspector.populate(data.waypoints.length);
+      }
+      // Auto-fit map view to waypoints
+      canvas.width  = container.clientWidth;
+      canvas.height = container.clientHeight;
+      if (data && data.waypoints && data.waypoints.length > 0) {
+        fitToWaypoints(data.waypoints);
       }
       instance.draw();
     },
@@ -66,6 +106,8 @@ window.MapVisualizer = function (canvasContainerId = 'routeCanvas', outputFieldI
     setActiveWaypoint: (index) => {
       activeWpIndex = index;
     },
+
+    getActiveWaypoint: () => activeWpIndex,
 
     draw: () => {
       canvas.width  = container.clientWidth;

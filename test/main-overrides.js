@@ -1,10 +1,10 @@
 /**
  * main-overrides.js
+ * - Cloud-only route storage via Firestore (no localStorage route cache)
  * - Hierarchical route tree with rename, collapse, delete
  * - Tooltip showing full name on hover
  * - Active highlighting + blink on save
- * - Intercepts saveRouteToLocalStorage to use grouped storage
- * - When logged in: also syncs to Firestore via FirestoreRoutes
+ * - Intercepts saveRouteToLocalStorage to use Firestore directly
  * - Wires Import/Export/Copy/Clear buttons
  * - Wires Inspector "Save Changes" button
  * - Wires auth UI: save/delete/visibility buttons update based on login state
@@ -16,36 +16,9 @@
   let _activeRef = null;   // { gi, vi }
   let _activeEl  = null;   // highlighted DOM element
 
-  // Maps localStorage group index to Firestore doc ID (when logged in)
-  // Structure: { 'gi:vi': firestoreDocId }
-  const _firestoreIds = {};
-
-  /* ── STORAGE ── */
-
-  function loadGroups() {
-    try {
-      const raw = localStorage.getItem('routeGroups');
-      if (raw) return JSON.parse(raw);
-    } catch (_) {}
-    try {
-      const old = JSON.parse(localStorage.getItem('routes') || '[]');
-      if (old.length) {
-        const groups = old.map(r => ({
-          baseName: r.routeName || 'Route',
-          baseData: r.routeData,
-          variants: [],
-          _collapsed: false
-        }));
-        saveGroups(groups);
-        return groups;
-      }
-    } catch (_) {}
-    return [];
-  }
-
-  function saveGroups(groups) {
-    localStorage.setItem('routeGroups', JSON.stringify(groups));
-  }
+  // In-memory route groups (loaded from Firestore or built locally for unsaved routes)
+  // Structure: [{ baseName, baseData, firestoreId, ownerUid, variants: [{ label, routeData, firestoreId }] }]
+  let _groups = [];
 
   /* ── TOAST ── */
 
@@ -91,6 +64,47 @@
     setTimeout(() => _activeEl && _activeEl.classList.remove('sidebar-blink'), 600);
   }
 
+  /* ── LOAD MY ROUTES FROM FIRESTORE ── */
+
+  async function loadMyCloudRoutes() {
+    const user = window.AuthUI?.getCurrentUser();
+    if (!user || !window.FirestoreRoutes) return;
+
+    try {
+      const routes = await window.FirestoreRoutes.getMyRoutes(user.uid);
+      // Build groups: each Firestore doc is a top-level entry (variants live locally for now)
+      // Merge with existing _groups to preserve local-only unsaved items
+      const cloudIds = new Set(routes.map(r => r.id));
+
+      // Remove cloud groups that no longer exist in Firestore
+      _groups = _groups.filter(g => !g.firestoreId || cloudIds.has(g.firestoreId));
+
+      routes.forEach(r => {
+        const existing = _groups.find(g => g.firestoreId === r.id);
+        if (existing) {
+          // Update metadata
+          existing.baseName = r.routeName || existing.baseName;
+          existing.baseData = r.routeData || existing.baseData;
+          existing.ownerUid = r.ownerUid;
+        } else {
+          _groups.push({
+            baseName:    r.routeName || 'Route',
+            baseData:    r.routeData,
+            firestoreId: r.id,
+            ownerUid:    r.ownerUid,
+            variants:    [],
+            _collapsed:  false
+          });
+        }
+      });
+
+      renderTree();
+    } catch (err) {
+      console.error('Failed to load cloud routes:', err);
+      showToast('Could not load cloud routes');
+    }
+  }
+
   /* ── TREE RENDER ── */
 
   function renderTree() {
@@ -99,15 +113,14 @@
     if (!tree) return;
 
     tree.querySelectorAll('.route-group').forEach(el => el.remove());
-    const groups = loadGroups();
 
-    if (!groups.length) {
+    if (!_groups.length) {
       if (empty) empty.style.display = '';
       return;
     }
     if (empty) empty.style.display = 'none';
 
-    groups.forEach((group, gi) => tree.appendChild(buildGroupEl(group, gi, groups)));
+    _groups.forEach((group, gi) => tree.appendChild(buildGroupEl(group, gi)));
 
     if (_activeRef) {
       const { gi, vi } = _activeRef;
@@ -124,7 +137,7 @@
     }
   }
 
-  function buildGroupEl(group, gi, groups) {
+  function buildGroupEl(group, gi) {
     const wrap = document.createElement('div');
     wrap.className = 'route-group';
 
@@ -136,9 +149,14 @@
     parent.className = 'route-parent';
     parent.title = group.baseName;
 
+    // Cloud indicator
+    const cloudMark = group.firestoreId
+      ? `<span class="cloud-badge" title="Saved to cloud (${group.firestoreId.slice(0,8)}…)">☁</span>`
+      : `<span class="cloud-badge" style="color:#d95050;" title="Not saved to cloud">⚠</span>`;
+
     const loadBtn = document.createElement('button');
     loadBtn.className = 'route-parent-load';
-    loadBtn.innerHTML = `<span class="route-icon">🗺</span><span class="route-parent-name">${escHtml(group.baseName)}</span>`;
+    loadBtn.innerHTML = `<span class="route-icon">🗺</span><span class="route-parent-name">${escHtml(group.baseName)}</span>${cloudMark}`;
     loadBtn.title   = group.baseName;
     loadBtn.onclick = () => { setActiveEl(parent, gi, -1); loadIntoEditor(group.baseData); };
     parent.appendChild(loadBtn);
@@ -147,9 +165,14 @@
     renBtn.className   = 'route-rename-btn';
     renBtn.title       = 'Rename';
     renBtn.textContent = '✎';
-    renBtn.onclick = () => startRename(loadBtn, group.baseName, (newName) => {
+    renBtn.onclick = () => startRename(loadBtn, group.baseName, async (newName) => {
       group.baseName = newName;
-      saveGroups(groups);
+      // Update cloud if saved
+      if (group.firestoreId && window.FirestoreRoutes && window.AuthUI?.isAdmin()) {
+        try {
+          await window.FirestoreRoutes.adminUpdateRoute(group.firestoreId, { routeName: newName });
+        } catch (_) {}
+      }
       renderTree();
       showToast('Renamed!');
     });
@@ -162,7 +185,6 @@
       colBtn.textContent = collapsed ? '▸' : '▾';
       colBtn.onclick     = () => {
         group._collapsed = !group._collapsed;
-        saveGroups(groups);
         renderTree();
       };
       parent.appendChild(colBtn);
@@ -172,40 +194,34 @@
     delBtn.className   = 'route-delete-btn';
     delBtn.title       = 'Delete route';
     delBtn.textContent = '×';
-    delBtn.onclick     = () => {
-      if (confirm(`Delete "${group.baseName}" and all variants?`)) {
-        // Also delete from Firestore if we have an ID stored
-        const baseKey = `${gi}:-1`;
-        if (_firestoreIds[baseKey] && window.AuthUI?.getCurrentUser()) {
-          window.FirestoreRoutes?.deleteRoute(
-            _firestoreIds[baseKey],
-            window.AuthUI.getCurrentUser().uid
-          ).catch(console.error);
-          delete _firestoreIds[baseKey];
+    delBtn.onclick = async () => {
+      if (!confirm(`Delete "${group.baseName}" and all variants?`)) return;
+      const user = window.AuthUI?.getCurrentUser();
+      if (group.firestoreId && user && window.FirestoreRoutes) {
+        try {
+          await window.FirestoreRoutes.deleteRoute(group.firestoreId, user.uid);
+        } catch (err) {
+          showToast('Cloud delete failed: ' + err.message);
+          return;
         }
-        // Delete all variants from Firestore
-        if (group.variants) {
-          group.variants.forEach((_, vi) => {
-            const varKey = `${gi}:${vi}`;
-            if (_firestoreIds[varKey] && window.AuthUI?.getCurrentUser()) {
-              window.FirestoreRoutes?.deleteRoute(
-                _firestoreIds[varKey],
-                window.AuthUI.getCurrentUser().uid
-              ).catch(console.error);
-              delete _firestoreIds[varKey];
-            }
-          });
-        }
-        groups.splice(gi, 1);
-        saveGroups(groups);
-        if (_activeRef && _activeRef.gi === gi) { _activeRef = null; _activeEl = null; }
-        renderTree();
       }
+      // Delete variants from cloud
+      if (group.variants) {
+        for (const v of group.variants) {
+          if (v.firestoreId && user && window.FirestoreRoutes) {
+            window.FirestoreRoutes.deleteRoute(v.firestoreId, user.uid).catch(console.error);
+          }
+        }
+      }
+      _groups.splice(gi, 1);
+      if (_activeRef && _activeRef.gi === gi) { _activeRef = null; _activeEl = null; }
+      renderTree();
+      showToast('Deleted');
     };
     parent.appendChild(delBtn);
     wrap.appendChild(parent);
 
-    /* ── CHILDREN ── */
+    /* ── CHILDREN (local variants) ── */
     if (hasVariants) {
       const childList = document.createElement('div');
       childList.className = 'route-children' + (collapsed ? ' collapsed' : '');
@@ -215,9 +231,13 @@
         child.className = 'route-child';
         child.title     = v.label;
 
+        const childCloud = v.firestoreId
+          ? `<span class="cloud-badge" title="Saved to cloud">☁</span>`
+          : '';
+
         const childLoad = document.createElement('button');
         childLoad.className = 'route-child-load';
-        childLoad.innerHTML = `<span style="color:var(--accent);font-size:10px;">↳</span><span class="child-label">${escHtml(v.label)}</span>`;
+        childLoad.innerHTML = `<span style="color:var(--accent);font-size:10px;">↳</span><span class="child-label">${escHtml(v.label)}</span>${childCloud}`;
         childLoad.title   = v.label;
         childLoad.onclick = () => { setActiveEl(child, gi, vi); loadIntoEditor(v.routeData); };
 
@@ -229,7 +249,6 @@
           e.stopPropagation();
           startRenameChild(childLoad, v.label, (newName) => {
             v.label = newName;
-            saveGroups(groups);
             renderTree();
             showToast('Renamed!');
           });
@@ -239,33 +258,23 @@
         childDel.className   = 'route-child-delete';
         childDel.title       = 'Delete variant';
         childDel.textContent = '×';
-        childDel.onclick = (e) => {
+        childDel.onclick = async (e) => {
           e.stopPropagation();
-          const varKey = `${gi}:${vi}`;
-          if (_firestoreIds[varKey] && window.AuthUI?.getCurrentUser()) {
-            window.FirestoreRoutes?.deleteRoute(
-              _firestoreIds[varKey],
-              window.AuthUI.getCurrentUser().uid
-            ).catch(console.error);
-            delete _firestoreIds[varKey];
+          const user = window.AuthUI?.getCurrentUser();
+          if (v.firestoreId && user && window.FirestoreRoutes) {
+            try {
+              await window.FirestoreRoutes.deleteRoute(v.firestoreId, user.uid);
+            } catch (err) {
+              showToast('Cloud delete failed: ' + err.message);
+              return;
+            }
           }
           group.variants.splice(vi, 1);
-          saveGroups(groups);
           if (_activeRef && _activeRef.gi === gi && _activeRef.vi === vi) {
             _activeRef = null; _activeEl = null;
           }
           renderTree();
         };
-
-        // Cloud sync indicator badge
-        const varKey = `${gi}:${vi}`;
-        if (_firestoreIds[varKey]) {
-          const badge = document.createElement('span');
-          badge.className   = 'cloud-badge';
-          badge.title       = 'Saved to cloud';
-          badge.textContent = '☁';
-          child.appendChild(badge);
-        }
 
         child.appendChild(childLoad);
         child.appendChild(childRen);
@@ -330,6 +339,10 @@
     if (inputEl)  inputEl.value  = str;
     if (outputEl) outputEl.value = str;
     if (window.MapVisualizerInstance) window.MapVisualizerInstance.loadFromOutput();
+    if (RouteProcessor.updateStateIndicators) {
+      RouteProcessor.updateStateIndicators(routeData._routeState || null);
+    }
+    if (window.reflectRouteCategories) window.reflectRouteCategories(routeData);
   }
 
   /* ── SAVE WAYPOINT EDITS BACK TO ACTIVE ROUTE SLOT ── */
@@ -345,49 +358,60 @@
     try { routeData = JSON.parse(raw); }
     catch (_) { showToast('Invalid JSON in output'); return; }
 
-    const groups = loadGroups();
     const { gi, vi } = _activeRef;
-    if (!groups[gi]) { showToast('Route not found'); return; }
+    if (!_groups[gi]) { showToast('Route not found'); return; }
 
+    const group = _groups[gi];
     if (vi === -1) {
-      groups[gi].baseData = routeData;
+      group.baseData = routeData;
     } else {
-      if (!groups[gi].variants[vi]) { showToast('Variant not found'); return; }
-      groups[gi].variants[vi].routeData = routeData;
+      if (!group.variants[vi]) { showToast('Variant not found'); return; }
+      group.variants[vi].routeData = routeData;
     }
 
-    saveGroups(groups);
     blinkActive();
 
-    // Sync to Firestore if logged in
+    // Push to Firestore
     const user    = window.AuthUI?.getCurrentUser();
     const userDoc = window.AuthUI?.getCurrentUserDoc();
-    if (user && window.FirestoreRoutes) {
-      const key        = `${gi}:${vi}`;
-      const routeName  = vi === -1 ? groups[gi].baseName : groups[gi].variants[vi].label;
-      const isPublicEl = document.getElementById('chkRoutePublic');
-      const isPublic   = isPublicEl ? isPublicEl.checked : true;
-
-      try {
-        const savedId = await window.FirestoreRoutes.saveRoute({
-          routeName,
-          routeData,
-          isPublic,
-          uid:        user.uid,
-          inGameName: userDoc?.inGameName || '',
-          routeId:    _firestoreIds[key] || null
-        });
-        _firestoreIds[key] = savedId;
-        showToast('Saved to cloud ☁');
-      } catch (err) {
-        showToast('Local save OK — cloud error: ' + err.message);
-        console.error('Firestore save error:', err);
-      }
-    } else {
-      showToast('Saved locally (sign in to sync to cloud)');
+    if (!user || !window.FirestoreRoutes) {
+      showToast('Sign in to save to cloud');
+      return;
     }
 
-    setTimeout(() => renderTree(), 50);
+    const routeName  = vi === -1 ? group.baseName : group.variants[vi].label;
+    const existingId = vi === -1 ? group.firestoreId : group.variants[vi]?.firestoreId;
+    const isPublicEl = document.getElementById('chkRoutePublic');
+    const isPublic   = isPublicEl ? isPublicEl.checked : true;
+    const categories = [...document.querySelectorAll('.cat-toggle.on')].map(b => b.dataset.cat);
+    const description = (document.getElementById('routeDescription')?.value || '').trim();
+
+    try {
+      const savedId = await window.FirestoreRoutes.saveRoute({
+        routeName,
+        routeData,
+        isPublic,
+        uid:        user.uid,
+        inGameName: userDoc?.inGameName || '',
+        routeId:    existingId || null,
+        categories,
+        description
+      });
+
+      if (vi === -1) {
+        group.firestoreId = savedId;
+        group.ownerUid    = user.uid;
+      } else {
+        group.variants[vi].firestoreId = savedId;
+      }
+
+      showToast('Saved to cloud ☁');
+    } catch (err) {
+      showToast('Cloud save failed: ' + err.message);
+      console.error('Firestore save error:', err);
+    }
+
+    renderTree();
   }
 
   function escHtml(str) {
@@ -396,12 +420,9 @@
       .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
-  /* ── INTERCEPT saveRouteToLocalStorage ── */
-
-  const _origSave = RouteProcessor.saveRouteToLocalStorage.bind(RouteProcessor);
+  /* ── INTERCEPT saveRouteToLocalStorage — now saves to cloud ── */
 
   RouteProcessor.saveRouteToLocalStorage = async function (routeName, routeData) {
-    const groups  = loadGroups();
     const inputEl = document.getElementById('json_data');
 
     let baseName = 'Route';
@@ -412,62 +433,69 @@
       baseName = routeData.routeName || 'Route';
     }
 
-    const variantLabel  = routeName.trim();
-    let group = groups.find(g => g.baseName === baseName);
+    const variantLabel = routeName.trim();
+    let group = _groups.find(g => g.baseName === baseName);
 
     if (!group) {
       let baseData = routeData;
       try { baseData = JSON.parse(inputEl ? inputEl.value : '{}'); } catch (_) {}
-      group = { baseName, baseData, variants: [], _collapsed: false };
-      groups.push(group);
+      group = { baseName, baseData, firestoreId: null, ownerUid: null, variants: [], _collapsed: false };
+      _groups.push(group);
     }
 
-    const gi            = groups.indexOf(group);
+    const gi = _groups.indexOf(group);
     const alreadyExists = group.variants.findIndex(v => v.label === variantLabel);
     let vi;
 
     if (alreadyExists === -1) {
-      group.variants.push({ label: variantLabel, routeData });
+      group.variants.push({ label: variantLabel, routeData, firestoreId: null });
       vi = group.variants.length - 1;
     } else {
       group.variants[alreadyExists].routeData = routeData;
       vi = alreadyExists;
     }
 
-    saveGroups(groups);
-    _origSave(routeName, routeData);
     renderTree();
 
-    // Auto-sync to Firestore if logged in
+    // Auto-save variant to Firestore if logged in
     const user    = window.AuthUI?.getCurrentUser();
     const userDoc = window.AuthUI?.getCurrentUserDoc();
     if (user && window.FirestoreRoutes) {
-      const key      = `${gi}:${vi}`;
       const isPublicEl = document.getElementById('chkRoutePublic');
       const isPublic   = isPublicEl ? isPublicEl.checked : true;
+      const categories = [...document.querySelectorAll('.cat-toggle.on')].map(b => b.dataset.cat);
+      const description = (document.getElementById('routeDescription')?.value || '').trim();
       try {
         const savedId = await window.FirestoreRoutes.saveRoute({
-          routeName: variantLabel,
+          routeName:  variantLabel,
           routeData,
           isPublic,
           uid:        user.uid,
           inGameName: userDoc?.inGameName || '',
-          routeId:    _firestoreIds[key] || null
+          routeId:    group.variants[vi]?.firestoreId || null,
+          categories,
+          description
         });
-        _firestoreIds[key] = savedId;
+        group.variants[vi].firestoreId = savedId;
+        showToast('Saved to cloud ☁');
       } catch (err) {
-        console.warn('Firestore auto-sync failed:', err.message);
+        showToast('Saved locally — cloud: ' + err.message);
+        console.error('Firestore auto-save error:', err);
       }
+      renderTree();
+    } else {
+      showToast('Sign in to save to cloud');
     }
 
+    // Highlight saved item
     setTimeout(() => {
-      const tree    = document.getElementById('route-tree');
+      const tree = document.getElementById('route-tree');
       if (!tree) return;
       const groupEl = tree.querySelectorAll('.route-group')[gi];
       if (!groupEl) return;
       const childEl = groupEl.querySelectorAll('.route-child')[vi];
       if (childEl) { setActiveEl(childEl, gi, vi); blinkActive(); }
-    }, 50);
+    }, 100);
 
     RouteProcessor.triggerBlink('saveCacheBtn');
   };
@@ -479,14 +507,17 @@
   const saveWpBtn = document.getElementById('btnSaveWaypoint');
   if (saveWpBtn) saveWpBtn.onclick = saveActiveRouteData;
 
-  document.getElementById('clearCacheBtn').onclick = () => {
-    if (confirm('Delete ALL saved routes and variants from this browser?\n(Cloud routes are not deleted)')) {
-      localStorage.removeItem('routeGroups');
-      localStorage.removeItem('routes');
-      _activeRef = null; _activeEl = null;
-      renderTree();
-    }
-  };
+  // Clear button now just clears in-memory groups (no localStorage to clear)
+  const clearBtn = document.getElementById('clearCacheBtn');
+  if (clearBtn) {
+    clearBtn.onclick = () => {
+      if (confirm('Remove all routes from the sidebar?\n(Cloud routes will not be deleted — sign in and refresh to reload them)')) {
+        _groups = [];
+        _activeRef = null; _activeEl = null;
+        renderTree();
+      }
+    };
+  }
 
   document.getElementById('copyOutputBtn').onclick = () => {
     copyText(document.getElementById('output')?.value || '');
@@ -517,13 +548,40 @@
     copyText(text);
   };
 
+  /* ── AUTO-ALIGN ── */
+  if (window.AutoAlign && window.MapVisualizerInstance) {
+    window.AutoAlign.init(window.MapVisualizerInstance);
+  }
+  document.getElementById('btnAutoAlign')?.addEventListener('click', () => {
+    window.AutoAlign?.openPanel();
+  });
+
+  /* ── DESCRIPTION CHAR COUNTER ── */
+  const descTextarea = document.getElementById('routeDescription');
+  const descCounter  = document.getElementById('descCharCount');
+  if (descTextarea && descCounter) {
+    descTextarea.addEventListener('input', () => {
+      const len = descTextarea.value.length;
+      descCounter.textContent = `${len} / 280`;
+      descCounter.style.color = len > 250 ? (len >= 280 ? '#d95050' : '#f5a623') : 'var(--border2)';
+    });
+  }
+
   /* ── AUTH STATE CHANGES ── */
 
-  document.addEventListener('authStateChanged', (e) => {
+  document.addEventListener('authStateChanged', async (e) => {
     const loggedIn = !!e.detail?.user;
-    // Update the visibility checkbox row
     const visRow = document.getElementById('routeVisibilityRow');
     if (visRow) visRow.style.display = loggedIn ? 'flex' : 'none';
+
+    if (loggedIn) {
+      // Load this user's routes from Firestore into the sidebar
+      await loadMyCloudRoutes();
+    } else {
+      // Clear cloud routes on logout, keep any un-saved local ones
+      _groups = _groups.filter(g => !g.firestoreId);
+      renderTree();
+    }
   });
 
   /* ── INITIAL RENDER ── */

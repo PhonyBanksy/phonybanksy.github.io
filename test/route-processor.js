@@ -31,13 +31,22 @@ const RouteProcessor = {
 
         if (reverseChecked) data.waypoints.reverse();
 
-        data.waypoints.forEach(wp => {
+        // Detect if the loaded data already has doubled gate widths
+        // by comparing against the original input JSON
+        let inputData = null;
+        try { inputData = JSON.parse(document.getElementById('json_data').value); } catch (_) {}
+        const alreadyScaled = data._routeState?.scaled == scaleFactor;
+
+        data.waypoints.forEach((wp, idx) => {
           if (!wp.scale3D) wp.scale3D = { x: 1, y: 10, z: 1 };
           wp.scale3D.x = parseFloat(wp.scale3D.x) || 1;   // depth
           wp.scale3D.y = parseFloat(wp.scale3D.y) || 10;  // gate width
           wp.scale3D.z = parseFloat(wp.scale3D.z) || 1;   // height
 
-          wp.scale3D.y = Math.round(wp.scale3D.y * scaleFactor * 100) / 100;
+          // Only apply scale if not already scaled to this factor
+          if (!alreadyScaled && scaleFactor !== 1) {
+            wp.scale3D.y = Math.round(wp.scale3D.y * scaleFactor * 100) / 100;
+          }
           if (squareGates) wp.scale3D.x = wp.scale3D.y;
 
           // Preserve existing rotation unchanged
@@ -47,7 +56,16 @@ const RouteProcessor = {
         outputField.value = JSON.stringify(data, null, 2);
 
         let suffix = reverseChecked ? '(R) ' : '';
-        if (scaleFactor !== 1) suffix += `×${scaleFactor} `;
+        if (scaleFactor !== 1 && !alreadyScaled) suffix += `×${scaleFactor} `;
+
+        // Store route state metadata (won't affect game, stripped on export)
+        data._routeState = {
+          scaled:   alreadyScaled ? (data._routeState?.scaled || scaleFactor) : (scaleFactor !== 1 ? scaleFactor : null),
+          reversed: reverseChecked || data._routeState?.reversed || false,
+          boxed:    squareGates || data._routeState?.boxed || false
+        };
+        outputField.value = JSON.stringify(data, null, 2);
+        RouteProcessor.updateStateIndicators(data._routeState);
 
         this.saveRouteToLocalStorage((data.routeName || 'Unnamed') + ' ' + suffix, data);
 
@@ -66,6 +84,37 @@ const RouteProcessor = {
     if (btn) {
       btn.classList.add('blink-active');
       setTimeout(() => btn.classList.remove('blink-active'), 400);
+    }
+  },
+
+  updateStateIndicators(state) {
+    const bar = document.getElementById('routeStateBadges');
+    if (!bar) return;
+    bar.innerHTML = '';
+    if (!state) return;
+    if (state.scaled) {
+      const b = document.createElement('span');
+      b.className = 'route-state-badge badge-x2';
+      b.textContent = `×${state.scaled}`;
+      b.title = 'Gate widths already scaled — will NOT scale again';
+      bar.appendChild(b);
+      // Update scale selector to show current state
+      const sel = document.getElementById('scale_mode');
+      if (sel) sel.value = '1'; // reset to ×1 since it's already scaled
+    }
+    if (state.reversed) {
+      const b = document.createElement('span');
+      b.className = 'route-state-badge badge-reversed';
+      b.textContent = 'REV';
+      b.title = 'Route already reversed';
+      bar.appendChild(b);
+    }
+    if (state.boxed) {
+      const b = document.createElement('span');
+      b.className = 'route-state-badge badge-boxed';
+      b.textContent = 'BOX';
+      b.title = 'Gates are boxed (square)';
+      bar.appendChild(b);
     }
   },
 

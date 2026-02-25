@@ -13,7 +13,6 @@
 <body>
 <div id="app">
 
-  <!-- ══ TOPBAR ══ -->
   <header id="topbar" style="grid-column: 1 / -1;">
     <div class="logo">
       <div class="logo-mark"></div>
@@ -25,7 +24,6 @@
       <span id="mapStatus">Trying auto-load…</span>
     </div>
 
-    <!-- ── Auth controls (right side of topbar) ── -->
     <div class="topbar-end">
       <a href="community.html" class="btn-secondary btn-sm" style="text-decoration:none;">🌐 Community Routes</a>
       <span id="userDisplay" style="display:none; align-items:center; font-size:12px; color:var(--fg); font-family:var(--head); letter-spacing:.04em;"></span>
@@ -37,7 +35,6 @@
     </div>
   </header>
 
-  <!-- ══ LEFT SIDEBAR — Route Tree ══ -->
   <aside id="sidebar-left">
     <div class="panel-head">
       <span class="panel-title">Routes</span>
@@ -54,7 +51,6 @@
     </div>
   </aside>
 
-  <!-- ══ MAP ══ -->
   <main id="main">
     <div id="map-toolbar">
       <div class="file-btn-wrap">
@@ -72,6 +68,16 @@
           <option value="2">×2</option>
         </select>
       </label>
+      
+      <div class="vsep"></div>
+      
+      <div class="topbar-align-group">
+        <span class="toolbar-label">Auto-Align:</span>
+        <input type="number" id="aaFrom" class="topbar-num-input" placeholder="From" title="Start Waypoint Index" />
+        <input type="number" id="aaTo"   class="topbar-num-input" placeholder="To"   title="End Waypoint Index" />
+        <button id="btnAutoAlign" class="btn-primary btn-sm" title="Align waypoints in range using angle bisectors">⟳ Align</button>
+      </div>
+
       <div id="routeStateBadges" style="display:flex;gap:4px;align-items:center;"></div>
       <input type="number" id="rotation_angle" value="0" style="display:none;" />
     </div>
@@ -81,17 +87,14 @@
     </div>
   </main>
 
-  <!-- ══ RIGHT PANEL ══ -->
   <aside id="sidebar-right">
     <div class="tabs">
       <button class="tab on" data-pane="pane-process">Process</button>
       <button class="tab" data-pane="pane-json">JSON</button>
     </div>
 
-    <!-- ── PROCESS TAB ── -->
     <div class="tab-pane on" id="pane-process">
 
-      <!-- INSPECTOR -->
       <div id="inspector">
         <div class="inspector-head">
           <span class="inspector-title">Inspector</span>
@@ -129,9 +132,7 @@
         </div>
       </div>
 
-      <!-- SCROLLABLE CONTENT -->
       <div class="process-body">
-        <!-- Visibility toggle (shown only when logged in) -->
         <div id="routeVisibilityRow" style="display:none; align-items:center; gap:8px; padding:8px 0; border-bottom:1px solid var(--border);">
           <label class="check-wrap" style="margin:0;">
             <input type="checkbox" id="chkRoutePublic" checked />
@@ -139,13 +140,11 @@
           </label>
         </div>
 
-        <!-- Route Description -->
         <div id="routeDescRow" style="display:flex;flex-direction:column;gap:4px;padding:8px 0;border-bottom:1px solid var(--border);">
           <label style="font-family:var(--head);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);">Description <span style="color:var(--border2);font-weight:400;">(optional · 280 chars)</span></label>
           <textarea id="routeDescription" maxlength="280" rows="2" placeholder="Short description shown in Community…" style="background:var(--panel);border:1px solid var(--border2);border-radius:3px;color:var(--text);font-size:12px;padding:6px 8px;font-family:var(--body);outline:none;resize:vertical;min-height:44px;transition:border-color .15s;"></textarea>
           <span id="descCharCount" style="font-family:var(--mono);font-size:9px;color:var(--border2);text-align:right;">0 / 280</span>
         </div>
-        <!-- Route Category Tags -->
         <div>
           <div class="sg-title" style="margin-bottom:8px;">Route Category</div>
           <div id="routeCatEditor" class="route-cat-row" style="background:var(--panel);border-radius:4px;border:1px solid var(--border2);">
@@ -162,116 +161,26 @@
 
         <div>
           <div class="sg-title" style="margin-bottom:10px;">How to Use</div>
-
           <div style="display:flex;flex-direction:column;gap:8px;">
-            <div style="display:flex;gap:10px;align-items:flex-start;padding:8px;background:var(--panel);border-radius:4px;border-left:3px solid var(--accent);">
-              <span style="font-family:var(--head);font-size:18px;font-weight:900;color:var(--accent);line-height:1;flex-shrink:0;">1</span>
-              <div style="font-size:12px;color:var(--text);line-height:1.6;">
-                <strong style="color:var(--text);">Sign in</strong> with Google <em style="color:var(--muted);font-style:normal;">(top-right)</em> to save routes to the cloud and share with the community.
-              </div>
             </div>
-
-            <div style="display:flex;gap:10px;align-items:flex-start;padding:8px;background:var(--panel);border-radius:4px;border-left:3px solid #4fc3f7;">
-              <span style="font-family:var(--head);font-size:18px;font-weight:900;color:#4fc3f7;line-height:1;flex-shrink:0;">2</span>
-              <div style="font-size:12px;color:var(--text);line-height:1.6;">
-                Click <strong>⬇ Import to Website</strong> — it reads your clipboard. Copy your route JSON from the game first, then click the button.
-              </div>
-            </div>
-
-            <div style="display:flex;gap:10px;align-items:flex-start;padding:8px;background:var(--panel);border-radius:4px;border-left:3px solid #9c6aff;">
-              <span style="font-family:var(--head);font-size:18px;font-weight:900;color:#9c6aff;line-height:1;flex-shrink:0;">3</span>
-              <div style="font-size:12px;color:var(--text);line-height:1.6;">
-                <strong>Set options</strong> in the toolbar above the map:<br>
-                <span style="color:var(--muted);">• <strong style="color:var(--text);">Scale ×2</strong> — doubles all gate widths (safe: won't double if already doubled)<br>
-                • <strong style="color:var(--text);">Box Gates</strong> — makes depth equal to width<br>
-                • <strong style="color:var(--text);">Reverse</strong> — reverses waypoint order</span>
-              </div>
-            </div>
-
-            <div style="display:flex;gap:10px;align-items:flex-start;padding:8px;background:var(--panel);border-radius:4px;border-left:3px solid var(--green);">
-              <span style="font-family:var(--head);font-size:18px;font-weight:900;color:var(--green);line-height:1;flex-shrink:0;">4</span>
-              <div style="font-size:12px;color:var(--text);line-height:1.6;">
-                Hit <strong style="color:var(--accent);">▶ Process Event</strong> — the result appears on the map and in the JSON tab. State badges <span style="font-family:var(--mono);font-size:10px;background:rgba(156,106,255,.2);color:#9c6aff;padding:1px 5px;border-radius:3px;">×2</span> show what's been applied.
-              </div>
-            </div>
-
-            <div style="display:flex;gap:10px;align-items:flex-start;padding:8px;background:var(--panel);border-radius:4px;border-left:3px solid #f5a623;">
-              <span style="font-family:var(--head);font-size:18px;font-weight:900;color:#f5a623;line-height:1;flex-shrink:0;">5</span>
-              <div style="font-size:12px;color:var(--text);line-height:1.6;">
-                Click a waypoint on the map or use the <strong>Inspector dropdown</strong> above to edit individual gate Width, Depth, Height, and rotation.
-              </div>
-            </div>
-
-            <div style="display:flex;gap:10px;align-items:flex-start;padding:8px;background:var(--panel);border-radius:4px;border-left:3px solid var(--green);">
-              <span style="font-family:var(--head);font-size:18px;font-weight:900;color:var(--green);line-height:1;flex-shrink:0;">6</span>
-              <div style="font-size:12px;color:var(--text);line-height:1.6;">
-                Click <strong>💾 Save Changes</strong> to persist edits. Routes auto-sync to the cloud when you're signed in.
-              </div>
-            </div>
-
-            <div style="display:flex;gap:10px;align-items:flex-start;padding:8px;background:var(--panel);border-radius:4px;border-left:3px solid #4fc3f7;">
-              <span style="font-family:var(--head);font-size:18px;font-weight:900;color:#4fc3f7;line-height:1;flex-shrink:0;">7</span>
-              <div style="font-size:12px;color:var(--text);line-height:1.6;">
-                Visit <a href="community.html" style="color:var(--accent);text-decoration:none;font-weight:700;">🌐 Community Routes</a> to browse, rate, and load other players' routes.
-              </div>
-            </div>
-          </div>
         </div>
       </div>
 
-      <!-- ACTION BUTTONS -->
       <div class="process-footer">
         <button id="importFromWebBtn" class="btn-import btn-full">⬇ Import to Website</button>
         <button id="exportToWebBtn"   class="btn-success btn-full">⬆ Export from Website</button>
         <button id="processBtn"       class="btn-primary btn-full">▶ Process Event</button>
-        <button id="btnAutoAlign"       class="btn-secondary btn-full">⟳ Auto-Align Gates</button>
         <button id="saveCacheBtn"     class="btn-secondary btn-full">💾 Save to Cache</button>
       </div>
     </div>
 
-    <!-- ── JSON TAB ── -->
     <div class="tab-pane" id="pane-json">
-      <div class="json-tab-wrap">
-        <div class="json-box">
-          <div class="box-header">
-            <span class="box-header-label">Input</span>
-            <button class="btn-ghost btn-sm" onclick="document.getElementById('json_data').value=''">Clear</button>
-          </div>
-          <textarea id="json_data" placeholder="Paste your route JSON here…"></textarea>
-        </div>
-        <div class="json-divider"></div>
-        <div class="json-box">
-          <div class="box-header">
-            <span class="box-header-label">Output</span>
-            <button class="btn-ghost btn-sm" id="copyOutputBtn">Copy</button>
-          </div>
-          <textarea id="output" placeholder="Processed output will appear here…" style="color:#ce9178;"></textarea>
-        </div>
       </div>
-    </div>
 
   </aside>
 </div>
 
 <div id="toast">Done!</div>
-
-<!-- ══ PROFILE SETUP MODAL ══ -->
-<div id="profileModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.7); z-index:1000; align-items:center; justify-content:center;">
-  <div class="modal-box">
-    <h2 class="modal-title">Complete Your Profile</h2>
-    <p class="modal-subtitle">Set your in-game and Discord names. These are shown publicly on Community Routes.</p>
-    <div class="modal-field">
-      <label for="inpIngameName">In-Game Name</label>
-      <input id="inpIngameName" type="text" maxlength="64" placeholder="Your character name in MotorTown" autocomplete="off" />
-    </div>
-    <div class="modal-field">
-      <label for="inpDiscordName">Discord Username</label>
-      <input id="inpDiscordName" type="text" maxlength="64" placeholder="e.g. username#1234 or username" autocomplete="off" />
-    </div>
-    <p id="profileError" style="color:#ff5555; font-size:12px; min-height:16px; margin:4px 0;"></p>
-    <button id="btnSaveProfile" class="btn-primary btn-full">Save Profile</button>
-  </div>
-</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="math-utils.js"></script>
@@ -281,31 +190,6 @@
 <script src="inspector.js"></script>
 <script src="auto-align.js"></script>
 <script src="main.js"></script>
-
-<!-- Firebase modules loaded as ES modules -->
-<script type="module" src="firebase-config.js"></script>
-<script type="module" src="auth-ui.js"></script>
-<script type="module" src="firestore-routes.js"></script>
-<script type="module">
-  // Initialize auth UI after modules load
-  document.addEventListener('DOMContentLoaded', () => {
-    window.AuthUI?.init();
-  });
-  // If DOM already loaded (modules can be deferred):
-  if (document.readyState !== 'loading') {
-    window.AuthUI?.init();
-  }
-</script>
-
-<!-- main-overrides must load AFTER the non-module scripts AND after Firebase modules are initialized -->
-<!-- We defer it slightly so Firebase modules are ready -->
-<script>
-  window.addEventListener('load', () => {
-    const s = document.createElement('script');
-    s.src = 'main-overrides.js';
-    document.body.appendChild(s);
-  });
-</script>
 
 </body>
 </html>
