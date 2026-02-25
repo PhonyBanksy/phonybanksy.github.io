@@ -501,29 +501,22 @@ document.addEventListener('DOMContentLoaded', () => {
     tbody.querySelectorAll('tr').forEach(r => r.classList.remove('selected'));
   }
 
-  /* ── Load route in editor — also records download ── */
-  async function loadRouteInEditor(route) {
-    if (!route?.routeData) { showToast('No route data'); return; }
-    try {
-      const uid = window.AuthUI?.getCurrentUser()?.uid;
-      
-      if (uid) {
-        _myDownloads.add(route.id);
-        localStorage.setItem('mt_downloads', JSON.stringify([..._myDownloads]));
-        
-        if (window.FirestoreRoutes?.recordDownload) {
-          // Give Firebase up to 1 second to log the download before redirecting
-          await Promise.race([
-            window.FirestoreRoutes.recordDownload(route.id, uid),
-            new Promise(resolve => setTimeout(resolve, 1000))
-          ]).catch(() => {});
-        }
-      }
-      
-      sessionStorage.setItem('communityRouteLoad', JSON.stringify(route.routeData));
-      window.location.href = 'index.html';
-    } catch (e) { showToast('Could not load: ' + e.message); }
+function loadRouteInEditor(route) {
+  // 1. Save the full JSON data to a temporary 'transfer' key
+  localStorage.setItem('mt_transfer_json', JSON.stringify(route.routeData));
+  
+  // 2. Mark as downloaded (keep your existing logic)
+  let downloads = JSON.parse(localStorage.getItem('mt_downloads') |
+
+| '');
+  if (!downloads.includes(route.id)) {
+    downloads.push(route.id);
+    localStorage.setItem('mt_downloads', JSON.stringify(downloads));
   }
+
+  // 3. Now redirect to the editor
+  window.location.href = 'index.html';
+}
 
   function copyRouteJson() {
     const route = _filtered.find(r => r.id === _selectedId);
