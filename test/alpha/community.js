@@ -245,6 +245,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     tbody.innerHTML = '';
+    buildRankCache();
 
     if (_groupMode === 'byCreator') {
       renderGroupedByCreator(isAdmin);
@@ -305,9 +306,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  function getAuthorRankBadge(inGameName) {
-    if (!inGameName || !_allRoutes.length) return '';
-    // Tally total beans per author from loaded routes
+  // Cached rank map: inGameName → { rank, totalBeans }
+  let _rankCache = {};
+
+  function buildRankCache() {
     const totals = {};
     _allRoutes.forEach(r => {
       const key = r.inGameName || '';
@@ -315,10 +317,14 @@ document.addEventListener('DOMContentLoaded', () => {
       totals[key] = (totals[key] || 0) + (Number(r.totalBeans) || 0);
     });
     const sorted = Object.entries(totals).sort((a, b) => b[1] - a[1]);
-    const pos = sorted.findIndex(([name]) => name === inGameName);
-    if (pos === -1 || totals[inGameName] === 0) return '';
-    const rank = BEAN_RANKS[Math.min(pos, BEAN_RANKS.length - 1)];
-    return `<span class="bean-rank-badge" style="color:${rank.color};border-color:${rank.color}30;background:${rank.color}12;" title="${rank.label} · 🫘 ${totals[inGameName]} total beans">${rank.icon}</span>`;
+    _rankCache = {};
+    sorted.forEach(([name, beans], i) => {
+      _rankCache[name] = { rank: BEAN_RANKS[Math.min(i, BEAN_RANKS.length - 1)], totalBeans: beans, pos: i };
+    });
+  }
+
+  function getAuthorRank(inGameName) {
+    return _rankCache[inGameName] || null;
   }
 
   function buildRouteRow(route, isAdmin, isChild) {
@@ -328,47 +334,55 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!route.isPublic) tr.classList.add('row-hidden');
     if (isChild) tr.classList.add('creator-child-row');
 
-    const cats = (route.categories || []).slice(0, 4);
-    const catHtml = cats.map(c =>
-      `<span class="route-tag ${CAT_CLASSES[c]||''}">${escHtml(c)}</span>`
+    const cats = (route.categories || []).slice(0, 3);
+    const catHtml = cats.map(cat =>
+      `<span class="route-tag ${CAT_CLASSES[cat]||''}">${escHtml(cat)}</span>`
     ).join('');
 
     const isFav = _myFavorites.has(route.id);
     const beansHtml = renderBeansCompact(route.avgRating||0, route.ratingCount||0, route.totalBeans||0);
     const isChecked = _selectedIds.has(route.id);
+    const dlCount = route.downloadCount || 0;
 
-    // Admin checkbox cell
-    const checkboxCell = isAdmin
-      ? `<td class="col-check" style="width:28px;text-align:center;padding:0 4px;">
-           <input type="checkbox" class="route-select-chk" data-id="${route.id}" ${isChecked ? 'checked' : ''} />
-         </td>`
+    // Author rank
+    const rankInfo = getAuthorRank(route.inGameName);
+    const rankIconHtml = rankInfo
+      ? `<span class="author-rank-icon" style="color:${rankInfo.rank.color};" title="${rankInfo.rank.label} · 🫘 ${rankInfo.totalBeans} total beans">${rankInfo.rank.icon}</span>`
       : '';
+    const rankLabelHtml = rankInfo
+      ? `<span class="author-rank-label" style="color:${rankInfo.rank.color};">${rankInfo.rank.label}</span>`
+      : '';
+
+    // Checkbox cell — always rendered but hidden for non-admins via CSS
+    const checkboxCell = `<td class="col-check${isAdmin ? '' : ' col-check-hidden'}"><input type="checkbox" class="route-select-chk" data-id="${route.id}" ${isChecked ? 'checked' : ''} /></td>`;
 
     tr.innerHTML = `
       ${checkboxCell}
       <td class="col-name">
-        <div class="col-name-inner">
+        <div class="col-name-main">
+          ${isChild ? '<span class="child-indent">↳</span>' : ''}
           <span class="route-name-text">
-            ${isChild ? '<span style="color:var(--muted);margin-right:4px;">↳</span>' : ''}
             ${escHtml(route.routeName || 'Unnamed')}
             ${!route.isPublic ? '<span class="badge-hidden">Hidden</span>' : ''}
           </span>
-          ${route.description ? `<span class="route-description-text">${escHtml(route.description)}</span>` : ''}
-          ${catHtml ? `<span class="col-name-tags">${catHtml}</span>` : ''}
         </div>
+        ${route.description ? `<div class="route-desc-line">${escHtml(route.description)}</div>` : ''}
+        ${catHtml ? `<div class="route-tags-line">${catHtml}</div>` : ''}
       </td>
       <td class="col-author">
-        <div class="author-cell">
-          ${escHtml(route.inGameName || '—')}
-          ${getAuthorRankBadge(route.inGameName)}
+        <div class="author-name-row">
+          ${rankIconHtml}
+          <span class="author-name-text">${escHtml(route.inGameName || '—')}</span>
         </div>
+        ${rankLabelHtml}
       </td>
       <td class="col-wps">${route.waypointCount ?? '?'}</td>
+      <td class="col-dl">${dlCount > 0 ? `<span class="dl-count">⬇ ${dlCount}</span>` : '<span class="dl-zero">—</span>'}</td>
       <td class="col-rating">${beansHtml}</td>
       <td class="col-date">${formatDate(route.updatedAt)}</td>
       <td class="col-actions">
         <button class="btn-fav ${isFav?'faved':''}" data-id="${route.id}" title="${isFav?'Unfavorite':'Favorite'}">⭐</button>
-        <button class="btn-secondary btn-sm btn-load-inline" data-id="${route.id}" title="Load in Editor">⬇</button>
+        <button class="btn-load-inline" data-id="${route.id}" title="Load in Editor">⬇</button>
       </td>
     `;
 
@@ -873,7 +887,11 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   document.addEventListener('authStateChanged', async () => {
-    adminPanel.style.display = window.AuthUI?.isAdmin() ? 'block' : 'none';
+    const isAdmin = window.AuthUI?.isAdmin();
+    adminPanel.style.display = isAdmin ? 'block' : 'none';
+    // Toggle is-admin class on table for checkbox column visibility
+    const tbl = document.getElementById('route-table');
+    if (tbl) tbl.classList.toggle('is-admin', !!isAdmin);
     loadRoutes();
   });
 

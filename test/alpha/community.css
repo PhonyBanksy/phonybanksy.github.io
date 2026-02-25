@@ -489,18 +489,69 @@ a.btn-secondary, a.btn-ghost { text-decoration: none; }
 
 /* ── TABLE NAME CELL — tags on same line, pushed to right ── */
 .col-name { min-width: 180px; }
-.col-name-inner {
-  display: flex; align-items: center; gap: 4px; flex-wrap: wrap; width: 100%;
+.col-name { min-width: 160px; max-width: 320px; }
+.col-name-main {
+  display: flex; align-items: center; gap: 5px; width: 100%;
 }
 .route-name-text {
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-shrink: 1; min-width: 0;
-  max-width: 100%;
+  font-weight: 600;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  flex: 1; min-width: 0;
 }
-.col-name-tags {
-  display: flex; gap: 3px; flex-shrink: 0; margin-left: auto; align-items: center;
+.child-indent { color: var(--muted); font-size: 10px; flex-shrink: 0; }
+.route-desc-line {
+  font-size: 10px; color: var(--muted); font-style: italic;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  max-width: 100%; margin-top: 1px;
 }
+.route-tags-line {
+  display: flex; gap: 3px; flex-wrap: wrap; margin-top: 3px;
+}
+.col-name-tags { display: flex; gap: 3px; flex-shrink: 0; margin-left: auto; align-items: center; }
 .meta-tags { display: flex; gap: 4px; flex-wrap: wrap; width: 100%; margin-top: 4px; }
-.col-actions { width: 70px !important; }
+
+/* ── AUTHOR COLUMN ── */
+.col-author { width: 140px; min-width: 120px; }
+.author-name-row {
+  display: flex; align-items: center; gap: 5px;
+}
+.author-rank-icon {
+  font-size: 16px; line-height: 1; flex-shrink: 0; cursor: default;
+}
+.author-name-text {
+  font-family: var(--head); font-size: 12px; font-weight: 700;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  letter-spacing: .02em;
+}
+.author-rank-label {
+  font-family: var(--head); font-size: 9px; font-weight: 700;
+  letter-spacing: .08em; text-transform: uppercase;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  display: block; margin-top: 1px;
+  opacity: .85;
+}
+
+/* ── DOWNLOADS COLUMN ── */
+.col-dl { width: 54px; text-align: center; }
+.dl-count { font-family: var(--mono); font-size: 10px; color: var(--text); }
+.dl-zero  { font-family: var(--mono); font-size: 10px; color: var(--border2); }
+
+/* ── CHECKBOX COLUMN ── */
+.col-check { width: 24px; padding: 0 4px !important; text-align: center; }
+.col-check input[type="checkbox"] {
+  accent-color: var(--accent); cursor: pointer; width: 13px; height: 13px; display: block; margin: 0 auto;
+}
+.col-check-hidden { visibility: hidden; pointer-events: none; }
+.admin-only-col { width: 24px; padding: 0 4px !important; }
+
+.col-actions { width: 62px !important; }
+.btn-load-inline {
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--panel); border: 1px solid var(--border2); border-radius: 3px;
+  color: var(--muted); padding: 3px 7px; cursor: pointer; font-size: 12px;
+  transition: all .15s; line-height: 1;
+}
+.btn-load-inline:hover { border-color: var(--accent); color: var(--accent); background: rgba(232,64,12,.08); }
 
 
 /* ── CREATOR GROUP ROWS ── */
@@ -564,13 +615,7 @@ a.btn-secondary, a.btn-ghost { text-decoration: none; }
   padding-left: 28px;
 }
 
-/* ── ADMIN CHECKBOX COLUMN ── */
-.col-check input[type="checkbox"] {
-  accent-color: var(--accent);
-  cursor: pointer;
-  width: 14px;
-  height: 14px;
-}
+
 
 /* ── BULK ACTION BAR ── */
 #bulkBar {
@@ -580,19 +625,7 @@ a.btn-secondary, a.btn-ghost { text-decoration: none; }
   animation: none;
 }
 
-/* ── ROUTE DESCRIPTION IN TABLE ── */
-.route-description-text {
-  font-size: 10px;
-  color: var(--muted);
-  font-family: var(--body);
-  font-style: italic;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 220px;
-  flex-shrink: 1;
-  min-width: 0;
-}
+
 
 /* ══════════════════════════════════════════
    BEAN RANK BADGES
@@ -613,12 +646,7 @@ a.btn-secondary, a.btn-ghost { text-decoration: none; }
   flex-shrink: 0;
   cursor: default;
 }
-.author-cell {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  flex-wrap: nowrap;
-}
+
 
 /* ══════════════════════════════════════════
    BEAN LEADERBOARD MODAL
@@ -745,3 +773,9 @@ a.btn-secondary, a.btn-ghost { text-decoration: none; }
   min-width: 55px;
   text-align: right;
 }
+
+/* Admin-only column header hidden until admin revealed */
+.admin-only-col { display: none; }
+.is-admin .admin-only-col { display: table-cell; }
+.col-check-hidden { display: none; }
+.is-admin .col-check-hidden { display: table-cell; visibility: visible; }

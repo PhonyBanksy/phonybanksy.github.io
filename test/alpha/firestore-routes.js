@@ -241,6 +241,29 @@ window.FirestoreRoutes = {
     return snap.docs.map(d => d.id);
   },
 
+
+  // Compute bean leaderboard — no composite index needed (client-side sort)
+  async getLeaderboard() {
+    const snap = await getDocs(query(
+      collection(db, ROUTES_COL),
+      where('isPublic', '==', true)
+    ));
+    const totals = {};
+    snap.docs.forEach(d => {
+      const data = d.data();
+      if (!data.ownerUid) return;
+      const uid = data.ownerUid;
+      if (!totals[uid]) {
+        totals[uid] = { uid, inGameName: data.inGameName || 'Unknown', totalBeans: 0, routeCount: 0 };
+      }
+      totals[uid].totalBeans += Number(data.totalBeans) || 0;
+      totals[uid].routeCount++;
+    });
+    return Object.values(totals)
+      .sort((a, b) => b.totalBeans - a.totalBeans)
+      .slice(0, 10);
+  },
+
   getAdminInstructions(uid) {
     return `To set yourself as admin:\n1. Go to: https://console.firebase.google.com/project/okias-events/firestore\n2. Browse to: users → ${uid || '(your UID shown after login)'}\n3. Click the "role" field and change "user" → "admin"\n4. Save, then refresh this page.`;
   }
