@@ -13,7 +13,6 @@
 <body>
 <div id="app">
 
-  <!-- ══ TOPBAR ══ -->
   <header id="topbar">
     <div class="logo">
       <div class="logo-mark"></div>
@@ -28,10 +27,8 @@
     </div>
   </header>
 
-  <!-- ══ BODY ══ -->
   <div id="community-layout">
 
-    <!-- LEFT: Filters -->
     <aside id="community-left">
       <div class="panel-head">
         <span class="panel-title">Filters</span>
@@ -79,7 +76,6 @@
         <button id="btnResetFilters" class="btn-ghost btn-full">Reset</button>
       </div>
 
-      <!-- Admin panel -->
       <div id="adminPanel" style="display:none;">
         <div class="admin-title">⭐ Admin Tools</div>
         <button id="btnShowAll" class="btn-secondary btn-full">Show All (incl. Hidden)</button>
@@ -87,7 +83,6 @@
       </div>
     </aside>
 
-    <!-- RIGHT: Table + detail -->
     <main id="community-right">
 
       <div id="browser-toolbar">
@@ -114,23 +109,26 @@
         </table>
       </div>
 
-      <!-- Detail panel (hidden until a row is selected) -->
       <div id="route-detail" style="display:none;">
         <div id="detail-header">
           <span id="detailName" class="detail-title"></span>
           <button id="btnCloseDetail" class="btn-ghost btn-sm">✕ Close</button>
         </div>
         <div id="detail-body">
-          <div id="detail-meta"></div>
-          <div id="detail-actions">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 15px; flex-wrap: wrap;">
+            <div id="detail-meta" style="flex: 1; min-width: 200px;"></div>
+            <div id="detailRatingWrap" style="display:none; flex-direction:column; gap:3px; align-items: flex-end; text-align: right;"></div>
+          </div>
+          
+          <div id="detail-actions" style="margin-top: 10px;">
             <button id="btnLoadRoute"   class="btn-primary btn-sm">⬇ Load in Editor</button>
             <button id="btnCopyRoute"   class="btn-ghost btn-sm">📋 Copy JSON</button>
             <button id="btnDetailFav"   class="btn-fav" style="display:none;">☆ Favourite</button>
             <button id="btnToggleVis"   class="btn-secondary btn-sm" style="display:none;">👁 Toggle Visibility</button>
             <button id="btnAdminDelete" class="btn-danger btn-sm"    style="display:none;">🗑 Delete</button>
           </div>
-          <div id="detailRatingWrap" style="display:none;flex-direction:column;gap:3px;padding:4px 0;"></div>
-          <pre id="detailJson" class="detail-json"></pre>
+          
+          <pre id="detailJson" class="detail-json" style="margin-top: 10px;"></pre>
         </div>
       </div>
 
@@ -140,7 +138,6 @@
 
 <div id="toast">Done!</div>
 
-<!-- Profile modal -->
 <div id="profileModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.75); z-index:1000; align-items:center; justify-content:center;">
   <div class="modal-box">
     <h2 class="modal-title">Complete Your Profile</h2>
