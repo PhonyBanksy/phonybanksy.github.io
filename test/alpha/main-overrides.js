@@ -1,54 +1,54 @@
 /**
  * main-overrides.js
- *
- * STORAGE MODEL
- * ─────────────
- * LOGGED IN  → Firestore only. On authStateChanged: fetch user's routes,
- *              render sidebar. Save = upsert by routeId (kept on the object).
- *              No localStorage for persistence.
- *
- * LOGGED OUT → localStorage only (key: mt_local_routes).
- *              Community loads land here. Everything is local-only.
- *              Sidebar shows local routes + a "sign in to sync" hint.
- *
- * Community load → always into localStorage + editor first.
- *                  If logged in: ☁ button appears to push it to Firestore.
+ * - Hierarchical route tree with rename, collapse, delete
+ * - Tooltip showing full name on hover
+ * - Active highlighting + blink on save
+ * - Intercepts saveRouteToLocalStorage to use grouped storage
+ * - When logged in: also syncs to Firestore via FirestoreRoutes
+ * - Wires Import/Export/Copy/Clear buttons
+ * - Wires Inspector "Save Changes" button
+ * - Wires auth UI: save/delete/visibility buttons update based on login state
  */
 
 (function () {
   'use strict';
 
-  /* ─────────────────────────────────────────────────────────────────────────
-   * IN-MEMORY LIST  –  each entry:
-   *   { id, routeName, routeData, isPublic, categories, _local }
-   *   id     = Firestore doc ID, null when local-only
-   *   _local = true  = not in Firestore yet
-   * ───────────────────────────────────────────────────────────────────────── */
-  let _routes    = [];   // the live list
-  let _activeIdx = -1;   // index of currently loaded route
-  let _activeEl  = null; // DOM element currently highlighted
+  let _activeRef = null;   // { gi, vi }
+  let _activeEl  = null;   // highlighted DOM element
 
-  /* ── LOCAL STORAGE (logged-out persistence) ─────────────────────────────── */
-  const LS_KEY = 'mt_local_routes';
+  // Maps localStorage group index to Firestore doc ID (when logged in)
+  // Structure: { 'gi:vi': firestoreDocId }
+  const _firestoreIds = {};
 
-  function lsLoad() {
-    try { return JSON.parse(localStorage.getItem(LS_KEY) || '[]'); }
-    catch (_) { return []; }
-  }
-  function lsSave(list) { localStorage.setItem(LS_KEY, JSON.stringify(list)); }
-  function lsDel(routeName) { lsSave(lsLoad().filter(r => r.routeName !== routeName)); }
-  function lsClear() {
-    [LS_KEY, 'routeGroups', 'routes'].forEach(k => localStorage.removeItem(k));
-  }
-  function lsUpsert(routeName, routeData) {
-    const list = lsLoad();
-    const i    = list.findIndex(r => r.routeName === routeName);
-    if (i >= 0) list[i] = { routeName, routeData };
-    else list.push({ routeName, routeData });
-    lsSave(list);
+  /* ── STORAGE ── */
+
+  function loadGroups() {
+    try {
+      const raw = localStorage.getItem('routeGroups');
+      if (raw) return JSON.parse(raw);
+    } catch (_) {}
+    try {
+      const old = JSON.parse(localStorage.getItem('routes') || '[]');
+      if (old.length) {
+        const groups = old.map(r => ({
+          baseName: r.routeName || 'Route',
+          baseData: r.routeData,
+          variants: [],
+          _collapsed: false
+        }));
+        saveGroups(groups);
+        return groups;
+      }
+    } catch (_) {}
+    return [];
   }
 
-  /* ── TOAST ─────────────────────────────────────────────────────────────── */
+  function saveGroups(groups) {
+    localStorage.setItem('routeGroups', JSON.stringify(groups));
+  }
+
+  /* ── TOAST ── */
+
   function showToast(msg) {
     const t = document.getElementById('toast');
     if (!t) return;
@@ -58,271 +58,239 @@
     t._timer = setTimeout(() => t.classList.remove('show'), 2500);
   }
 
-  /* ── CLIPBOARD ─────────────────────────────────────────────────────────── */
+  /* ── CLIPBOARD ── */
+
   function copyText(text) {
-    if (navigator.clipboard?.writeText) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(text)
         .then(() => showToast('Copied!'))
         .catch(() => fallbackCopy(text));
-    } else { fallbackCopy(text); }
+    } else {
+      fallbackCopy(text);
+    }
   }
+
   function fallbackCopy(text) {
     const ta = document.createElement('textarea');
     ta.value = text;
     ta.style.cssText = 'position:fixed;top:-9999px;left:-9999px;opacity:0';
-    document.body.appendChild(ta); ta.focus(); ta.select();
+    document.body.appendChild(ta);
+    ta.focus(); ta.select();
     try { document.execCommand('copy'); showToast('Copied!'); }
     catch (_) { showToast('Copy failed'); }
     ta.remove();
   }
 
-  /* ── BLINK ──────────────────────────────────────────────────────────────── */
-  function blinkEl(el) {
-    if (!el) return;
-    el.classList.remove('sidebar-blink'); void el.offsetWidth;
-    el.classList.add('sidebar-blink');
-    setTimeout(() => el && el.classList.remove('sidebar-blink'), 600);
+  /* ── BLINK SIDEBAR ITEM ── */
+
+  function blinkActive() {
+    if (!_activeEl) return;
+    _activeEl.classList.remove('sidebar-blink');
+    void _activeEl.offsetWidth;
+    _activeEl.classList.add('sidebar-blink');
+    setTimeout(() => _activeEl && _activeEl.classList.remove('sidebar-blink'), 600);
   }
 
-  /* ── HTML ESCAPE ────────────────────────────────────────────────────────── */
-  function esc(s) {
-    return String(s)
-      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
-      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  }
+  /* ── TREE RENDER ── */
 
-  /* ── LOAD SIDEBAR DATA ─────────────────────────────────────────────────── */
-  async function loadSidebar() {
-    const user = window.AuthUI?.getCurrentUser();
-
-    if (user) {
-      // ── LOGGED IN: Firestore is truth ───────────────────────────────────
-      try {
-        const rows = await window.FirestoreRoutes.getMyRoutes(user.uid);
-        _routes = rows.map(r => ({
-          id:         r.id,
-          routeName:  r.routeName,
-          routeData:  r.routeData,
-          isPublic:   r.isPublic,
-          categories: r.categories || [],
-          _local:     false
-        }));
-      } catch (err) {
-        console.warn('Could not load Firestore routes:', err);
-        _routes = [];
-      }
-
-      // Append any local routes not yet synced (e.g. community loads)
-      lsLoad().forEach(lr => {
-        if (!_routes.find(r => r.routeName === lr.routeName)) {
-          _routes.push({
-            id: null, routeName: lr.routeName, routeData: lr.routeData,
-            isPublic: true, categories: [], _local: true
-          });
-        }
-      });
-
-    } else {
-      // ── LOGGED OUT: localStorage only ───────────────────────────────────
-      _routes = lsLoad().map(r => ({
-        id: null, routeName: r.routeName, routeData: r.routeData,
-        isPublic: true, categories: [], _local: true
-      }));
-    }
-
-    renderTree();
-  }
-
-  /* ── RENDER SIDEBAR ────────────────────────────────────────────────────── */
   function renderTree() {
     const tree  = document.getElementById('route-tree');
     const empty = document.getElementById('route-empty');
     if (!tree) return;
 
-    // Remove old items (keep non-item children like route-empty)
-    tree.querySelectorAll('.route-parent').forEach(el => el.remove());
+    tree.querySelectorAll('.route-group').forEach(el => el.remove());
+    const groups = loadGroups();
 
-    if (!_routes.length) {
+    if (!groups.length) {
       if (empty) empty.style.display = '';
       return;
     }
     if (empty) empty.style.display = 'none';
 
-    _routes.forEach((route, idx) => {
-      const item = buildItem(route, idx);
-      tree.appendChild(item);
-      if (idx === _activeIdx) {
-        item.classList.add('active');
-        _activeEl = item;
+    groups.forEach((group, gi) => tree.appendChild(buildGroupEl(group, gi, groups)));
+
+    if (_activeRef) {
+      const { gi, vi } = _activeRef;
+      const groupEl = tree.querySelectorAll('.route-group')[gi];
+      if (groupEl) {
+        if (vi === -1) {
+          const parent = groupEl.querySelector('.route-parent');
+          if (parent) { parent.classList.add('active'); _activeEl = parent; }
+        } else {
+          const child = groupEl.querySelectorAll('.route-child')[vi];
+          if (child) { child.classList.add('active'); _activeEl = child; }
+        }
       }
-    });
+    }
   }
 
-  function buildItem(route, idx) {
-    // Re-use .route-parent which already has all needed CSS
-    const item = document.createElement('div');
-    item.className = 'route-parent' + (route._local ? ' route-local' : '');
-    item.title = route.routeName;
+  function buildGroupEl(group, gi, groups) {
+    const wrap = document.createElement('div');
+    wrap.className = 'route-group';
 
-    // Load / name button
+    const hasVariants = group.variants && group.variants.length > 0;
+    const collapsed   = group._collapsed || false;
+
+    /* ── PARENT ROW ── */
+    const parent = document.createElement('div');
+    parent.className = 'route-parent';
+    parent.title = group.baseName;
+
     const loadBtn = document.createElement('button');
     loadBtn.className = 'route-parent-load';
-    const icon = route._local ? '📋' : '🗺';
-    loadBtn.innerHTML =
-      `<span class="route-icon">${icon}</span>` +
-      `<span class="route-parent-name">${esc(route.routeName)}</span>`;
-    loadBtn.onclick = () => { setActive(item, idx); loadIntoEditor(route.routeData); };
-    item.appendChild(loadBtn);
+    loadBtn.innerHTML = `<span class="route-icon">🗺</span><span class="route-parent-name">${escHtml(group.baseName)}</span>`;
+    loadBtn.title   = group.baseName;
+    loadBtn.onclick = () => { setActiveEl(parent, gi, -1); loadIntoEditor(group.baseData); };
+    parent.appendChild(loadBtn);
 
-    // ☁ push-to-cloud button (local-only routes when user is logged in)
-    if (route._local && window.AuthUI?.getCurrentUser()) {
-      const cloudBtn = document.createElement('button');
-      cloudBtn.className = 'route-rename-btn';
-      cloudBtn.title     = 'Save to cloud';
-      cloudBtn.textContent = '☁';
-      cloudBtn.onclick = async (e) => {
-        e.stopPropagation();
-        cloudBtn.disabled = true;
-        try   { await persist(idx); renderTree(); showToast('Saved to cloud ☁'); }
-        catch (err) { showToast('Cloud save failed: ' + err.message); cloudBtn.disabled = false; }
-      };
-      item.appendChild(cloudBtn);
-    }
-
-    // ✎ Rename
     const renBtn = document.createElement('button');
     renBtn.className   = 'route-rename-btn';
     renBtn.title       = 'Rename';
     renBtn.textContent = '✎';
-    renBtn.onclick = (e) => {
-      e.stopPropagation();
-      startRename(loadBtn, route.routeName, async (newName) => {
-        const oldName = route.routeName;
-        route.routeName = newName;
-        if (route.routeData) route.routeData.routeName = newName;
-        // Update localStorage entry if it was there under the old name
-        if (route._local) { lsDel(oldName); lsUpsert(newName, route.routeData); }
-        try   { await persist(idx); renderTree(); showToast('Renamed!'); }
-        catch (err) { showToast('Rename failed: ' + err.message); }
-      });
-    };
-    item.appendChild(renBtn);
+    renBtn.onclick = () => startRename(loadBtn, group.baseName, (newName) => {
+      group.baseName = newName;
+      saveGroups(groups);
+      renderTree();
+      showToast('Renamed!');
+    });
+    parent.appendChild(renBtn);
 
-    // × Delete
+    if (hasVariants) {
+      const colBtn = document.createElement('button');
+      colBtn.className   = 'route-collapse-btn';
+      colBtn.title       = collapsed ? 'Expand' : 'Collapse';
+      colBtn.textContent = collapsed ? '▸' : '▾';
+      colBtn.onclick     = () => {
+        group._collapsed = !group._collapsed;
+        saveGroups(groups);
+        renderTree();
+      };
+      parent.appendChild(colBtn);
+    }
+
     const delBtn = document.createElement('button');
     delBtn.className   = 'route-delete-btn';
-    delBtn.title       = 'Delete';
+    delBtn.title       = 'Delete route';
     delBtn.textContent = '×';
-    delBtn.onclick = async (e) => {
-      e.stopPropagation();
-      if (!confirm(`Delete "${route.routeName}"?`)) return;
-      await deleteRoute(idx);
+    delBtn.onclick     = () => {
+      if (confirm(`Delete "${group.baseName}" and all variants?`)) {
+        // Also delete from Firestore if we have an ID stored
+        const baseKey = `${gi}:-1`;
+        if (_firestoreIds[baseKey] && window.AuthUI?.getCurrentUser()) {
+          window.FirestoreRoutes?.deleteRoute(
+            _firestoreIds[baseKey],
+            window.AuthUI.getCurrentUser().uid
+          ).catch(console.error);
+          delete _firestoreIds[baseKey];
+        }
+        // Delete all variants from Firestore
+        if (group.variants) {
+          group.variants.forEach((_, vi) => {
+            const varKey = `${gi}:${vi}`;
+            if (_firestoreIds[varKey] && window.AuthUI?.getCurrentUser()) {
+              window.FirestoreRoutes?.deleteRoute(
+                _firestoreIds[varKey],
+                window.AuthUI.getCurrentUser().uid
+              ).catch(console.error);
+              delete _firestoreIds[varKey];
+            }
+          });
+        }
+        groups.splice(gi, 1);
+        saveGroups(groups);
+        if (_activeRef && _activeRef.gi === gi) { _activeRef = null; _activeEl = null; }
+        renderTree();
+      }
     };
-    item.appendChild(delBtn);
+    parent.appendChild(delBtn);
+    wrap.appendChild(parent);
 
-    // ☁ badge (already-synced cloud routes)
-    if (!route._local) {
-      const badge       = document.createElement('span');
-      badge.className   = 'route-collapse-btn'; // re-use the muted small-text style
-      badge.title       = 'Saved to cloud';
-      badge.textContent = '☁';
-      badge.style.cursor = 'default';
-      item.appendChild(badge);
-    }
+    /* ── CHILDREN ── */
+    if (hasVariants) {
+      const childList = document.createElement('div');
+      childList.className = 'route-children' + (collapsed ? ' collapsed' : '');
 
-    return item;
-  }
+      group.variants.forEach((v, vi) => {
+        const child = document.createElement('div');
+        child.className = 'route-child';
+        child.title     = v.label;
 
-  /* ── SET ACTIVE ────────────────────────────────────────────────────────── */
-  function setActive(el, idx) {
-    document.querySelectorAll('.route-parent').forEach(e => e.classList.remove('active'));
-    if (el) el.classList.add('active');
-    _activeEl  = el;
-    _activeIdx = idx;
-  }
+        const childLoad = document.createElement('button');
+        childLoad.className = 'route-child-load';
+        childLoad.innerHTML = `<span style="color:var(--accent);font-size:10px;">↳</span><span class="child-label">${escHtml(v.label)}</span>`;
+        childLoad.title   = v.label;
+        childLoad.onclick = () => { setActiveEl(child, gi, vi); loadIntoEditor(v.routeData); };
 
-  /* ── LOAD ROUTE INTO EDITOR ────────────────────────────────────────────── */
-  function loadIntoEditor(routeData) {
-    if (!routeData) return;
-    const str      = JSON.stringify(routeData, null, 2);
-    const inputEl  = document.getElementById('json_data');
-    const outputEl = document.getElementById('output');
-    if (inputEl)  inputEl.value  = str;
-    if (outputEl) outputEl.value = str;
-    if (window.MapVisualizerInstance) window.MapVisualizerInstance.loadFromOutput();
-    if (RouteProcessor?.updateStateIndicators) RouteProcessor.updateStateIndicators(routeData._routeState || null);
-    if (window.reflectRouteCategories) window.reflectRouteCategories(routeData);
-  }
+        const childRen = document.createElement('button');
+        childRen.className   = 'route-child-rename';
+        childRen.title       = 'Rename';
+        childRen.textContent = '✎';
+        childRen.onclick = (e) => {
+          e.stopPropagation();
+          startRenameChild(childLoad, v.label, (newName) => {
+            v.label = newName;
+            saveGroups(groups);
+            renderTree();
+            showToast('Renamed!');
+          });
+        };
 
-  /* ── PERSIST (Firestore when logged in, localStorage when not) ──────────── */
-  async function persist(idx) {
-    const route   = _routes[idx];
-    const user    = window.AuthUI?.getCurrentUser();
-    const userDoc = window.AuthUI?.getCurrentUserDoc();
+        const childDel = document.createElement('button');
+        childDel.className   = 'route-child-delete';
+        childDel.title       = 'Delete variant';
+        childDel.textContent = '×';
+        childDel.onclick = (e) => {
+          e.stopPropagation();
+          const varKey = `${gi}:${vi}`;
+          if (_firestoreIds[varKey] && window.AuthUI?.getCurrentUser()) {
+            window.FirestoreRoutes?.deleteRoute(
+              _firestoreIds[varKey],
+              window.AuthUI.getCurrentUser().uid
+            ).catch(console.error);
+            delete _firestoreIds[varKey];
+          }
+          group.variants.splice(vi, 1);
+          saveGroups(groups);
+          if (_activeRef && _activeRef.gi === gi && _activeRef.vi === vi) {
+            _activeRef = null; _activeEl = null;
+          }
+          renderTree();
+        };
 
-    if (user && window.FirestoreRoutes) {
-      // Firestore upsert
-      const isPublicEl = document.getElementById('chkRoutePublic');
-      const isPublic   = isPublicEl ? isPublicEl.checked : (route.isPublic ?? true);
-      const categories = route.categories?.length
-        ? route.categories
-        : [...document.querySelectorAll('.cat-toggle.on')].map(b => b.dataset.cat);
+        // Cloud sync indicator badge
+        const varKey = `${gi}:${vi}`;
+        if (_firestoreIds[varKey]) {
+          const badge = document.createElement('span');
+          badge.className   = 'cloud-badge';
+          badge.title       = 'Saved to cloud';
+          badge.textContent = '☁';
+          child.appendChild(badge);
+        }
 
-      const savedId = await window.FirestoreRoutes.saveRoute({
-        routeName:  route.routeName,
-        routeData:  route.routeData,
-        isPublic,
-        uid:        user.uid,
-        inGameName: userDoc?.inGameName || '',
-        routeId:    route.id || null,   // null = let Firestore upsert by name
-        categories
+        child.appendChild(childLoad);
+        child.appendChild(childRen);
+        child.appendChild(childDel);
+        childList.appendChild(child);
       });
-      route.id     = savedId;
-      route._local = false;
-      lsDel(route.routeName);  // remove from localStorage now it's in Firestore
 
-    } else {
-      // localStorage upsert (logged-out)
-      lsUpsert(route.routeName, route.routeData);
+      wrap.appendChild(childList);
     }
+
+    return wrap;
   }
 
-  /* ── DELETE ────────────────────────────────────────────────────────────── */
-  async function deleteRoute(idx) {
-    const route = _routes[idx];
-    const user  = window.AuthUI?.getCurrentUser();
+  /* ── RENAME HELPERS ── */
 
-    if (route.id && user && window.FirestoreRoutes) {
-      try { await window.FirestoreRoutes.deleteRoute(route.id, user.uid); }
-      catch (err) { showToast('Delete failed: ' + err.message); return; }
-    }
-    lsDel(route.routeName);
-
-    _routes.splice(idx, 1);
-    if      (_activeIdx === idx) { _activeIdx = -1; _activeEl = null; }
-    else if (_activeIdx  >  idx) { _activeIdx--; }
-    renderTree();
-  }
-
-  /* ── UPSERT IN MEMORY ──────────────────────────────────────────────────── */
-  function upsertMemory(routeName, routeData) {
-    const i = _routes.findIndex(r => r.routeName === routeName);
-    if (i >= 0) { _routes[i].routeData = routeData; return i; }
-    _routes.push({ id: null, routeName, routeData, isPublic: true, categories: [], _local: true });
-    return _routes.length - 1;
-  }
-
-  /* ── RENAME INLINE INPUT ───────────────────────────────────────────────── */
   function startRename(loadBtn, currentName, onCommit) {
-    const span = loadBtn.querySelector('.route-parent-name');
-    if (!span) return;
+    const nameSpan = loadBtn.querySelector('.route-parent-name');
+    if (!nameSpan) return;
     const input = document.createElement('input');
     input.type      = 'text';
     input.value     = currentName;
     input.className = 'route-rename-input';
-    span.replaceWith(input);
+    nameSpan.replaceWith(input);
     input.focus(); input.select();
-    const commit = () => onCommit(input.value.trim() || currentName);
+    const commit = () => { onCommit(input.value.trim() || currentName); };
     input.onblur    = commit;
     input.onkeydown = (e) => {
       if (e.key === 'Enter')  { e.preventDefault(); commit(); }
@@ -330,101 +298,203 @@
     };
   }
 
-  /* ── SAVE ACTIVE (Inspector "Save Changes" button) ─────────────────────── */
-  async function saveActive() {
-    if (_activeIdx < 0 || !_routes[_activeIdx]) {
-      showToast('No route selected'); return;
+  function startRenameChild(loadBtn, currentLabel, onCommit) {
+    const labelSpan = loadBtn.querySelector('.child-label');
+    if (!labelSpan) return;
+    const input = document.createElement('input');
+    input.type      = 'text';
+    input.value     = currentLabel;
+    input.className = 'route-rename-input';
+    input.style.fontSize = '10px';
+    labelSpan.replaceWith(input);
+    input.focus(); input.select();
+    const commit = () => { onCommit(input.value.trim() || currentLabel); };
+    input.onblur    = commit;
+    input.onkeydown = (e) => {
+      if (e.key === 'Enter')  { e.preventDefault(); commit(); }
+      if (e.key === 'Escape') { e.preventDefault(); renderTree(); }
+    };
+  }
+
+  function setActiveEl(el, gi, vi) {
+    document.querySelectorAll('.route-parent, .route-child').forEach(e => e.classList.remove('active'));
+    el.classList.add('active');
+    _activeEl  = el;
+    _activeRef = { gi, vi };
+  }
+
+  function loadIntoEditor(routeData) {
+    const str = JSON.stringify(routeData, null, 2);
+    const inputEl  = document.getElementById('json_data');
+    const outputEl = document.getElementById('output');
+    if (inputEl)  inputEl.value  = str;
+    if (outputEl) outputEl.value = str;
+    if (window.MapVisualizerInstance) window.MapVisualizerInstance.loadFromOutput();
+    // Reflect route state in toolbar badges
+    if (RouteProcessor.updateStateIndicators) {
+      RouteProcessor.updateStateIndicators(routeData._routeState || null);
     }
-    const raw = document.getElementById('output')?.value.trim() || '';
+    // Reflect categories
+    if (window.reflectRouteCategories) window.reflectRouteCategories(routeData);
+  }
+
+  /* ── SAVE WAYPOINT EDITS BACK TO ACTIVE ROUTE SLOT ── */
+
+  async function saveActiveRouteData() {
+    if (!_activeRef) { showToast('No route selected'); return; }
+
+    const outputEl = document.getElementById('output');
+    const raw = outputEl ? outputEl.value.trim() : '';
     if (!raw) { showToast('No output to save'); return; }
 
     let routeData;
     try { routeData = JSON.parse(raw); }
-    catch (_) { showToast('Invalid JSON'); return; }
+    catch (_) { showToast('Invalid JSON in output'); return; }
 
-    const route      = _routes[_activeIdx];
-    route.routeData  = routeData;
-    route.categories = [...document.querySelectorAll('.cat-toggle.on')].map(b => b.dataset.cat);
+    const groups = loadGroups();
+    const { gi, vi } = _activeRef;
+    if (!groups[gi]) { showToast('Route not found'); return; }
 
-    const user = window.AuthUI?.getCurrentUser();
-    try {
-      await persist(_activeIdx);
-      blinkEl(_activeEl);
-      showToast(user ? 'Saved to cloud ☁' : 'Saved locally');
-      renderTree();
-      // Restore highlight after re-render
-      setTimeout(() => {
-        const items = document.querySelectorAll('.route-parent');
-        if (items[_activeIdx]) setActive(items[_activeIdx], _activeIdx);
-      }, 60);
-    } catch (err) {
-      showToast('Save failed: ' + err.message);
+    if (vi === -1) {
+      groups[gi].baseData = routeData;
+    } else {
+      if (!groups[gi].variants[vi]) { showToast('Variant not found'); return; }
+      groups[gi].variants[vi].routeData = routeData;
     }
+
+    saveGroups(groups);
+    blinkActive();
+
+    // Sync to Firestore if logged in
+    const user    = window.AuthUI?.getCurrentUser();
+    const userDoc = window.AuthUI?.getCurrentUserDoc();
+    if (user && window.FirestoreRoutes) {
+      const key        = `${gi}:${vi}`;
+      const routeName  = vi === -1 ? groups[gi].baseName : groups[gi].variants[vi].label;
+      const isPublicEl = document.getElementById('chkRoutePublic');
+      const isPublic   = isPublicEl ? isPublicEl.checked : true;
+      const categories = [...document.querySelectorAll('.cat-toggle.on')].map(b => b.dataset.cat);
+
+      try {
+        const savedId = await window.FirestoreRoutes.saveRoute({
+          routeName,
+          routeData,
+          isPublic,
+          uid:        user.uid,
+          inGameName: userDoc?.inGameName || '',
+          routeId:    _firestoreIds[key] || null,
+          categories
+        });
+        _firestoreIds[key] = savedId;
+        showToast('Saved to cloud ☁');
+      } catch (err) {
+        showToast('Local save OK — cloud error: ' + err.message);
+        console.error('Firestore save error:', err);
+      }
+    } else {
+      showToast('Saved locally (sign in to sync to cloud)');
+    }
+
+    setTimeout(() => renderTree(), 50);
   }
 
-  /* ── OVERRIDE: RouteProcessor.saveRouteToLocalStorage ──────────────────── *
-   * Called by RouteProcessor.process() with the processed route.             *
-   * We intercept to store in our system instead of raw localStorage.         *
-   * ───────────────────────────────────────────────────────────────────────── */
-  RouteProcessor.saveRouteToLocalStorage = async function (routeName, routeData) {
-    const idx = upsertMemory(routeName, routeData);
+  function escHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  /* ── INTERCEPT saveRouteToLocalStorage ── */
+
+  const _origSave = RouteProcessor.saveRouteToLocalStorage.bind(RouteProcessor);
+
+  RouteProcessor.saveRouteToLocalStorage = function (routeName, routeData) {
+    // ── Save to localStorage cache only. No auto-upload to Firestore.
+    // ── User must explicitly click 💾 Save Changes to push to cloud.
+    const groups  = loadGroups();
+    const inputEl = document.getElementById('json_data');
+
+    let baseName = 'Route';
+    try {
+      const inputData = JSON.parse(inputEl ? inputEl.value : '{}');
+      baseName = inputData.routeName || routeData.routeName || 'Route';
+    } catch (_) {
+      baseName = routeData.routeName || 'Route';
+    }
+
+    const variantLabel  = routeName.trim();
+    let group = groups.find(g => g.baseName === baseName);
+
+    if (!group) {
+      let baseData = routeData;
+      try { baseData = JSON.parse(inputEl ? inputEl.value : '{}'); } catch (_) {}
+      group = { baseName, baseData, variants: [], _collapsed: false };
+      groups.push(group);
+    }
+
+    const gi            = groups.indexOf(group);
+    const alreadyExists = group.variants.findIndex(v => v.label === variantLabel);
+    let vi;
+
+    if (alreadyExists === -1) {
+      group.variants.push({ label: variantLabel, routeData });
+      vi = group.variants.length - 1;
+    } else {
+      group.variants[alreadyExists].routeData = routeData;
+      vi = alreadyExists;
+    }
+
+    saveGroups(groups);
+    _origSave(routeName, routeData);
     renderTree();
 
-    try { await persist(idx); renderTree(); }
-    catch (err) { console.warn('Auto-persist failed:', err.message); }
-
+    // Highlight the saved item — but no Firestore upload here
     setTimeout(() => {
-      const items = document.querySelectorAll('.route-parent');
-      if (items[idx]) { setActive(items[idx], idx); blinkEl(items[idx]); }
-    }, 60);
+      const tree    = document.getElementById('route-tree');
+      if (!tree) return;
+      const groupEl = tree.querySelectorAll('.route-group')[gi];
+      if (!groupEl) return;
+      const childEl = groupEl.querySelectorAll('.route-child')[vi];
+      if (childEl) { setActiveEl(childEl, gi, vi); blinkActive(); }
+    }, 50);
 
     RouteProcessor.triggerBlink('saveCacheBtn');
   };
 
   RouteProcessor.updateRouteList = function () { renderTree(); };
 
-  /* ── WIRE BUTTONS ──────────────────────────────────────────────────────── */
+  /* ── WIRE BUTTONS ── */
 
   const saveWpBtn = document.getElementById('btnSaveWaypoint');
-  if (saveWpBtn) saveWpBtn.onclick = saveActive;
+  if (saveWpBtn) saveWpBtn.onclick = saveActiveRouteData;
 
   document.getElementById('clearCacheBtn').onclick = () => {
-    const user = window.AuthUI?.getCurrentUser();
-    const msg  = user
-      ? 'Remove all unsynced local routes from this browser?\n(Your cloud routes are not affected.)'
-      : 'Delete all locally saved routes? This cannot be undone.';
-    if (!confirm(msg)) return;
-    lsClear();
-    if (user) {
-      // Keep Firestore-backed routes, drop local-only
-      _routes = _routes.filter(r => !r._local);
-    } else {
-      _routes = [];
+    if (confirm('Delete ALL saved routes and variants from this browser?\n(Cloud routes are not deleted)')) {
+      localStorage.removeItem('routeGroups');
+      localStorage.removeItem('routes');
+      _activeRef = null; _activeEl = null;
+      renderTree();
     }
-    _activeIdx = -1; _activeEl = null;
-    renderTree();
   };
 
-  document.getElementById('copyOutputBtn').onclick = () =>
+  document.getElementById('copyOutputBtn').onclick = () => {
     copyText(document.getElementById('output')?.value || '');
+  };
 
   document.getElementById('importFromWebBtn').onclick = async () => {
     try {
-      const text = (await navigator.clipboard.readText()).trim();
-      if (!text.startsWith('{') && !text.startsWith('[')) throw new Error('Not JSON');
-      document.getElementById('json_data').value = text;
-      document.getElementById('output').value    = text;
+      const text    = await navigator.clipboard.readText();
+      const trimmed = text.trim();
+      if (!trimmed.startsWith('{') && !trimmed.startsWith('[')) throw new Error('Not JSON');
+      document.getElementById('json_data').value = trimmed;
+      document.getElementById('output').value    = trimmed;
       if (window.MapVisualizerInstance) window.MapVisualizerInstance.loadFromOutput();
       showToast('Route imported!');
     } catch (_) {
-      // Clipboard unavailable — switch to JSON tab so user can paste manually
       document.querySelectorAll('.tab').forEach(b => b.classList.remove('on'));
       document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('on'));
-      const tab = document.querySelector('[data-pane="pane-json"]');
-      if (tab) {
-        tab.classList.add('on');
-        document.getElementById('pane-json').classList.add('on');
-      }
+      const jsonTab = document.querySelector('[data-pane="pane-json"]');
+      if (jsonTab) { jsonTab.classList.add('on'); document.getElementById('pane-json').classList.add('on'); }
       document.getElementById('json_data')?.focus();
       showToast('Paste your JSON in the Input box');
     }
@@ -436,77 +506,16 @@
     copyText(text);
   };
 
-  /* ── AUTH STATE CHANGES ─────────────────────────────────────────────────── */
-  document.addEventListener('authStateChanged', async () => {
+  /* ── AUTH STATE CHANGES ── */
+
+  document.addEventListener('authStateChanged', (e) => {
+    const loggedIn = !!e.detail?.user;
+    // Update the visibility checkbox row
     const visRow = document.getElementById('routeVisibilityRow');
-    if (visRow) visRow.style.display = window.AuthUI?.getCurrentUser() ? 'flex' : 'none';
-    _activeIdx = -1; _activeEl = null;
-    await loadSidebar();
+    if (visRow) visRow.style.display = loggedIn ? 'flex' : 'none';
   });
 
-  /* ── COMMUNITY ROUTE HANDOFF ──────────────────────────────────────────────
-   * sessionStorage set by community.js before redirecting.
-   * Runs at bottom of this file — after all overrides are wired.
-   * ─────────────────────────────────────────────────────────────────────── */
-  (function applyCommunityRoute() {
-    const raw = sessionStorage.getItem('communityRouteLoad');
-    if (!raw) return;
-    sessionStorage.removeItem('communityRouteLoad');
-
-    let routeData;
-    try { routeData = JSON.parse(raw); }
-    catch (_) { return; }
-    if (!routeData?.waypoints?.length) return;
-
-    // 1. Always save to localStorage immediately (works before auth resolves)
-    const routeName = routeData.routeName || 'Community Route';
-    lsUpsert(routeName, routeData);
-
-    // 2. Populate both textareas
-    const str = JSON.stringify(routeData, null, 2);
-    const inp = document.getElementById('json_data');
-    const out = document.getElementById('output');
-    if (inp) inp.value = str;
-    if (out) out.value = str;
-
-    // 3. Add to in-memory list
-    const memIdx = upsertMemory(routeName, routeData);
-
-    // 4. Reflect categories and state badges
-    if (window.reflectRouteCategories) window.reflectRouteCategories(routeData);
-    if (RouteProcessor?.updateStateIndicators) RouteProcessor.updateStateIndicators(routeData._routeState || null);
-
-    requestAnimationFrame(() => {
-      // 5. Draw the map
-      if (window.MapVisualizerInstance) window.MapVisualizerInstance.loadFromOutput();
-
-      // 6. Switch to Process tab (map view)
-      document.querySelectorAll('.tab').forEach(b => b.classList.remove('on'));
-      document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('on'));
-      const pt = document.querySelector('.tab[data-pane="pane-process"]');
-      const pp = document.getElementById('pane-process');
-      if (pt) pt.classList.add('on');
-      if (pp) pp.classList.add('on');
-
-      // 7. Render sidebar and highlight the new entry
-      renderTree();
-      setTimeout(() => {
-        const items = document.querySelectorAll('.route-parent');
-        if (items[memIdx]) setActive(items[memIdx], memIdx);
-      }, 60);
-
-      showToast('Community route loaded!');
-    });
-  })();
-
-  /* ── INITIAL RENDER ─────────────────────────────────────────────────────── *
-   * Show local routes immediately. authStateChanged will replace this with    *
-   * Firestore routes once auth resolves (usually within 1-2 seconds).         *
-   * ─────────────────────────────────────────────────────────────────────── */
-  _routes = lsLoad().map(r => ({
-    id: null, routeName: r.routeName, routeData: r.routeData,
-    isPublic: true, categories: [], _local: true
-  }));
+  /* ── INITIAL RENDER ── */
   renderTree();
 
 })();

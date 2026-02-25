@@ -46,6 +46,10 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 /* ── LEFT SIDEBAR ── */
 #sidebar-left { background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
 .panel-head { padding: 10px 12px 8px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+
+.route-legend { display: flex; gap: 8px; align-items: center; }
+.route-legend span { font-size: 10px; color: var(--muted); font-family: var(--head); letter-spacing: .06em; text-transform: uppercase; white-space: nowrap; cursor: default; }
+.route-legend span:hover { color: var(--text); }
 .panel-title { font-family: var(--head); font-size: 10px; font-weight: 700; letter-spacing: .15em; text-transform: uppercase; color: var(--muted); }
 
 
@@ -63,9 +67,6 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 }
 .route-parent:hover { border-color: var(--muted); }
 .route-parent.active { border-color: rgba(232,64,12,.5); background: rgba(232,64,12,.06); }
-
-/* Local-only (unsynced) route — subtle dashed border */
-.route-local { border-style: dashed !important; opacity: 0.85; }
 
 .route-parent-load {
   flex: 1; display: flex; align-items: center; gap: 7px;
@@ -181,6 +182,8 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 
 .tab-pane { display: none; flex-direction: column; flex: 1; min-height: 0; }
 .tab-pane.on { display: flex; }
+/* Tab bar is hidden but pane switching still works programmatically.
+   pane-process starts with class="on" in HTML so it shows by default. */
 
 
 /* ── INSPECTOR ── */

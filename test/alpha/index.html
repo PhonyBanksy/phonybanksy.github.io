@@ -41,6 +41,10 @@
   <aside id="sidebar-left">
     <div class="panel-head">
       <span class="panel-title">Routes</span>
+      <span class="route-legend">
+        <span title="Saved locally (cache only)">💾 cache</span>
+        <span title="Saved to cloud">☁ cloud</span>
+      </span>
     </div>
     <div id="route-tree">
       <div class="sidebar-empty" id="route-empty">
@@ -79,7 +83,7 @@
 
   <!-- ══ RIGHT PANEL ══ -->
   <aside id="sidebar-right">
-    <div class="tabs">
+    <div class="tabs" style="display:none;">
       <button class="tab on" data-pane="pane-process">Process</button>
       <button class="tab" data-pane="pane-json">JSON</button>
     </div>
