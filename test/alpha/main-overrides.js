@@ -539,4 +539,47 @@
   /* ── INITIAL RENDER ── */
   renderTree();
 
+  /* ── COMMUNITY ROUTE HANDOFF ── */
+  // This runs here — AFTER saveRouteToLocalStorage is overridden — so the route
+  // lands in the sidebar tree correctly and the map renders immediately.
+  (function handleCommunityRouteLoad() {
+    const raw = sessionStorage.getItem('communityRouteLoad');
+    if (!raw) return;
+    sessionStorage.removeItem('communityRouteLoad');
+
+    let routeData;
+    try { routeData = JSON.parse(raw); }
+    catch (e) { console.warn('communityRouteLoad: bad JSON', e); return; }
+
+    const str      = JSON.stringify(routeData, null, 2);
+    const inputEl  = document.getElementById('json_data');
+    const outputEl = document.getElementById('output');
+    if (inputEl)  inputEl.value  = str;
+    if (outputEl) outputEl.value = str;
+
+    // Save into the sidebar tree (override is now in place)
+    const routeName = routeData.routeName || 'Community Route';
+    RouteProcessor.saveRouteToLocalStorage(routeName, routeData);
+
+    // Reflect categories + state badges
+    if (window.reflectRouteCategories) window.reflectRouteCategories(routeData);
+    if (RouteProcessor?.updateStateIndicators) RouteProcessor.updateStateIndicators(routeData._routeState || null);
+
+    // Give the canvas a frame to measure its size, then load + fit
+    requestAnimationFrame(() => {
+      if (window.MapVisualizerInstance) window.MapVisualizerInstance.loadFromOutput();
+
+      // Switch to Process tab so the user sees the map
+      document.querySelectorAll('.tab').forEach(b => b.classList.remove('on'));
+      document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('on'));
+      const processTab = document.querySelector('[data-pane="pane-process"]');
+      if (processTab) {
+        processTab.classList.add('on');
+        document.getElementById('pane-process').classList.add('on');
+      }
+
+      showToast('Community route loaded!');
+    });
+  })();
+
 })();
