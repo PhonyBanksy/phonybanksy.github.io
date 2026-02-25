@@ -1,0 +1,168 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAuth() {
+      return request.auth != null;
+    }
+    function isOwner(uid) {
+      return isAuth() && request.auth.uid == uid;
+    }
+    function isAdmin() {
+      return isAuth() &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    function maxLen(field, n) {
+      return field is string && field.size() <= n;
+    }
+    function validCategories(cats) {
+      return cats is list
+        && cats.size() <= 8
+        && cats.hasOnly(['Sprint','Circuit','Endurance','Offroad','Dakar','Hills','Technical','Speed']);
+    }
+
+    // Any auth user updating ONLY the rating aggregate fields (avgRating, ratingCount, totalBeans, updatedAt)
+    function isRatingAggregateUpdate() {
+      return isAuth()
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['avgRating', 'ratingCount', 'totalBeans', 'updatedAt'])
+        && request.resource.data.avgRating   is number
+        && request.resource.data.ratingCount is int
+        && request.resource.data.ratingCount >= 0
+        && request.resource.data.ownerUid    == resource.data.ownerUid
+        && request.resource.data.characterId == resource.data.characterId;
+    }
+
+    // Any auth user updating ONLY downloadCount
+    function isDownloadCountUpdate() {
+      return isAuth()
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['downloadCount'])
+        && request.resource.data.downloadCount is int
+        && request.resource.data.downloadCount >= 0
+        && request.resource.data.ownerUid    == resource.data.ownerUid
+        && request.resource.data.characterId == resource.data.characterId;
+    }
+
+    // Admin updating any fields (name, tags, visibility)
+    function isAdminMetaUpdate() {
+      return isAdmin()
+        && request.resource.data.ownerUid    == resource.data.ownerUid
+        && request.resource.data.characterId == resource.data.characterId;
+    }
+
+    // Full route content update by owner
+    function isRouteContentUpdate() {
+      return (isOwner(resource.data.ownerUid) || isAdmin())
+        && request.resource.data.ownerUid    == resource.data.ownerUid
+        && request.resource.data.characterId == resource.data.characterId
+        && maxLen(request.resource.data.routeName,  128)
+        && maxLen(request.resource.data.inGameName,  64)
+        && request.resource.data.waypointCount is int
+        && request.resource.data.waypointCount >= 1
+        && request.resource.data.waypointCount <= 500
+        && request.resource.data.isPublic is bool
+        && request.resource.data.routeData is map
+        && request.resource.data.routeData.keys().hasAll(['routeName','waypoints'])
+        && request.resource.data.routeData.waypoints is list
+        && request.resource.data.routeData.waypoints.size() >= 1
+        && request.resource.data.routeData.waypoints.size() <= 500
+        && (!('categories' in request.resource.data)
+            || validCategories(request.resource.data.categories));
+    }
+
+    // ── /users/{uid} ────────────────────────────────────────────────────────
+    match /users/{uid} {
+      allow read: if isOwner(uid) || isAdmin();
+      allow create: if isOwner(uid)
+        && request.resource.data.keys().hasAll([
+             'googleDisplayName','email','inGameName','discordName','role','createdAt'
+           ])
+        && request.resource.data.role == 'user'
+        && maxLen(request.resource.data.inGameName,  64)
+        && maxLen(request.resource.data.discordName, 64)
+        && maxLen(request.resource.data.googleDisplayName, 128)
+        && maxLen(request.resource.data.email, 256);
+      allow update: if isOwner(uid)
+        && !('role' in request.resource.data.diff(resource.data).affectedKeys())
+        && !('email' in request.resource.data.diff(resource.data).affectedKeys())
+        && maxLen(request.resource.data.inGameName,  64)
+        && maxLen(request.resource.data.discordName, 64);
+      // Admin can update role field (to promote users)
+      allow update: if isAdmin();
+      allow delete: if false;
+
+      // ── /users/{uid}/favorites/{routeId} ──────────────────────────────────
+      match /favorites/{routeId} {
+        allow read:   if isOwner(uid);
+        allow create,
+              update: if isOwner(uid)
+          && request.resource.data.keys().hasAll(['routeId','addedAt'])
+          && request.resource.data.routeId is string;
+        allow delete: if isOwner(uid);
+      }
+    }
+
+    // ── /routes/{routeId} ───────────────────────────────────────────────────
+    match /routes/{routeId} {
+      allow read: if resource.data.isPublic == true
+                  || isOwner(resource.data.ownerUid)
+                  || isAdmin();
+
+      allow create: if isAuth()
+        && request.resource.data.ownerUid    == request.auth.uid
+        && request.resource.data.characterId == request.auth.uid
+        && request.resource.data.keys().hasAll([
+             'ownerUid','characterId','inGameName','routeName',
+             'routeData','isPublic','waypointCount','createdAt','updatedAt'
+           ])
+        && maxLen(request.resource.data.routeName,  128)
+        && maxLen(request.resource.data.inGameName,  64)
+        && request.resource.data.waypointCount is int
+        && request.resource.data.waypointCount >= 1
+        && request.resource.data.waypointCount <= 500
+        && request.resource.data.isPublic is bool
+        && request.resource.data.routeData is map
+        && request.resource.data.routeData.keys().hasAll(['routeName','waypoints'])
+        && request.resource.data.routeData.waypoints is list
+        && request.resource.data.routeData.waypoints.size() >= 1
+        && request.resource.data.routeData.waypoints.size() <= 500
+        && (!('categories' in request.resource.data)
+            || validCategories(request.resource.data.categories));
+
+      allow update: if isRouteContentUpdate()
+                    || isRatingAggregateUpdate()
+                    || isDownloadCountUpdate()
+                    || isAdminMetaUpdate();
+
+      allow delete: if isOwner(resource.data.ownerUid) || isAdmin();
+
+      // ── /routes/{routeId}/ratings/{raterUid} ──────────────────────────────
+      match /ratings/{raterUid} {
+        allow read:   if isOwner(raterUid) || isAdmin();
+        allow create,
+              update: if isOwner(raterUid)
+          && request.resource.data.keys().hasAll(['rating','uid','updatedAt'])
+          && request.resource.data.uid    == request.auth.uid
+          && request.resource.data.rating is int
+          && request.resource.data.rating >= 1
+          && request.resource.data.rating <= 5
+          && get(/databases/$(database)/documents/routes/$(routeId)).data.ownerUid
+             != request.auth.uid;
+        allow delete: if isOwner(raterUid) || isAdmin();
+      }
+
+      // ── /routes/{routeId}/downloads/{uid} ─────────────────────────────────
+      // Any authenticated user can record their own download.
+      match /downloads/{downloaderUid} {
+        allow read:   if isOwner(downloaderUid) || isAdmin();
+        allow create: if isOwner(downloaderUid)
+          && request.resource.data.keys().hasAll(['uid','downloadedAt'])
+          && request.resource.data.uid == request.auth.uid;
+        allow update: if false; // immutable once created
+        allow delete: if isAdmin();
+      }
+    }
+
+  }
+}
