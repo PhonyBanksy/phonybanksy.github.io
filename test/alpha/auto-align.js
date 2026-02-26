@@ -1,10 +1,9 @@
 /**
  * auto-align.js
- * Aligns the rotation of the selected waypoint to bisect the path angle.
+ * Aligns waypoints based on the bisector of the angle between neighbors.
  */
 
 window.AutoAlign = (() => {
-  let currentSelectedIndex = -1;
 
   function toQuat(yawDeg) {
     const rad = (yawDeg * Math.PI) / 180;
@@ -12,79 +11,67 @@ window.AutoAlign = (() => {
   }
 
   function calculateBisector(prev, curr, next) {
-    // Road direction coming in
+    // Angle of incoming path (prev -> curr)
     const inAngle = Math.atan2(curr.y - prev.y, curr.x - prev.x);
-    // Road direction going out
+    // Angle of outgoing path (curr -> next)
     const outAngle = Math.atan2(next.y - curr.y, next.x - curr.x);
 
     let diff = outAngle - inAngle;
-    // Normalize difference to ensure shortest turn
     while (diff > Math.PI) diff -= 2 * Math.PI;
     while (diff < -Math.PI) diff += 2 * Math.PI;
 
-    // Divide by 2 to find the middle angle of the bend
+    // The bisector of the corner
     const resultRad = inAngle + (diff / 2);
-    // Convert back to degrees for the game engine
-    return (resultRad * 180 / Math.PI);
+    // Convert to degrees and add 90 to make the gate face "into" the turn
+    return (resultRad * 180 / Math.PI) + 90;
   }
 
-  function alignActiveWaypoint(visualizer) {
-    if (currentSelectedIndex === -1) return;
-
+  function alignRange(visualizer, fromIdx, toIdx) {
     const data = visualizer.getRouteData();
     if (!data?.waypoints) return;
-    
     const wps = data.waypoints;
-    const idx = currentSelectedIndex;
-    
-    const p = wps[idx - 1]?.translation;
-    const c = wps[idx]?.translation;
-    const n = wps[idx + 1]?.translation;
 
-    let yaw;
-    if (p && n) {
-      // Logic for corners/straight roads: bisect neighbor angles
-      yaw = calculateBisector(p, c, n);
-    } else if (n) {
-      // Start point: face toward the next point
-      yaw = Math.atan2(n.y - c.y, n.x - c.x) * (180 / Math.PI);
-    } else if (p) {
-      // End point: face away from the previous point
-      yaw = Math.atan2(c.y - p.y, c.x - p.x) * (180 / Math.PI);
+    for (let i = fromIdx; i <= toIdx; i++) {
+      const p = wps[i-1]?.translation;
+      const c = wps[i]?.translation;
+      const n = wps[i+1]?.translation;
+
+      let yaw;
+      if (p && n) {
+        yaw = calculateBisector(p, c, n);
+      } else if (n) {
+        yaw = Math.atan2(n.y - c.y, n.x - c.x) * (180 / Math.PI) + 90;
+      } else if (p) {
+        yaw = Math.atan2(c.y - p.y, c.x - p.x) * (180 / Math.PI) + 90;
+      }
+
+      if (yaw !== undefined) wps[i].rotation = toQuat(yaw);
     }
 
-    if (yaw !== undefined) {
-      wps[idx].rotation = toQuat(yaw);
-      visualizer.saveRouteData(data);
-      visualizer.loadFromOutput();
-    }
+    visualizer.saveRouteData(data);
+    visualizer.loadFromOutput();
   }
 
   return {
     init(visualizer) {
-      const btn = document.getElementById('btnAutoAlignSingle');
-      const statusLabel = document.getElementById('aaStatusLabel');
+      const btn = document.getElementById('btnAutoAlignTop');
       if (!btn) return;
 
       btn.addEventListener('click', () => {
-        if (currentSelectedIndex === -1) {
-          alert("Click a waypoint on the map first!");
-          return;
-        }
-        alignActiveWaypoint(visualizer);
+        const from = parseInt(document.getElementById('aaFrom').value);
+        const to   = parseInt(document.getElementById('aaTo').value);
+        if (isNaN(from) || isNaN(to)) return alert("Set From and To indices first!");
         
-        // Visual feedback
-        btn.classList.replace('btn-primary', 'btn-success');
-        setTimeout(() => btn.classList.replace('btn-success', 'btn-primary'), 800);
+        alignRange(visualizer, from, to);
+        btn.style.background = "var(--green)";
+        setTimeout(() => btn.style.background = "", 1000);
       });
 
-      // Listen for waypoint selection from map-visualizer/waypoint-ui
       window.addEventListener('waypointSelected', (e) => {
-        currentSelectedIndex = e.detail.index;
-        if (statusLabel) {
-          statusLabel.textContent = `Waypoint #${currentSelectedIndex} selected`;
-          statusLabel.style.color = "var(--accent)";
-        }
+        const idx = e.detail.index;
+        const f = document.getElementById('aaFrom');
+        const t = document.getElementById('aaTo');
+        if (f.value === "") f.value = idx; else t.value = idx;
       });
     }
   };

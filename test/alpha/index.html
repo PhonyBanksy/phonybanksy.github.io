@@ -71,9 +71,11 @@
 
       <div class="vsep"></div>
 
-      <div class="topbar-align-group">
-        <span id="aaStatusLabel" class="toolbar-label">Select waypoint to autoalign</span>
-        <button id="btnAutoAlignSingle" class="btn-primary btn-sm" title="Auto-align the currently selected waypoint based on neighbors">⟳ Auto-Align</button>
+      <div style="display:flex; align-items:center; gap:5px; background:rgba(255,255,255,0.03); padding:2px 6px; border-radius:4px; border:1px solid var(--border2);">
+        <span style="font-family:var(--head); font-size:10px; color:var(--muted); text-transform:uppercase; font-weight:700;">Align</span>
+        <input type="number" id="aaFrom" style="width:40px; height:22px; font-size:11px;" placeholder="From" />
+        <input type="number" id="aaTo"   style="width:40px; height:22px; font-size:11px;" placeholder="To" />
+        <button id="btnAutoAlignTop" class="btn-primary btn-sm" style="padding: 2px 8px;">⟳ Run</button>
       </div>
 
       <div id="routeStateBadges" style="display:flex;gap:4px;align-items:center; margin-left:10px;"></div>
@@ -92,20 +94,37 @@
     </div>
 
     <div class="tab-pane on" id="pane-process">
+
       <div id="inspector">
         <div class="inspector-head">
           <span class="inspector-title">Inspector</span>
           <span class="inspector-wp-label" id="inspectorWpLabel"></span>
         </div>
+
         <div class="inspector-select-row">
           <label for="wpSelect">Waypoint</label>
-          <select id="wpSelect"><option value="-1">— no route loaded —</option></select>
+          <select id="wpSelect">
+            <option value="-1">— no route loaded —</option>
+          </select>
         </div>
-        <div id="inspectorEmpty" class="inspector-empty">Click a waypoint on the map<br>or select from the dropdown above</div>
+
+        <div id="inspectorEmpty" class="inspector-empty">
+          Click a waypoint on the map<br>or select from the dropdown above
+        </div>
+
         <div id="inspectorBody" class="inspector-body" style="display:none;">
-          <div class="insp-row"><label>Gate Width (Y)</label><input type="number" id="inpWidth" value="10" step="0.5" /></div>
-          <div class="insp-row"><label>Depth (X)</label><input type="number" id="inpHeight" value="1" step="0.1" /></div>
-          <div class="insp-row"><label>Height (Z)</label><input type="number" id="inpDepth" value="1" step="0.1" /></div>
+          <div class="insp-row">
+            <label>Gate Width (Y)</label>
+            <input type="number" id="inpWidth" value="10" step="0.5" />
+          </div>
+          <div class="insp-row">
+            <label>Depth (X)</label>
+            <input type="number" id="inpHeight" value="1" step="0.1" />
+          </div>
+          <div class="insp-row">
+            <label>Height (Z)</label>
+            <input type="number" id="inpDepth" value="1" step="0.1" />
+          </div>
           <div class="insp-rot-val" id="rotateVal">0</div>
           <div class="insp-rot-label">rotation °</div>
           <input type="range" id="rotSlider" min="-180" max="180" value="0" />
@@ -115,24 +134,47 @@
 
       <div class="process-body">
         <div id="routeVisibilityRow" style="display:none; align-items:center; gap:8px; padding:8px 0; border-bottom:1px solid var(--border);">
-          <label class="check-wrap" style="margin:0;"><input type="checkbox" id="chkRoutePublic" checked /><span style="font-size:11px; color:var(--muted);">Public (visible in Community)</span></label>
+          <label class="check-wrap" style="margin:0;">
+            <input type="checkbox" id="chkRoutePublic" checked />
+            <span style="font-size:11px; color:var(--muted);">Public (visible in Community)</span>
+          </label>
         </div>
+
         <div id="routeDescRow" style="display:flex;flex-direction:column;gap:4px;padding:8px 0;border-bottom:1px solid var(--border);">
           <label style="font-family:var(--head);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);">Description <span style="color:var(--border2);font-weight:400;">(optional · 280 chars)</span></label>
           <textarea id="routeDescription" maxlength="280" rows="2" placeholder="Short description shown in Community…" style="background:var(--panel);border:1px solid var(--border2);border-radius:3px;color:var(--text);font-size:12px;padding:6px 8px;font-family:var(--body);outline:none;resize:vertical;min-height:44px;transition:border-color .15s;"></textarea>
           <span id="descCharCount" style="font-family:var(--mono);font-size:9px;color:var(--border2);text-align:right;">0 / 280</span>
         </div>
+        
         <div>
           <div class="sg-title" style="margin-bottom:8px;">Route Category</div>
           <div id="routeCatEditor" class="route-cat-row" style="background:var(--panel);border-radius:4px;border:1px solid var(--border2);">
-            <button class="cat-toggle tag-sprint" data-cat="Sprint">Sprint</button>
-            <button class="cat-toggle tag-circuit" data-cat="Circuit">Circuit</button>
+            <button class="cat-toggle tag-sprint"    data-cat="Sprint">Sprint</button>
+            <button class="cat-toggle tag-circuit"   data-cat="Circuit">Circuit</button>
             <button class="cat-toggle tag-endurance" data-cat="Endurance">Endurance</button>
-            <button class="cat-toggle tag-offroad" data-cat="Offroad">Offroad</button>
-            <button class="cat-toggle tag-dakar" data-cat="Dakar">Dakar</button>
-            <button class="cat-toggle tag-hills" data-cat="Hills">Hills</button>
+            <button class="cat-toggle tag-offroad"   data-cat="Offroad">Offroad</button>
+            <button class="cat-toggle tag-dakar"     data-cat="Dakar">Dakar</button>
+            <button class="cat-toggle tag-hills"     data-cat="Hills">Hills</button>
             <button class="cat-toggle tag-technical" data-cat="Technical">Technical</button>
-            <button class="cat-toggle tag-speed" data-cat="Speed">Speed</button>
+            <button class="cat-toggle tag-speed"     data-cat="Speed">Speed</button>
+          </div>
+        </div>
+
+        <div>
+          <div class="sg-title" style="margin-bottom:10px;">How to Use</div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div style="display:flex;gap:10px;align-items:flex-start;padding:8px;background:var(--panel);border-radius:4px;border-left:3px solid var(--accent);">
+              <span style="font-family:var(--head);font-size:18px;font-weight:900;color:var(--accent);line-height:1;flex-shrink:0;">1</span>
+              <div style="font-size:12px;color:var(--text);line-height:1.6;"><strong>Sign in</strong> with Google to save routes to the cloud.</div>
+            </div>
+            <div style="display:flex;gap:10px;align-items:flex-start;padding:8px;background:var(--panel);border-radius:4px;border-left:3px solid #4fc3f7;">
+              <span style="font-family:var(--head);font-size:18px;font-weight:900;color:#4fc3f7;line-height:1;flex-shrink:0;">2</span>
+              <div style="font-size:12px;color:var(--text);line-height:1.6;">Click <strong>⬇ Import to Website</strong> after copying your route JSON from the game.</div>
+            </div>
+            <div style="display:flex;gap:10px;align-items:flex-start;padding:8px;background:var(--panel);border-radius:4px;border-left:3px solid #9c6aff;">
+              <span style="font-family:var(--head);font-size:18px;font-weight:900;color:#9c6aff;line-height:1;flex-shrink:0;">3</span>
+              <div style="font-size:12px;color:var(--text);line-height:1.6;">Set options like <strong>Scale ×2</strong> or <strong>Reverse</strong> in the top toolbar.</div>
+            </div>
           </div>
         </div>
       </div>
@@ -164,7 +206,23 @@
         </div>
       </div>
     </div>
+
   </aside>
+</div>
+
+<div id="profileModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.7); z-index:1000; align-items:center; justify-content:center;">
+  <div class="modal-box">
+    <h2 class="modal-title">Complete Your Profile</h2>
+    <div class="modal-field">
+      <label>In-Game Name</label>
+      <input id="inpIngameName" type="text" maxlength="64" />
+    </div>
+    <div class="modal-field">
+      <label>Discord Username</label>
+      <input id="inpDiscordName" type="text" maxlength="64" />
+    </div>
+    <button id="btnSaveProfile" class="btn-primary btn-full">Save Profile</button>
+  </div>
 </div>
 
 <div id="toast">Done!</div>
