@@ -23,7 +23,7 @@ window.AutoAlign = (() => {
     // The bisector of the corner
     const resultRad = inAngle + (diff / 2);
     // Convert to degrees and add 90 to make the gate face "into" the turn
-    return (resultRad * 180 / Math.PI) + 90;
+    return (resultRad * 180 / Math.PI);
   }
 
   function alignRange(visualizer, fromIdx, toIdx) {
