@@ -5,6 +5,11 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
+  // Initialize Authentication UI so the login button and Firebase listeners work
+  if (window.AuthUI) {
+    window.AuthUI.init();
+  }
+
   // 1. Wire processor buttons
   RouteProcessor.updateRouteList();
   bindRouteProcessorUI();
@@ -12,6 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // 2. Map visualizer
   window.MapVisualizerInstance = window.MapVisualizer('routeCanvas', 'output');
   setupWaypointUI(window.MapVisualizerInstance);
+  
   // 3. Tab switching
   document.querySelectorAll('.tab').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -22,25 +28,27 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById(target).classList.add('on');
     });
   });
-window.addEventListener('load', () => {
-  // Check if a route was sent from the community page
-  const pendingJson = localStorage.getItem('mt_transfer_json');
-  
-  if (pendingJson) {
-    const textArea = document.getElementById('json_data');
-    if (textArea) {
-      // Inject the JSON into the editor's input box
-      textArea.value = pendingJson;
-      
-      // Clear the temporary storage so it doesn't reload every time
-      localStorage.removeItem('mt_transfer_json');
-      
-      // Automatically trigger the 'Process' button to render the map
-      document.getElementById('processBtn')?.click();
-      console.log("Successfully auto-loaded route from community!");
+
+  window.addEventListener('load', () => {
+    // Check if a route was sent from the community page
+    const pendingJson = localStorage.getItem('mt_transfer_json');
+    
+    if (pendingJson) {
+      const textArea = document.getElementById('json_data');
+      if (textArea) {
+        // Inject the JSON into the editor's input box
+        textArea.value = pendingJson;
+        
+        // Clear the temporary storage so it doesn't reload every time
+        localStorage.removeItem('mt_transfer_json');
+        
+        // Automatically trigger the 'Process' button to render the map
+        document.getElementById('processBtn')?.click();
+        console.log("Successfully auto-loaded route from community!");
+      }
     }
-  }
-});
+  });
+
   // 5. Category tag toggles
   document.querySelectorAll('.cat-toggle').forEach(btn => {
     btn.addEventListener('click', () => {
