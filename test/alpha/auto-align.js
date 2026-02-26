@@ -22,7 +22,6 @@ window.AutoAlign = (() => {
 
     // The bisector of the corner
     const resultRad = inAngle + (diff / 2);
-    // Convert to degrees and add 90 to make the gate face "into" the turn
     return (resultRad * 180 / Math.PI);
   }
 
@@ -40,12 +39,16 @@ window.AutoAlign = (() => {
       if (p && n) {
         yaw = calculateBisector(p, c, n);
       } else if (n) {
-        yaw = Math.atan2(n.y - c.y, n.x - c.x) * (180 / Math.PI) + 90;
+        // Start waypoint: pointing towards the next waypoint (removed + 90)
+        yaw = Math.atan2(n.y - c.y, n.x - c.x) * (180 / Math.PI);
       } else if (p) {
-        yaw = Math.atan2(c.y - p.y, c.x - p.x) * (180 / Math.PI) + 90;
+        // Finish waypoint: pointing away from the previous waypoint (removed + 90)
+        yaw = Math.atan2(c.y - p.y, c.x - p.x) * (180 / Math.PI);
       }
 
-      if (yaw !== undefined) wps[i].rotation = toQuat(yaw);
+      if (yaw !== undefined) {
+        wps[i].rotation = toQuat(yaw);
+      }
     }
 
     visualizer.saveRouteData(data);
