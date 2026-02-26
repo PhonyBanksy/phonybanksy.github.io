@@ -13,23 +13,27 @@
 <body>
 <div id="app">
 
-  <header id="topbar">
-  <div class="logo">
-    <div class="logo-mark"></div>
-    <span class="logo-text">Motor<em>Town</em> Community</span>
-  </div>
-  <div class="vsep"></div>
-  <div class="status-pill">
-    <div class="dot"></div>
-    <span>Browser</span>
-  </div>
-  <div class="topbar-end">
-    <a href="index.html" class="btn-secondary btn-sm" style="text-decoration:none;">← Back to Editor</a>
-    <span id="userDisplay" style="display:none; align-items:center; font-size:12px; color:var(--text); font-family:var(--head); letter-spacing:.04em;"></span>
-    <button id="btnLogin"  class="btn-secondary btn-sm">🔑 Sign in</button>
-    <button id="btnLogout" class="btn-danger btn-sm" style="display:none;">Sign Out</button>
-  </div>
-</header>
+<header id="topbar">
+    <div class="logo">
+      <div class="logo-mark"></div>
+      <span class="logo-text">Motor<em>Town</em></span>
+    </div>
+
+    <nav class="top-nav-tabs">
+      <a href="index.html" class="nav-tab">Editor</a>
+      <a href="community.html" class="nav-tab active">Community</a>
+    </nav>
+
+    <div class="vsep"></div>
+    <div class="page-indicator">Community</div>
+    <div class="vsep"></div>
+
+    <div class="topbar-end">
+      <span id="userDisplay" style="display:none; align-items:center; font-size:12px; color:var(--text); font-family:var(--head); letter-spacing:.04em;"></span>
+      <button id="btnLogin"  class="btn-secondary btn-sm">🔑 Sign in</button>
+      <button id="btnLogout" class="btn-danger btn-sm" style="display:none;">Sign Out</button>
+    </div>
+  </header>
 
   <div id="community-layout">
 

@@ -26,7 +26,45 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 /* ── LAYOUT ── */
 #app { display: grid; grid-template-columns: 490px 1fr 360px; grid-template-rows: 48px 1fr; height: 100vh; }
 
+/* ── TOP NAV TABS ── */
+.top-nav-tabs {
+  display: flex;
+  gap: 4px;
+  margin-left: 10px;
+}
 
+.nav-tab {
+  text-decoration: none;
+  font-family: var(--head);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 6px 14px;
+  border-radius: 4px;
+  transition: all 0.15s;
+}
+
+.nav-tab:hover {
+  background: rgba(255,255,255,0.05);
+  color: var(--text);
+}
+
+.nav-tab.active {
+  background: var(--accent);
+  color: #fff;
+}
+
+.page-indicator {
+  font-family: var(--head);
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-left: 10px;
+}
 /* ── TOPBAR ── */
 #topbar {
   grid-column: 1 / -1; display: flex; align-items: center; gap: 14px;
