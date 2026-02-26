@@ -1,14 +1,14 @@
 /**
  * auth-ui.js
- * Handles Google Sign-In (popup flow), logout, and the first-time profile setup modal.
- * Switched to signInWithPopup to fix the 404 /__/firebase/init.json redirect error on GitHub Pages.
+ * Handles Google Sign-In (redirect flow), logout, and the first-time profile setup modal.
+ * Uses signInWithRedirect to avoid popup-blocked issues on most browsers/hosts.
  *
  * Exposes: window.AuthUI = { init, getCurrentUser, isAdmin }
  */
 
-import { auth, db, provider }                                   from './firebase-config.js';
-import { signInWithPopup, signOut, onAuthStateChanged }         from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { doc, getDoc, setDoc, serverTimestamp }                 from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { auth, db, provider }                                                 from './firebase-config.js';
+import { signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { doc, getDoc, setDoc, serverTimestamp }                               from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 // ── Sanitize helper ───────────────────────────────────────────────────────────
 function sanitize(str, maxLen = 64) {
@@ -43,7 +43,6 @@ window.AuthUI = {
 
     if (!btnLogin) return;
 
-    // Attach event listeners
     btnLogin.addEventListener('click',  () => loginWithGoogle());
     btnLogout.addEventListener('click', () => logout());
     if (btnSaveProfile) btnSaveProfile.addEventListener('click', () => saveProfile());
@@ -57,18 +56,16 @@ window.AuthUI = {
       });
     }
 
+    // Handle result from a previous signInWithRedirect call
+    handleRedirectResult();
+
     // React to auth state changes
     onAuthStateChanged(auth, async (user) => {
       if (user) {
-        try {
-          _currentUser = user;
-          await loadOrCreateUserDoc(user);
-          updateTopbarUI(true);
-          document.dispatchEvent(new CustomEvent('authStateChanged', { detail: { user, userDoc: _currentUserDoc } }));
-        } catch (err) {
-          console.error("Failed to load or create user doc:", err);
-          alert("Login error: " + err.message);
-        }
+        _currentUser = user;
+        await loadOrCreateUserDoc(user);
+        updateTopbarUI(true);
+        document.dispatchEvent(new CustomEvent('authStateChanged', { detail: { user, userDoc: _currentUserDoc } }));
       } else {
         _currentUser    = null;
         _currentUserDoc = null;
@@ -79,23 +76,30 @@ window.AuthUI = {
   }
 };
 
-// ── Google Sign-In (Popup — prevents redirect 404s) ──────────────────────────
+// ── Google Sign-In (redirect — avoids popup-blocked) ─────────────────────────
 async function loginWithGoogle() {
   try {
     btnLogin.disabled    = true;
-    btnLogin.textContent = 'Signing in…';
-    
-    // Using Popup instead of Redirect to stay on GitHub Pages
-    await signInWithPopup(auth, provider);
-    
-    // onAuthStateChanged will fire automatically on success
+    btnLogin.textContent = 'Redirecting…';
+    await signInWithRedirect(auth, provider);
+    // Browser will navigate away; onAuthStateChanged fires on return
   } catch (err) {
-    console.error('Login popup failed:', err);
+    console.error('Login redirect failed:', err);
     btnLogin.disabled    = false;
     btnLogin.textContent = '🔑 Sign in with Google';
-    // Ignore error if user just closed the popup
-    if (err.code !== 'auth/popup-closed-by-user' && err.code !== 'auth/cancelled-popup-request') {
-      alert('Sign-in failed: ' + err.message);
+    alert('Sign-in failed: ' + err.message);
+  }
+}
+
+// ── Handle redirect result on page load ───────────────────────────────────────
+async function handleRedirectResult() {
+  try {
+    await getRedirectResult(auth);
+    // If we came back from Google redirect, onAuthStateChanged fires automatically
+  } catch (err) {
+    // Ignore cancelled-popup errors; log anything else
+    if (err.code !== 'auth/cancelled-popup-request') {
+      console.warn('Redirect result:', err.code, err.message);
     }
   }
 }
@@ -179,7 +183,7 @@ function updateTopbarUI(loggedIn) {
     btnLogout.style.display   = 'none';
     userDisplay.style.display = 'none';
     btnLogin.disabled         = false;
-    btnLogin.textContent      = '🔑 Sign in';
+    btnLogin.textContent      = '🔑 Sign in with Google';
   }
 }
 
@@ -191,12 +195,4 @@ function showToast(msg) {
   t.classList.add('show');
   clearTimeout(t._timer);
   t._timer = setTimeout(() => t.classList.remove('show'), 2500);
-}
-
-// ── Auto-Initialize ───────────────────────────────────────────────────────────
-// This guarantees the UI binds even if index.html module loads late
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => window.AuthUI.init());
-} else {
-  window.AuthUI.init();
 }
