@@ -548,6 +548,14 @@
     copyText(text);
   };
 
+  /* ── AUTO-ALIGN ── */
+  if (window.AutoAlign && window.MapVisualizerInstance) {
+    window.AutoAlign.init(window.MapVisualizerInstance);
+  }
+  document.getElementById('btnAutoAlign')?.addEventListener('click', () => {
+    window.AutoAlign?.openPanel();
+  });
+
   /* ── DESCRIPTION CHAR COUNTER ── */
   const descTextarea = document.getElementById('routeDescription');
   const descCounter  = document.getElementById('descCharCount');
@@ -559,23 +567,31 @@
     });
   }
 
-  /* ── AUTH STATE CHANGES ── */
-
+/* ── AUTH STATE CHANGES ── */
   document.addEventListener('authStateChanged', async (e) => {
     const loggedIn = !!e.detail?.user;
     const visRow = document.getElementById('routeVisibilityRow');
     if (visRow) visRow.style.display = loggedIn ? 'flex' : 'none';
 
     if (loggedIn) {
-      // Load this user's routes from Firestore into the sidebar
       await loadMyCloudRoutes();
     } else {
-      // Clear cloud routes on logout, keep any un-saved local ones
       _groups = _groups.filter(g => !g.firestoreId);
       renderTree();
     }
   });
 
+  /* ── INITIAL RENDER & FORCED AUTH CHECK ── */
+  (async function init() {
+    renderTree();
+    // If user is already authenticated (event was missed), trigger load manually
+    const currentUser = window.AuthUI?.getCurrentUser();
+    if (currentUser) {
+      const visRow = document.getElementById('routeVisibilityRow');
+      if (visRow) visRow.style.display = 'flex';
+      await loadMyCloudRoutes();
+    }
+  })();
   /* ── INITIAL RENDER ── */
   renderTree();
 

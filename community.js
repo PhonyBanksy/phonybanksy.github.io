@@ -62,19 +62,36 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
   /* ── Bean rank tiers (rank 1 = best) ── */
+  // Bean rank tiers — all bean-themed, icons are SVG beans rendered via CSS classes
   const BEAN_RANKS = [
-    { rank: 1,  min: 1,    icon: '🥇', label: 'Bean Baron',      color: '#FFD700' },
-    { rank: 2,  min: 1,    icon: '🥈', label: 'Bean Magnate',    color: '#C0C0C0' },
-    { rank: 3,  min: 1,    icon: '🥉', label: 'Bean Tycoon',     color: '#CD7F32' },
-    { rank: 4,  min: 1,    icon: '🌱', label: 'Bean Merchant',   color: '#8bc34a' },
-    { rank: 5,  min: 1,    icon: '🌿', label: 'Bean Trader',     color: '#4caf50' },
-    { rank: 6,  min: 1,    icon: '🫘', label: 'Bean Marketeer',  color: '#26c6da' },
-    { rank: 7,  min: 1,    icon: '🪴', label: 'Bean Seller',     color: '#4fc3f7' },
-    { rank: 8,  min: 1,    icon: '🌾', label: 'Bean Grower',     color: '#9c6aff' },
-    { rank: 9,  min: 1,    icon: '🪣', label: 'Bean Picker',     color: '#f5a623' },
-    { rank: 10, min: 1,    icon: '🌰', label: 'Bean Farmer',     color: '#a0826d' },
+    { pos: 0,  label: 'Bean Baron',     beanClass: 'bean-rank-1',  color: '#FFD700', size: 28 },
+    { pos: 1,  label: 'Bean Magnate',   beanClass: 'bean-rank-2',  color: '#E8E8E8', size: 24 },
+    { pos: 2,  label: 'Bean Tycoon',    beanClass: 'bean-rank-3',  color: '#CD7F32', size: 22 },
+    { pos: 3,  label: 'Bean Merchant',  beanClass: 'bean-rank-4',  color: '#8bc34a', size: 18 },
+    { pos: 4,  label: 'Bean Trader',    beanClass: 'bean-rank-5',  color: '#4caf50', size: 17 },
+    { pos: 5,  label: 'Bean Marketeer', beanClass: 'bean-rank-6',  color: '#26c6da', size: 16 },
+    { pos: 6,  label: 'Bean Seller',    beanClass: 'bean-rank-7',  color: '#4fc3f7', size: 15 },
+    { pos: 7,  label: 'Bean Grower',    beanClass: 'bean-rank-8',  color: '#9c6aff', size: 15 },
+    { pos: 8,  label: 'Bean Picker',    beanClass: 'bean-rank-9',  color: '#f5a623', size: 14 },
+    { pos: 9,  label: 'Bean Farmer',    beanClass: 'bean-rank-10', color: '#a07060', size: 14 },
   ];
-  const ADMIN_RANK = { icon: '🌿', label: 'Bean Sprout', color: '#27c26b' };
+  const ADMIN_RANK = { label: 'Bean Sprout', beanClass: 'bean-rank-admin', color: '#27c26b', size: 16 };
+
+  // Returns SVG bean icon HTML with size/color for rank
+  function beanSvg(rank) {
+    const s = rank.size || 16;
+    const col = rank.color;
+    // Bean shape: simple oval with highlight and shadow for depth
+    const shadow = col + '55';
+    const highlight = 'rgba(255,255,255,0.35)';
+    return `<svg class="bean-svg ${rank.beanClass||''}" width="${s}" height="${s}" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="display:inline-block;vertical-align:middle;flex-shrink:0;" title="${rank.label}">
+      <ellipse cx="12" cy="13" rx="8" ry="9" fill="${col}"/>
+      <ellipse cx="12" cy="12.5" rx="7.5" ry="8.5" fill="${col}"/>
+      <path d="M8 7 Q12 4 16 7 Q18 10 16 14 Q14 17 12 16 Q9 15 8 12 Q7 9 8 7Z" fill="${shadow}" opacity="0.4"/>
+      <ellipse cx="10" cy="9" rx="2.5" ry="3.5" fill="${highlight}" transform="rotate(-20 10 9)"/>
+      <path d="M12 5 Q14 7 14 10 Q14 13 12 14" stroke="rgba(0,0,0,0.2)" stroke-width="1" fill="none"/>
+    </svg>`;
+  }
 
   /* ── Category config ── */
   const CATS = ['Sprint','Circuit','Endurance','Offroad','Dakar','Hills','Technical','Speed'];
@@ -269,15 +286,20 @@ document.addEventListener('DOMContentLoaded', () => {
       const isExpanded = _expandedCreators.has(ownerUid);
       const routes = group.routes;
 
-      // Creator header row
+      // Creator header row — bean + name + rank label + count, all left-aligned
+      const _cr = getAuthorRank(group.inGameName);
+      const _crBeanHtml  = _cr ? beanSvg({..._cr.rank, size: Math.min(_cr.rank.size||16, 18)}) : '';
+      const _crRankLabel = _cr ? `<span class="creator-rank-label" style="color:${_cr.rank.color};">${_cr.rank.label}</span>` : '';
+
       const headerTr = document.createElement('tr');
       headerTr.className = 'creator-group-header';
       headerTr.innerHTML = `
         <td colspan="${isAdmin ? 7 : 6}" class="creator-group-cell">
           <button class="creator-group-toggle" data-uid="${escHtml(ownerUid)}">
             <span class="creator-chevron">${isExpanded ? '▾' : '▸'}</span>
-            <span class="creator-avatar">👤</span>
+            <span class="creator-bean-icon">${_crBeanHtml}</span>
             <span class="creator-name">${escHtml(group.inGameName)}</span>
+            ${_crRankLabel}
             <span class="creator-route-count">${routes.length} route${routes.length !== 1 ? 's' : ''}</span>
           </button>
         </td>
@@ -346,8 +368,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Author rank
     const rankInfo = getAuthorRank(route.inGameName);
-    const rankIconHtml = rankInfo
-      ? `<span class="author-rank-icon" style="color:${rankInfo.rank.color};" title="${rankInfo.rank.label} · 🫘 ${rankInfo.totalBeans} total beans">${rankInfo.rank.icon}</span>`
+    const rankBeanHtml = rankInfo
+      ? `<span class="author-rank-bean" title="${rankInfo.rank.label} · 🫘 ${rankInfo.totalBeans} total beans">${beanSvg(rankInfo.rank)}</span>`
       : '';
     const rankLabelHtml = rankInfo
       ? `<span class="author-rank-label" style="color:${rankInfo.rank.color};">${rankInfo.rank.label}</span>`
@@ -371,8 +393,8 @@ document.addEventListener('DOMContentLoaded', () => {
       </td>
       <td class="col-author">
         <div class="author-name-row">
-          ${rankIconHtml}
           <span class="author-name-text">${escHtml(route.inGameName || '—')}</span>
+          ${rankBeanHtml}
         </div>
         ${rankLabelHtml}
       </td>
@@ -422,38 +444,51 @@ document.addEventListener('DOMContentLoaded', () => {
     return html;
   }
 
-  function renderBeansDetail(avg, count, totalBeans) {
+  // Combined rating: shows avg results + interactive vote in ONE row
+  function renderRatingWidget(avg, count, totalBeans, myRating, canRate, showVote) {
     const full = Math.round(avg);
-    let html = '<div class="beans-detail-wrap" style="align-items: flex-end;">';
-    html += '<div class="beans-row">';
+    let html = '<div class="rating-widget">';
+
+    // Row 1: community avg beans + stats + (if can vote) separator + your vote beans
+    html += '<div class="rw-main-row">';
+
+    // Community avg beans
+    html += '<div class="rw-avg-beans">';
     for (let i = 1; i <= 5; i++) {
-      html += `<span class="bean ${i <= full ? 'filled' : ''}">🫘</span>`;
-    }
-    html += `<span class="bean-count">${count > 0 ? avg.toFixed(1) + ' avg' : 'No ratings yet'}</span>`;
-    html += '</div>';
-    if (count > 0 && totalBeans > 0) {
-      html += `<div class="beans-total" style="justify-content: flex-end;">`;
-      html += `<span class="beans-total-label">🫘 × ${totalBeans} total beans</span>`;
-      html += `<span class="beans-total-sub">${count} vote${count!==1?'s':''}</span>`;
-      html += `</div>`;
+      html += `<span class="bean${i <= full ? ' filled' : ''}">🫘</span>`;
     }
     html += '</div>';
+
+    // Stats
+    if (count > 0) {
+      html += `<span class="rw-avg-num">${avg.toFixed(1)}</span>`;
+      html += `<span class="rw-votes">${count}v · 🫘×${totalBeans}</span>`;
+    } else {
+      html += `<span class="rw-no-votes">no votes yet</span>`;
+    }
+
+    // Vote beans inline — separated by thin divider
+    if (showVote) {
+      html += '<span class="rw-sep">|</span>';
+      if (canRate) {
+        html += `<div class="rw-vote-beans bean-interactive" id="myRatingBeans">`;
+        for (let i = 1; i <= 5; i++) {
+          html += `<span class="bean bean-btn${myRating && i <= myRating ? ' filled' : ''}" data-val="${i}" title="${i}🫘">🫘</span>`;
+        }
+        html += '</div>';
+        html += `<span class="rw-vote-label">${myRating ? myRating+'🫘 yours' : 'your vote'}</span>`;
+      } else {
+        html += `<span class="rw-gate">⬇ load to vote</span>`;
+      }
+    }
+
+    html += '</div>'; // end main-row
+    html += '</div>'; // end rating-widget
     return html;
   }
 
-  function renderInteractiveBeans(myRating, canRate) {
-    if (!canRate) {
-      return `<div class="bean-gate-msg" style="text-align: right;">⬇ Load this route in the editor first to unlock rating</div>`;
-    }
-    let html = '<div class="bean-interactive-wrap" style="align-items: flex-end;">';
-    html += `<div class="bean-interactive" id="myRatingBeans" style="justify-content: flex-end;">`;
-    for (let i = 1; i <= 5; i++) {
-      html += `<span class="bean bean-btn ${myRating && i <= myRating ? 'filled' : ''}" data-val="${i}" title="${i} bean${i>1?'s':''}">🫘</span>`;
-    }
-    html += '</div>';
-    html += `<div class="bean-rating-hint">${myRating ? `Your rating: ${myRating} 🫘` : 'How many beans does it deserve?'}</div>`;
-    html += '</div>';
-    return html;
+  function renderBeansDetail(avg, count, totalBeans) {
+    return renderRatingWidget(avg, count, totalBeans, null, false, false);
   }
 
   /* ── Select row → detail panel ── */
@@ -521,54 +556,37 @@ document.addEventListener('DOMContentLoaded', () => {
       favBtn.style.display = uid ? 'inline-flex' : 'none';
     }
 
-    // Rating section
+    // Rating section — combined widget
     const ratingWrap = document.getElementById('detailRatingWrap');
     if (ratingWrap) {
-      if (uid && !isOwner) {
-        let html = renderBeansDetail(route.avgRating||0, route.ratingCount||0, route.totalBeans||0);
-        html += '<div style="margin-top:8px;border-top:1px solid var(--border);padding-top:8px;text-align:right;width:100%;">';
-        html += '<div style="font-size:10px;color:var(--muted);font-family:var(--head);letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px;">Your Rating</div>';
-        html += '<div id="ratingWidgetSlot" style="min-height:28px;"></div>';
-        html += '</div>';
-        ratingWrap.innerHTML = html;
-        ratingWrap.style.display = 'flex';
+      // Show avg immediately, vote row loading
+      ratingWrap.innerHTML = renderRatingWidget(route.avgRating||0, route.ratingCount||0, route.totalBeans||0, null, false, uid && !isOwner);
+      ratingWrap.style.display = 'block';
 
+      if (uid && !isOwner) {
         const [myRatingResult, hasDownloadedResult] = await Promise.all([
           window.FirestoreRoutes?.getMyRating?.(route.id, uid).catch(() => null) ?? Promise.resolve(null),
           window.FirestoreRoutes?.hasDownloaded?.(route.id, uid).catch(() => false) ?? Promise.resolve(false)
         ]);
-
         _myRating = myRatingResult;
-        const canRate = _myDownloads.has(route.id) || hasDownloadedResult;
-
-        if (canRate) {
+        const canRate = _myDownloads.has(route.id) || hasDownloadedResult || _myRating !== null;
+        if (hasDownloadedResult) {
           _myDownloads.add(route.id);
-          localStorage.setItem('mt_downloads', JSON.stringify([..._myDownloads]));
+          try { localStorage.setItem('mt_downloads', JSON.stringify([..._myDownloads])); } catch(_){}
         }
-
-        const canRateFinal = canRate || (_myRating !== null);
-
-        const slot = ratingWrap.querySelector('#ratingWidgetSlot');
-        if (slot) {
-          slot.outerHTML = renderInteractiveBeans(_myRating, canRateFinal);
-        }
+        ratingWrap.innerHTML = renderRatingWidget(route.avgRating||0, route.ratingCount||0, route.totalBeans||0, _myRating, canRate, true);
 
         const interactiveWrap = ratingWrap.querySelector('.bean-interactive');
         if (interactiveWrap) {
           const btns = interactiveWrap.querySelectorAll('.bean-btn');
           btns.forEach((b, i) => {
-            b.addEventListener('mouseenter', () => {
-              btns.forEach((bb, j) => bb.classList.toggle('filled', j <= i));
-            });
+            b.addEventListener('mouseenter', () => btns.forEach((bb, j) => bb.classList.toggle('filled', j <= i)));
             b.addEventListener('click', () => submitRating(route.id, parseInt(b.dataset.val)));
           });
           interactiveWrap.addEventListener('mouseleave', () => {
             btns.forEach((bb, j) => bb.classList.toggle('filled', !!(_myRating && j + 1 <= _myRating)));
           });
         }
-      } else {
-        ratingWrap.innerHTML = renderBeansDetail(route.avgRating||0, route.ratingCount||0, route.totalBeans||0);
-        ratingWrap.style.display = 'flex';
       }
     }
 
@@ -786,7 +804,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function renderBeanRankBadge(rank) {
-    return `<span class="bean-rank-badge" style="color:${rank.color};border-color:${rank.color}20;background:${rank.color}15;" title="${rank.label}">${rank.icon} ${rank.label}</span>`;
+    return `<span class="bean-rank-badge" style="color:${rank.color};border-color:${rank.color}20;background:${rank.color}15;" title="${rank.label}">${beanSvg(rank)} ${rank.label}</span>`;
   }
 
   async function openLeaderboard() {
@@ -809,7 +827,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const row = document.createElement('div');
         row.className = 'lb-row' + (isTop3 ? ' lb-top3' : '');
         row.innerHTML = `
-          <span class="lb-pos" style="color:${rank.color};">${rank.icon}</span>
+          <span class="lb-pos">${beanSvg(rank)}</span>
           <span class="lb-name">${escHtml(entry.inGameName)}</span>
           <span class="lb-rank-label" style="color:${rank.color};">${rank.label}</span>
           <span class="lb-beans">🫘 ${entry.totalBeans}</span>
@@ -875,9 +893,6 @@ document.addEventListener('DOMContentLoaded', () => {
   btnCloseDetail.addEventListener('click', closeDetail);
   btnShowAll?.addEventListener('click', () => loadRoutes(true));
   document.getElementById('btnDetailFav')?.addEventListener('click', () => { if (_selectedId) toggleFav(_selectedId); });
-
-  const btnPromote = document.getElementById('btnAdminPromote');
-  if (btnPromote) btnPromote.addEventListener('click', showAdminPromoModal);
 
   [searchInput, authorInput].forEach(inp =>
     inp.addEventListener('keydown', e => { if (e.key === 'Enter') applyFilters(); })

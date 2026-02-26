@@ -392,3 +392,108 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px;
 .btn-fav:hover { border-color: #e8c000; color: #e8c000; background: rgba(232,192,0,.08); filter: none; }
 .btn-fav.faved { border-color: #e8c000; color: #e8c000; background: rgba(232,192,0,.12); }
 
+
+/* ══════════════════════════════════════════
+   AUTO-ALIGN PANEL
+   ══════════════════════════════════════════ */
+.auto-align-panel {
+  background: var(--panel);
+  border: 1px solid var(--border2);
+  border-radius: 4px;
+  margin-bottom: 12px;
+  overflow: hidden;
+}
+
+.aa-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border2);
+}
+
+.aa-title {
+  font-family: var(--head);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.aa-body {
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.aa-hint {
+  font-size: 10px;
+  color: var(--muted);
+  line-height: 1.5;
+  margin: 0;
+  padding: 6px 8px;
+  background: rgba(232,64,12,.06);
+  border-left: 2px solid var(--accent);
+  border-radius: 2px;
+}
+.aa-hint strong { color: var(--text); }
+
+.aa-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.aa-row label {
+  font-family: var(--head);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  min-width: 56px;
+  flex-shrink: 0;
+}
+
+.aa-row input[type="number"] {
+  flex: 1;
+  background: var(--input-bg, #1a1a1a);
+  border: 1px solid var(--border2);
+  border-radius: 3px;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 12px;
+  padding: 4px 8px;
+  outline: none;
+  transition: border-color .15s;
+}
+.aa-row input[type="number"]:focus { border-color: var(--accent); }
+
+.aa-quick {
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.aa-preview {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+  min-height: 14px;
+}
+
+#aaRun {
+  margin-top: 2px;
+}
+
+.aa-result {
+  font-family: var(--head);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  min-height: 14px;
+  text-align: center;
+}
