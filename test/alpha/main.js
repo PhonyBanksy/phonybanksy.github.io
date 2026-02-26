@@ -1,18 +1,23 @@
 /**
  * main.js
  * Entry point — wires up all modules after DOM is ready.
- * Load order: math-utils → route-processor → map-visualizer → inspector → main → main-overrides
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-  // 1. Wire processor buttons
+  // 1. Processor setup
   RouteProcessor.updateRouteList();
   bindRouteProcessorUI();
 
-  // 2. Map visualizer
+  // 2. Map visualizer setup
   window.MapVisualizerInstance = window.MapVisualizer('routeCanvas', 'output');
   setupWaypointUI(window.MapVisualizerInstance);
-  // 3. Tab switching
+  
+  // 3. Initialize Auto-Align Tool
+  if (window.AutoAlign) {
+    window.AutoAlign.init(window.MapVisualizerInstance);
+  }
+
+  // 4. Tab switching
   document.querySelectorAll('.tab').forEach(btn => {
     btn.addEventListener('click', () => {
       const target = btn.dataset.pane;
@@ -22,30 +27,11 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById(target).classList.add('on');
     });
   });
-window.addEventListener('load', () => {
-  // Check if a route was sent from the community page
-  const pendingJson = localStorage.getItem('mt_transfer_json');
-  
-  if (pendingJson) {
-    const textArea = document.getElementById('json_data');
-    if (textArea) {
-      // Inject the JSON into the editor's input box
-      textArea.value = pendingJson;
-      
-      // Clear the temporary storage so it doesn't reload every time
-      localStorage.removeItem('mt_transfer_json');
-      
-      // Automatically trigger the 'Process' button to render the map
-      document.getElementById('processBtn')?.click();
-      console.log("Successfully auto-loaded route from community!");
-    }
-  }
-});
+
   // 5. Category tag toggles
   document.querySelectorAll('.cat-toggle').forEach(btn => {
     btn.addEventListener('click', () => {
       btn.classList.toggle('on');
-      // Store selected categories in current output JSON
       const activeCategories = [...document.querySelectorAll('.cat-toggle.on')].map(b => b.dataset.cat);
       const outputEl = document.getElementById('output');
       if (outputEl && outputEl.value.trim()) {
@@ -60,13 +46,22 @@ window.addEventListener('load', () => {
     });
   });
 
-  // Helper to reflect categories from loaded route data
   window.reflectRouteCategories = (routeData) => {
     const cats = routeData?._categories || [];
     document.querySelectorAll('.cat-toggle').forEach(btn => {
       btn.classList.toggle('on', cats.includes(btn.dataset.cat));
     });
   };
-  // Community route handoff is handled at the bottom of main-overrides.js,
-  // after saveRouteToLocalStorage has been overridden and the tree is ready.
+});
+
+window.addEventListener('load', () => {
+  const pendingJson = localStorage.getItem('mt_transfer_json');
+  if (pendingJson) {
+    const textArea = document.getElementById('json_data');
+    if (textArea) {
+      textArea.value = pendingJson;
+      localStorage.removeItem('mt_transfer_json');
+      document.getElementById('processBtn')?.click();
+    }
+  }
 });
