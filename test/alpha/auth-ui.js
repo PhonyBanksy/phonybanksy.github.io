@@ -62,10 +62,17 @@ window.AuthUI = {
     // React to auth state changes
     onAuthStateChanged(auth, async (user) => {
       if (user) {
-        _currentUser = user;
-        await loadOrCreateUserDoc(user);
-        updateTopbarUI(true);
-        document.dispatchEvent(new CustomEvent('authStateChanged', { detail: { user, userDoc: _currentUserDoc } }));
+        try {
+          _currentUser = user;
+          await loadOrCreateUserDoc(user);
+          updateTopbarUI(true);
+          document.dispatchEvent(new CustomEvent('authStateChanged', { detail: { user, userDoc: _currentUserDoc } }));
+        } catch (err) {
+          console.error("Failed to load or create user doc:", err);
+          alert("Login error: " + err.message);
+          // Optionally sign out the user if profile loading fails
+          // await signOut(auth); 
+        }
       } else {
         _currentUser    = null;
         _currentUserDoc = null;
