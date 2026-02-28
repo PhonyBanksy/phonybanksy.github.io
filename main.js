@@ -29,23 +29,74 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  window.addEventListener('load', () => {
-    // Check if a route was sent from the community page
+  window.addEventListener('load', async () => {
+    // Priority 1: community page handoff
     const pendingJson = localStorage.getItem('mt_transfer_json');
-    
+
     if (pendingJson) {
       const textArea = document.getElementById('json_data');
       if (textArea) {
-        // Inject the JSON into the editor's input box
         textArea.value = pendingJson;
-        
-        // Clear the temporary storage so it doesn't reload every time
         localStorage.removeItem('mt_transfer_json');
-        
-        // Automatically trigger the 'Process' button to render the map
         document.getElementById('processBtn')?.click();
         console.log("Successfully auto-loaded route from community!");
       }
+    } else {
+      const firstVisit = !localStorage.getItem('mt_visited');
+      const lastRoute  = localStorage.getItem('mt_last_route');
+
+      if (firstVisit) {
+        // First time ever — show the kitty welcome route
+        localStorage.setItem('mt_visited', '1');
+        try {
+          const resp = await fetch('cat.json');
+          if (resp.ok) {
+            const catData = await resp.json();
+            const catStr  = JSON.stringify(catData, null, 2);
+            document.getElementById('json_data').value = catStr;
+            document.getElementById('output').value    = catStr;
+            if (window.MapVisualizerInstance) window.MapVisualizerInstance.loadFromOutput();
+            const hint = document.querySelector('.map-hint');
+            if (hint) {
+              hint.textContent = '🐱 Welcome! Load your own route JSON to get started';
+              hint.classList.add('welcome');
+              setTimeout(() => {
+                hint.textContent = 'Scroll to Zoom · Drag to Pan · Click Waypoint to Select';
+                hint.classList.remove('welcome');
+              }, 4000);
+            }
+          }
+        } catch (e) {
+          console.log('cat.json not found, skipping default load');
+        }
+
+      } else if (lastRoute) {
+        // Returning user — restore their last viewed route
+        try {
+          const routeData = JSON.parse(lastRoute);
+          const str       = JSON.stringify(routeData, null, 2);
+          document.getElementById('json_data').value = str;
+          document.getElementById('output').value    = str;
+          if (window.MapVisualizerInstance) window.MapVisualizerInstance.loadFromOutput();
+          if (window.reflectRouteCategories) window.reflectRouteCategories(routeData);
+        } catch (e) {
+          console.log('Could not restore last route');
+        }
+      }
+    }
+
+    // Persist the current output to localStorage whenever it changes
+    // so returning users get their last route back
+    const outputEl = document.getElementById('output');
+    if (outputEl) {
+      const saveLastRoute = () => {
+        const val = outputEl.value.trim();
+        if (val) {
+          try { JSON.parse(val); localStorage.setItem('mt_last_route', val); } catch (_) {}
+        }
+      };
+      outputEl.addEventListener('input', saveLastRoute);
+      document.getElementById('processBtn')?.addEventListener('click', () => setTimeout(saveLastRoute, 100));
     }
   });
 
@@ -53,7 +104,6 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.cat-toggle').forEach(btn => {
     btn.addEventListener('click', () => {
       btn.classList.toggle('on');
-      // Store selected categories in current output JSON
       const activeCategories = [...document.querySelectorAll('.cat-toggle.on')].map(b => b.dataset.cat);
       const outputEl = document.getElementById('output');
       if (outputEl && outputEl.value.trim()) {
