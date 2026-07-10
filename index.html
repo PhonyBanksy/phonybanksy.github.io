@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en-GB">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Prime Collections LTD — Commercial Debt Recovery, Edinburgh &amp; Glasgow</title>
+  <title data-i18n="meta.title">Prime Collections LTD — Commercial Debt Recovery, Edinburgh &amp; Glasgow</title>
   <meta name="description" content="Get paid what you're owed. Commercial debt recovery and credit control across the UK — same-day action, no contract, market-leading fees.">
   <meta property="og:title" content="Prime Collections LTD — Commercial Debt Recovery">
   <meta property="og:type" content="website">
@@ -26,11 +26,18 @@
         Prime&nbsp;<span>Collections</span>
       </a>
       <nav class="nav-links" id="navLinks">
-        <a href="#top" class="active">Home</a>
-        <a href="#services">Services</a>
-        <a href="#legislation">Late Payment</a>
-        <a href="#contact">Contact</a>
-        <a href="#contact" class="btn">Start recovery <span class="arw">→</span></a>
+        <a href="#top" class="active" data-i18n="nav.home">Home</a>
+        <a href="#services" data-i18n="nav.services">Services</a>
+        <a href="#legislation" data-i18n="nav.latePayment">Late Payment</a>
+        <a href="#contact" data-i18n="nav.contact">Contact</a>
+        <select id="langSelect" class="lang" aria-label="Language / Cànan">
+          <option value="en">English</option>
+          <option value="gd">Gàidhlig</option>
+          <option value="ga">Gaeilge</option>
+          <option value="lt">Lietuvių</option>
+          <option value="hi">हिन्दी</option>
+        </select>
+        <a href="#contact" class="btn"><span data-i18n="nav.cta">Start recovery</span> <span class="arw">→</span></a>
       </nav>
       <button class="nav-toggle" id="navToggle" aria-label="Menu" aria-expanded="false">
         <span></span><span></span><span></span>
@@ -44,48 +51,47 @@
     <section class="hero">
       <div class="container hero-grid">
         <div>
-          <span class="label eyebrow reveal">Commercial Debt Recovery <span class="dot">·</span> Edinburgh &amp; Glasgow</span>
-          <h1 class="reveal d1">Get paid what <em>you're owed.</em></h1>
-          <p class="sub reveal d2">Commercial debt management and credit control that turns overdue invoices back into cashflow. Same-day action, no contract to sign, market-leading fees.</p>
+          <span class="label eyebrow reveal" data-i18n="hero.eyebrow">Commercial Debt Recovery · Edinburgh &amp; Glasgow</span>
+          <h1 class="reveal d1" data-i18n-html="hero.headline_html">Get paid what <em>you're owed.</em></h1>
+          <p class="sub reveal d2" data-i18n="hero.sub">Commercial debt management and credit control that turns overdue invoices back into cashflow. Same-day action, no contract to sign, market-leading fees.</p>
           <div class="hero-cta reveal d3">
-            <a href="#contact" class="btn">Start your recovery <span class="arw">→</span></a>
+            <a href="#contact" class="btn"><span data-i18n="hero.cta">Start your recovery</span> <span class="arw">→</span></a>
             <a href="tel:01315550785" class="phone">
-              <small>Call today</small>
+              <small data-i18n="hero.callLabel">Call today</small>
               <b>0131 555 0785</b>
             </a>
           </div>
 
-          <!-- SIGNATURE: aged-debt ledger strip — the real thing recovery deals with -->
+          <!-- SIGNATURE: aged-debt ledger strip -->
           <div class="aged reveal d3" aria-label="Outstanding debt by age">
             <div class="aged-head">
-              <p class="label">How late is the invoice?</p>
-              <p class="label">Red = we step in <span class="dot">↓</span></p>
+              <p class="label" data-i18n="aged.head1">How late is the invoice?</p>
+              <p class="label" data-i18n="aged.head2">Red = we step in ↓</p>
             </div>
             <div class="aged-row">
-              <div class="aged-cell"><div class="k">Current</div><div class="v">Not due</div></div>
-              <div class="aged-cell"><div class="k">30 days</div><div class="v">Slipping</div></div>
-              <div class="aged-cell warn"><div class="k">60 days</div><div class="v">Overdue</div></div>
-              <div class="aged-cell late"><div class="k">90+ days</div><div class="v">At risk</div></div>
+              <div class="aged-cell"><div class="k" data-i18n="aged.c1k">Current</div><div class="v" data-i18n="aged.c1v">Not due</div></div>
+              <div class="aged-cell"><div class="k" data-i18n="aged.c2k">30 days</div><div class="v" data-i18n="aged.c2v">Slipping</div></div>
+              <div class="aged-cell warn"><div class="k" data-i18n="aged.c3k">60 days</div><div class="v" data-i18n="aged.c3v">Overdue</div></div>
+              <div class="aged-cell late"><div class="k" data-i18n="aged.c4k">90+ days</div><div class="v" data-i18n="aged.c4v">At risk</div></div>
             </div>
-            <div class="aged-note">Once an invoice is <b>90+ days late</b>, the odds of collecting it yourself fall sharply. That's where we step in.<span class="paid">→ PAID</span></div>
+            <div class="aged-note"><span data-i18n-html="aged.note_html">Once an invoice is <b>90+ days late</b>, the odds of collecting it yourself fall sharply. That's where we step in.</span><span class="paid" data-i18n="aged.paid">→ PAID</span></div>
           </div>
         </div>
 
-        <!-- Enquiry docket. Posts to contact_form.php on the live server;
-             mailto:info@ihjcollection.co.uk is the fallback until a backend is wired up. -->
+        <!-- Enquiry docket. Posts to contact_form.php on the live server. -->
         <form class="docket reveal d2" action="contact_form.php" method="post">
           <div class="docket-head">
-            <h3>New recovery request</h3>
-            <span class="label ref">No obligation</span>
+            <h3 data-i18n="docket.title">New recovery request</h3>
+            <span class="label ref" data-i18n="docket.badge">No obligation</span>
           </div>
           <div class="docket-body">
-            <p class="small">Tell us what you're owed. We'll come back to you the same day.</p>
-            <div class="field"><input type="text"  name="name"  placeholder="Your full name *" required minlength="2"></div>
-            <div class="field"><input type="text"  name="org"   placeholder="Your organisation"></div>
-            <div class="field"><input type="email" name="email" placeholder="Your email *" required></div>
-            <div class="field"><input type="tel"   name="phone" placeholder="Your telephone"></div>
-            <div class="field"><textarea name="query" placeholder="What are you owed, and by whom?" required></textarea></div>
-            <button type="submit" class="btn">Submit request <span class="arw">→</span></button>
+            <p class="small" data-i18n="docket.intro">Tell us what you're owed. We'll come back to you the same day.</p>
+            <div class="field"><input type="text"  name="name"  data-i18n-ph="docket.ph_name"  placeholder="Your full name *" required minlength="2"></div>
+            <div class="field"><input type="text"  name="org"   data-i18n-ph="docket.ph_org"   placeholder="Your organisation"></div>
+            <div class="field"><input type="email" name="email" data-i18n-ph="docket.ph_email" placeholder="Your email *" required></div>
+            <div class="field"><input type="tel"   name="phone" data-i18n-ph="docket.ph_phone" placeholder="Your telephone"></div>
+            <div class="field"><textarea name="query" data-i18n-ph="docket.ph_query" placeholder="What are you owed, and by whom?" required></textarea></div>
+            <button type="submit" class="btn"><span data-i18n="docket.submit">Submit request</span> <span class="arw">→</span></button>
           </div>
         </form>
       </div>
@@ -95,39 +101,39 @@
     <div class="trust">
       <div class="container trust-inner">
         <!-- NOTE: "Est. 1986" carried over from previous owner (IHJ). Review for Prime Collections LTD. -->
-        <div class="trust-cell"><div class="k">Est. 1986</div><div class="d">Decades of recovery experience</div></div>
-        <div class="trust-cell"><div class="k">Same day</div><div class="d">Cases actioned immediately</div></div>
-        <div class="trust-cell"><div class="k">No contract</div><div class="d">Nothing to sign, ever</div></div>
-        <div class="trust-cell"><div class="k">£ millions</div><div class="d">Recovered for UK businesses</div></div>
+        <div class="trust-cell"><div class="k" data-i18n="trust.c1k">Est. 1986</div><div class="d" data-i18n="trust.c1d">Decades of recovery experience</div></div>
+        <div class="trust-cell"><div class="k" data-i18n="trust.c2k">Same day</div><div class="d" data-i18n="trust.c2d">Cases actioned immediately</div></div>
+        <div class="trust-cell"><div class="k" data-i18n="trust.c3k">No contract</div><div class="d" data-i18n="trust.c3d">Nothing to sign, ever</div></div>
+        <div class="trust-cell"><div class="k" data-i18n="trust.c4k">£ millions</div><div class="d" data-i18n="trust.c4d">Recovered for UK businesses</div></div>
       </div>
     </div>
 
-    <!-- ===== IS YOUR BUSINESS OWED MONEY / SERVICES ===== -->
+    <!-- ===== SERVICES ===== -->
     <section id="services">
       <div class="container">
-        <span class="label eyebrow">Is your business owed money?</span>
-        <h2 class="h-lead">If you're struggling to recover cash, we can help.</h2>
-        <p class="sub-lead">A full commercial debt management service, carefully managed from first contact to litigation — so you can get back to running your business.</p>
+        <span class="label eyebrow" data-i18n="services.eyebrow">Is your business owed money?</span>
+        <h2 class="h-lead" data-i18n="services.heading">If you're struggling to recover cash, we can help.</h2>
+        <p class="sub-lead" data-i18n="services.sub">A full commercial debt management service, carefully managed from first contact to litigation — so you can get back to running your business.</p>
         <div class="owed-grid">
           <div class="panel">
-            <p class="label">What's included</p>
+            <p class="label" data-i18n="services.listLabel">What's included</p>
             <ul class="ledger-list">
-              <li>Full commercial debt management service</li>
-              <li>No contract to sign</li>
-              <li>Cases actioned same day</li>
-              <li>Dedicated client relationship manager</li>
-              <li>Market-leading fees</li>
-              <li>Proactive service — telephony, email and letter</li>
-              <li>Seamless process to litigation</li>
-              <li>Late payment collections</li>
+              <li data-i18n="services.item1">Full commercial debt management service</li>
+              <li data-i18n="services.item2">No contract to sign</li>
+              <li data-i18n="services.item3">Cases actioned same day</li>
+              <li data-i18n="services.item4">Dedicated client relationship manager</li>
+              <li data-i18n="services.item5">Market-leading fees</li>
+              <li data-i18n="services.item6">Proactive service — telephony, email and letter</li>
+              <li data-i18n="services.item7">Seamless process to litigation</li>
+              <li data-i18n="services.item8">Late payment collections</li>
             </ul>
           </div>
 
           <div class="panel mark">
             <!-- NOTE: "Est. 1986" is the previous owner's founding date. Update for Prime Collections LTD. -->
-            <div class="est-chip"><span class="k">Est.</span><span class="v">1986</span></div>
-            <h2>Best of Both Worlds Guarantee</h2>
-            <p class="lede">A seamless, low-cost process managed from pre-sue to litigation with our partner firms — bringing true transparency and cost management if and when litigation is required.</p>
+            <div class="est-chip"><span class="k" data-i18n="services.estK">Est.</span><span class="v" data-i18n="services.estV">1986</span></div>
+            <h2 data-i18n="services.guaranteeTitle">Best of Both Worlds Guarantee</h2>
+            <p class="lede" data-i18n="services.guaranteeText">A seamless, low-cost process managed from pre-sue to litigation with our partner firms — bringing true transparency and cost management if and when litigation is required.</p>
             <div class="contact-row">
               <a href="tel:01315550785">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M6.6 10.8a15.5 15.5 0 0 0 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1A17 17 0 0 1 3 4c0-.6.4-1 1-1h3.4c.6 0 1 .4 1 1 0 1.2.2 2.4.6 3.6.1.4 0 .8-.3 1z"/></svg>
@@ -143,13 +149,13 @@
       </div>
     </section>
 
-    <!-- ===== WHY WORK WITH US — statement line items ===== -->
+    <!-- ===== WHY WORK WITH US ===== -->
     <section>
       <div class="container">
         <div class="why-head">
           <div>
-            <span class="label eyebrow">Why work with us</span>
-            <h2 class="h-lead">Recovery professionals you can rely on</h2>
+            <span class="label eyebrow" data-i18n="why.eyebrow">Why work with us</span>
+            <h2 class="h-lead" data-i18n="why.heading">Recovery professionals you can rely on</h2>
           </div>
         </div>
         <div class="items">
@@ -157,41 +163,40 @@
           <div class="item">
             <span class="ico"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg></span>
             <div class="body">
-              <h3>Decades of experience</h3>
-              <!-- NOTE: original copy said "30 years experience" (IHJ heritage) — revise as needed. -->
-              <p>A specialist business-to-business collections company. We use that experience to exceed expectations and offer a seamless service from pre-sue right through to litigation.</p>
+              <h3 data-i18n="why.i1t">Decades of experience</h3>
+              <p data-i18n="why.i1p">A specialist business-to-business collections company. We use that experience to exceed expectations and offer a seamless service from pre-sue right through to litigation.</p>
             </div>
           </div>
 
           <div class="item">
             <span class="ico"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 21v-6M9 21V9M15 21v-9M21 21V5"/></svg></span>
             <div class="body">
-              <h3>Management expertise</h3>
-              <p>Dedicated arrears management, tracing, recovery and litigation across the UK, backed by strong relationships with tracing agents, insolvency practitioners and sheriff officers.</p>
+              <h3 data-i18n="why.i2t">Management expertise</h3>
+              <p data-i18n="why.i2p">Dedicated arrears management, tracing, recovery and litigation across the UK, backed by strong relationships with tracing agents, insolvency practitioners and sheriff officers.</p>
             </div>
           </div>
 
           <div class="item">
             <span class="ico"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="M12 7v10"/><path d="M14.5 9.5C14.5 8.4 13.4 8 12 8s-2.5.7-2.5 1.8S10.6 11.5 12 11.5s2.5.7 2.5 1.8S13.4 15 12 15s-2.5-.5-2.5-1.5"/></svg></span>
             <div class="body">
-              <h3>Millions of pounds recovered</h3>
-              <p>No debt is too small. Our costs are often covered by late payment collection. The aim is simple: outstanding results, and more cash back in your business.</p>
+              <h3 data-i18n="why.i3t">Millions of pounds recovered</h3>
+              <p data-i18n="why.i3p">No debt is too small. Our costs are often covered by late payment collection. The aim is simple: outstanding results, and more cash back in your business.</p>
             </div>
           </div>
 
           <div class="item">
             <span class="ico"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M8 7a3 3 0 1 0 0-.01M16 7a3 3 0 1 0 0-.01M2 20c0-3 2.7-5 6-5s6 2 6 5M14 15c3 0 6 2 6 5"/></svg></span>
             <div class="body">
-              <h3>Seamless partnerships</h3>
-              <p>Low-cost litigation services through our partner firms give you a smooth path from collection to court on the occasions it's needed.</p>
+              <h3 data-i18n="why.i4t">Seamless partnerships</h3>
+              <p data-i18n="why.i4p">Low-cost litigation services through our partner firms give you a smooth path from collection to court on the occasions it's needed.</p>
             </div>
           </div>
 
           <div class="item">
             <span class="ico"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6 8-6s8 2 8 6"/></svg></span>
             <div class="body">
-              <h3>Expert staff</h3>
-              <p>We employ and train people who understand that different businesses need different approaches. Our diverse client base all demand results and a positive experience.</p>
+              <h3 data-i18n="why.i5t">Expert staff</h3>
+              <p data-i18n="why.i5p">We employ and train people who understand that different businesses need different approaches. Our diverse client base all demand results and a positive experience.</p>
             </div>
           </div>
 
@@ -203,19 +208,19 @@
     <section>
       <div class="container about-grid">
         <div>
-          <span class="label eyebrow">About us</span>
-          <h2 class="h-lead">Dependable recovery, fair rates</h2>
-          <p>Prime Collections LTD provides dependable debt collection services to private and commercial clients across the UK. We're proud that our rates are among the most affordable in the industry. Call our team on 0131 555 0785 to discuss our competitive fees.</p>
-          <a href="#contact" class="btn btn-ghost">Talk to us <span class="arw">→</span></a>
+          <span class="label eyebrow" data-i18n="about.eyebrow">About us</span>
+          <h2 class="h-lead" data-i18n="about.heading">Dependable recovery, fair rates</h2>
+          <p data-i18n="about.text">Prime Collections LTD provides dependable debt collection services to private and commercial clients across the UK. We're proud that our rates are among the most affordable in the industry. Call our team on 0131 555 0785 to discuss our competitive fees.</p>
+          <a href="#contact" class="btn btn-ghost"><span data-i18n="about.cta">Talk to us</span> <span class="arw">→</span></a>
         </div>
         <!-- Designed statement-of-account mock-up (no photography) -->
         <div class="statement" role="img" aria-label="Example statement of account: three overdue invoices totalling 13,630 pounds, marked recovered.">
-          <div class="st-head"><span class="t">Statement of Account</span><span class="ref">REF PC-4021</span></div>
+          <div class="st-head"><span class="t" data-i18n="about.stHead">Statement of Account</span><span class="ref">REF PC-4021</span></div>
           <div class="st-row"><span class="inv">INV-2043<small>Due 12 Mar</small></span><span class="amt">£1,250.00</span><span class="age">14 days</span></div>
           <div class="st-row"><span class="inv">INV-2029<small>Due 02 Feb</small></span><span class="amt">£3,480.00</span><span class="age">52 days</span></div>
           <div class="st-row overdue"><span class="inv">INV-1998<small>Due 08 Jan</small></span><span class="amt">£8,900.00</span><span class="age">94 days</span></div>
           <div class="st-total">
-            <span class="lbl"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 13l4 4L19 7"/></svg>Recovered · Paid</span>
+            <span class="lbl"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 13l4 4L19 7"/></svg><span data-i18n="about.stRecovered">Recovered · Paid</span></span>
             <span class="sum">£13,630.00</span>
           </div>
         </div>
@@ -225,26 +230,26 @@
     <!-- ===== BENEFITS ===== -->
     <section>
       <div class="container">
-        <span class="label eyebrow">The Prime difference</span>
-        <h2 class="h-lead" style="margin-bottom:2.5rem;">Built to put money back in your business</h2>
+        <span class="label eyebrow" data-i18n="benefits.eyebrow">The Prime difference</span>
+        <h2 class="h-lead" data-i18n="benefits.heading" style="margin-bottom:2.5rem;">Built to put money back in your business</h2>
         <div class="benefit-grid">
           <div class="gcard">
-            <p class="label">Fees</p>
-            <h3>Cost effective</h3>
-            <p>Low commission rates, charged as a share of what we recover — subject to debt value.</p>
-            <div class="motif"><span class="fee"><span class="big">Low %</span><span class="cap">of sums recovered</span></span></div>
+            <p class="label" data-i18n="benefits.b1label">Fees</p>
+            <h3 data-i18n="benefits.b1title">Cost effective</h3>
+            <p data-i18n="benefits.b1text">Low commission rates, charged as a share of what we recover — subject to debt value.</p>
+            <div class="motif"><span class="fee"><span class="big" data-i18n="benefits.b1big">Low %</span><span class="cap" data-i18n="benefits.b1cap">of sums recovered</span></span></div>
           </div>
           <div class="gcard">
-            <p class="label">Service</p>
-            <h3>Focused</h3>
-            <p>We handle everything start to finish, so you can focus on running your business.</p>
-            <div class="motif"><span class="flowline"><span class="tick">✓</span>Instruct<span class="arw">→</span><span class="tick">✓</span>Recover<span class="arw">→</span><span class="tick">✓</span>Close</span></div>
+            <p class="label" data-i18n="benefits.b2label">Service</p>
+            <h3 data-i18n="benefits.b2title">Focused</h3>
+            <p data-i18n="benefits.b2text">We handle everything start to finish, so you can focus on running your business.</p>
+            <div class="motif"><span class="flowline"><span class="tick">✓</span><span data-i18n="benefits.b2s1">Instruct</span><span class="arw">→</span><span class="tick">✓</span><span data-i18n="benefits.b2s2">Recover</span><span class="arw">→</span><span class="tick">✓</span><span data-i18n="benefits.b2s3">Close</span></span></div>
           </div>
           <div class="gcard">
-            <p class="label">Results</p>
-            <h3>Cash flow</h3>
-            <p>With our strong retrieval rate, you pocket the money you've already earned.</p>
-            <div class="motif"><span class="owedpaid"><span class="cell a">Owed</span><span class="arw">→</span><span class="cell b">Paid</span></span></div>
+            <p class="label" data-i18n="benefits.b3label">Results</p>
+            <h3 data-i18n="benefits.b3title">Cash flow</h3>
+            <p data-i18n="benefits.b3text">With our strong retrieval rate, you pocket the money you've already earned.</p>
+            <div class="motif"><span class="owedpaid"><span class="cell a" data-i18n="benefits.b3owed">Owed</span><span class="arw">→</span><span class="cell b" data-i18n="benefits.b3paid">Paid</span></span></div>
           </div>
         </div>
       </div>
@@ -262,39 +267,38 @@
             Prime&nbsp;<span>Collections</span>
           </a>
           <ul class="footer-links">
-            <li><a href="#top">Home</a></li>
-            <li><a href="#services">Services</a></li>
-            <li><a href="#legislation">Late Payment Legislation</a></li>
-            <li><a href="#contact">Contact</a></li>
+            <li><a href="#top" data-i18n="footer.home">Home</a></li>
+            <li><a href="#services" data-i18n="footer.services">Services</a></li>
+            <li><a href="#legislation" data-i18n="footer.latePayment">Late Payment Legislation</a></li>
+            <li><a href="#contact" data-i18n="footer.contact">Contact</a></li>
           </ul>
-          <p class="blurb">Contact Prime Collections LTD at <a href="mailto:info@ihjcollection.co.uk">info@ihjcollection.co.uk</a> for independent debt collection from recovery professionals. Or call the team on 0131 555 0785 to discuss your requirements.</p>
+          <p class="blurb" data-i18n-html="footer.blurb_html">Contact Prime Collections LTD at <a href="mailto:info@ihjcollection.co.uk">info@ihjcollection.co.uk</a> for independent debt collection from recovery professionals. Or call the team on 0131 555 0785 to discuss your requirements.</p>
         </div>
 
-        <!-- Second enquiry docket (same backend note as the hero form) -->
+        <!-- Second enquiry docket -->
         <form class="docket" action="contact_form.php" method="post">
           <div class="docket-head">
-            <h3>Send an enquiry</h3>
-            <span class="label ref">Same-day reply</span>
+            <h3 data-i18n="footer.formTitle">Send an enquiry</h3>
+            <span class="label ref" data-i18n="footer.formBadge">Same-day reply</span>
           </div>
           <div class="docket-body">
-            <div class="field"><input type="text"  name="name"  placeholder="Your full name *" required minlength="2"></div>
-            <div class="field"><input type="text"  name="org"   placeholder="Your organisation"></div>
-            <div class="field"><input type="email" name="email" placeholder="Your email *" required></div>
-            <div class="field"><input type="tel"   name="phone" placeholder="Your telephone"></div>
-            <div class="field"><textarea name="query" placeholder="How can we help you?" required></textarea></div>
-            <button type="submit" class="btn">Submit request <span class="arw">→</span></button>
+            <div class="field"><input type="text"  name="name"  data-i18n-ph="docket.ph_name"  placeholder="Your full name *" required minlength="2"></div>
+            <div class="field"><input type="text"  name="org"   data-i18n-ph="docket.ph_org"   placeholder="Your organisation"></div>
+            <div class="field"><input type="email" name="email" data-i18n-ph="docket.ph_email" placeholder="Your email *" required></div>
+            <div class="field"><input type="tel"   name="phone" data-i18n-ph="docket.ph_phone" placeholder="Your telephone"></div>
+            <div class="field"><textarea name="query" data-i18n-ph="footer.ph_query" placeholder="How can we help you?" required></textarea></div>
+            <button type="submit" class="btn"><span data-i18n="docket.submit">Submit request</span> <span class="arw">→</span></button>
           </div>
         </form>
       </div>
 
       <div class="divider"></div>
-      <!-- PLACEHOLDER LEGAL LINE: registration number & registered office carried over from the
-           previous owner (IHJ Collection Ltd, SC101236). Replace with Prime Collections LTD's own
-           details before going live. -->
-      <p class="copyright">Prime Collections LTD is a company incorporated in Scotland (Registered No: [UPDATE]) whose registered office is [UPDATE ADDRESS]. © 2026 Prime Collections LTD. All rights reserved. <a href="#top">Privacy Policy</a></p>
+      <!-- PLACEHOLDER LEGAL LINE: registration number & registered office carried over from IHJ. Replace before going live. -->
+      <p class="copyright" data-i18n-html="footer.copyright_html">Prime Collections LTD is a company incorporated in Scotland (Registered No: [UPDATE]) whose registered office is [UPDATE ADDRESS]. © 2026 Prime Collections LTD. All rights reserved. <a href="#top">Privacy Policy</a></p>
     </div>
   </footer>
 
+  <script src="js/i18n.js"></script>
   <script>
     var t = document.getElementById('navToggle');
     var l = document.getElementById('navLinks');

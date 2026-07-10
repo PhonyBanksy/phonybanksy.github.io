@@ -1,0 +1,132 @@
+{
+  "_language": {
+    "code": "ga",
+    "name": "Gaeilge",
+    "english_name": "Irish",
+    "note": "Copy of the English original — rewrite every value below into Gaeilge (Irish). Any value left as English will simply display in English."
+  },
+  "meta": {
+    "title": "Prime Collections LTD — Commercial Debt Recovery, Edinburgh & Glasgow",
+    "description": "Get paid what you're owed. Commercial debt recovery and credit control across the UK — same-day action, no contract, market-leading fees."
+  },
+  "nav": {
+    "home": "Home",
+    "services": "Services",
+    "latePayment": "Late Payment",
+    "contact": "Contact",
+    "cta": "Start recovery"
+  },
+  "hero": {
+    "eyebrow": "Commercial Debt Recovery · Edinburgh & Glasgow",
+    "headline_html": "Get paid what <em>you're owed.</em>",
+    "sub": "Commercial debt management and credit control that turns overdue invoices back into cashflow. Same-day action, no contract to sign, market-leading fees.",
+    "cta": "Start your recovery",
+    "callLabel": "Call today"
+  },
+  "aged": {
+    "head1": "How late is the invoice?",
+    "head2": "Red = we step in ↓",
+    "c1k": "Current",
+    "c1v": "Not due",
+    "c2k": "30 days",
+    "c2v": "Slipping",
+    "c3k": "60 days",
+    "c3v": "Overdue",
+    "c4k": "90+ days",
+    "c4v": "At risk",
+    "note_html": "Once an invoice is <b>90+ days late</b>, the odds of collecting it yourself fall sharply. That's where we step in.",
+    "paid": "→ PAID"
+  },
+  "docket": {
+    "title": "New recovery request",
+    "badge": "No obligation",
+    "intro": "Tell us what you're owed. We'll come back to you the same day.",
+    "ph_name": "Your full name *",
+    "ph_org": "Your organisation",
+    "ph_email": "Your email *",
+    "ph_phone": "Your telephone",
+    "ph_query": "What are you owed, and by whom?",
+    "submit": "Submit request"
+  },
+  "trust": {
+    "c1k": "Est. 1986",
+    "c1d": "Decades of recovery experience",
+    "c2k": "Same day",
+    "c2d": "Cases actioned immediately",
+    "c3k": "No contract",
+    "c3d": "Nothing to sign, ever",
+    "c4k": "£ millions",
+    "c4d": "Recovered for UK businesses"
+  },
+  "services": {
+    "eyebrow": "Is your business owed money?",
+    "heading": "If you're struggling to recover cash, we can help.",
+    "sub": "A full commercial debt management service, carefully managed from first contact to litigation — so you can get back to running your business.",
+    "listLabel": "What's included",
+    "item1": "Full commercial debt management service",
+    "item2": "No contract to sign",
+    "item3": "Cases actioned same day",
+    "item4": "Dedicated client relationship manager",
+    "item5": "Market-leading fees",
+    "item6": "Proactive service — telephony, email and letter",
+    "item7": "Seamless process to litigation",
+    "item8": "Late payment collections",
+    "estK": "Est.",
+    "estV": "1986",
+    "guaranteeTitle": "Best of Both Worlds Guarantee",
+    "guaranteeText": "A seamless, low-cost process managed from pre-sue to litigation with our partner firms — bringing true transparency and cost management if and when litigation is required."
+  },
+  "why": {
+    "eyebrow": "Why work with us",
+    "heading": "Recovery professionals you can rely on",
+    "i1t": "Decades of experience",
+    "i1p": "A specialist business-to-business collections company. We use that experience to exceed expectations and offer a seamless service from pre-sue right through to litigation.",
+    "i2t": "Management expertise",
+    "i2p": "Dedicated arrears management, tracing, recovery and litigation across the UK, backed by strong relationships with tracing agents, insolvency practitioners and sheriff officers.",
+    "i3t": "Millions of pounds recovered",
+    "i3p": "No debt is too small. Our costs are often covered by late payment collection. The aim is simple: outstanding results, and more cash back in your business.",
+    "i4t": "Seamless partnerships",
+    "i4p": "Low-cost litigation services through our partner firms give you a smooth path from collection to court on the occasions it's needed.",
+    "i5t": "Expert staff",
+    "i5p": "We employ and train people who understand that different businesses need different approaches. Our diverse client base all demand results and a positive experience."
+  },
+  "about": {
+    "eyebrow": "About us",
+    "heading": "Dependable recovery, fair rates",
+    "text": "Prime Collections LTD provides dependable debt collection services to private and commercial clients across the UK. We're proud that our rates are among the most affordable in the industry. Call our team on 0131 555 0785 to discuss our competitive fees.",
+    "cta": "Talk to us",
+    "stHead": "Statement of Account",
+    "stRecovered": "Recovered · Paid"
+  },
+  "benefits": {
+    "eyebrow": "The Prime difference",
+    "heading": "Built to put money back in your business",
+    "b1label": "Fees",
+    "b1title": "Cost effective",
+    "b1text": "Low commission rates, charged as a share of what we recover — subject to debt value.",
+    "b1big": "Low %",
+    "b1cap": "of sums recovered",
+    "b2label": "Service",
+    "b2title": "Focused",
+    "b2text": "We handle everything start to finish, so you can focus on running your business.",
+    "b2s1": "Instruct",
+    "b2s2": "Recover",
+    "b2s3": "Close",
+    "b3label": "Results",
+    "b3title": "Cash flow",
+    "b3text": "With our strong retrieval rate, you pocket the money you've already earned.",
+    "b3owed": "Owed",
+    "b3paid": "Paid"
+  },
+  "footer": {
+    "home": "Home",
+    "services": "Services",
+    "latePayment": "Late Payment Legislation",
+    "contact": "Contact",
+    "blurb_html": "Contact Prime Collections LTD at <a href=\"mailto:info@ihjcollection.co.uk\">info@ihjcollection.co.uk</a> for independent debt collection from recovery professionals. Or call the team on 0131 555 0785 to discuss your requirements.",
+    "formTitle": "Send an enquiry",
+    "formBadge": "Same-day reply",
+    "ph_query": "How can we help you?",
+    "copyright_html": "Prime Collections LTD is a company incorporated in Scotland (Registered No: [UPDATE]) whose registered office is [UPDATE ADDRESS]. © 2026 Prime Collections LTD. All rights reserved. <a href=\"#top\">Privacy Policy</a>"
+  }
+}
