@@ -5,11 +5,11 @@
    ============================================================ */
 
 :root {
-  --ink:      #14120e;   /* warm charcoal — ledger cover */
-  --ink-2:    #1b1710;   /* panel */
-  --ink-3:    #221d14;   /* raised card / input */
-  --rule:     #3a3225;   /* ruled hairline */
-  --rule-soft:#282219;
+  --ink:      #1d1913;   /* warm charcoal — ledger cover (lightened) */
+  --ink-2:    #262119;   /* panel */
+  --ink-3:    #2e2820;   /* raised card / input */
+  --rule:     #473d2d;   /* ruled hairline */
+  --rule-soft:#342d22;
   --gold:     #f5b301;   /* brand / the recovered sum */
   --gold-hi:  #ffd257;
   --red:      #e5484d;   /* overdue / arrears — used sparingly */
@@ -64,7 +64,7 @@ section { padding: 6rem 0; }
 .topline { height: 3px; background: linear-gradient(90deg, var(--red) 0, var(--gold) 8%, #c98a00 60%, transparent 88%, var(--red) 100%); }
 .nav {
   position: sticky; top: 0; z-index: 60;
-  background: rgba(20,18,14,.8);
+  background: rgba(29,25,19,.8);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--rule);
 }
@@ -130,7 +130,7 @@ section { padding: 6rem 0; }
 .aged-head {
   display: flex; justify-content: space-between; align-items: center;
   padding: .7rem 1.1rem; border-bottom: 1px solid var(--rule);
-  background: #191510;
+  background: #231e16;
 }
 .aged-head .label { margin: 0; }
 .aged-row { display: grid; grid-template-columns: repeat(4, 1fr); }
@@ -149,7 +149,7 @@ section { padding: 6rem 0; }
 
 /* docket form */
 .docket { border: 1px solid var(--rule); border-radius: 8px; background: var(--ink-2); overflow: hidden; }
-.docket-head { padding: 1rem 1.3rem; border-bottom: 1px solid var(--rule); background: #191510; display: flex; justify-content: space-between; align-items: baseline; }
+.docket-head { padding: 1rem 1.3rem; border-bottom: 1px solid var(--rule); background: #231e16; display: flex; justify-content: space-between; align-items: baseline; }
 .docket-head h3 { font-size: 1.15rem; }
 .docket-head .ref { color: var(--faint); }
 .docket-body { padding: 1.4rem 1.3rem 1.5rem; }
@@ -176,7 +176,7 @@ section { padding: 6rem 0; }
 /* ---------- owed / services ---------- */
 .owed-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.6rem; align-items: stretch; }
 .panel { border: 1px solid var(--rule); border-radius: 8px; background: var(--ink-2); padding: 2.2rem; }
-.panel.mark { background: linear-gradient(160deg, #241d0c, var(--ink-2)); border-color: #4b3d18; }
+.panel.mark { background: linear-gradient(160deg, #2c240f, var(--ink-2)); border-color: #4b3d18; }
 .panel h2 { font-size: 1.5rem; margin: .9rem 0 .7rem; }
 .panel .lede { color: var(--muted); margin: 0 0 1.4rem; }
 .ledger-list { list-style: none; margin: 0; padding: 0; }
@@ -218,7 +218,7 @@ section { padding: 6rem 0; }
 .about-grid p { color: var(--muted); font-size: 1.08rem; }
 
 .statement { border: 1px solid var(--rule); border-radius: 8px; background: var(--ink-2); overflow: hidden; box-shadow: 0 24px 60px -30px rgba(0,0,0,.8); }
-.st-head { display: flex; justify-content: space-between; align-items: baseline; padding: 1rem 1.3rem; border-bottom: 1px solid var(--rule); background: #191510; }
+.st-head { display: flex; justify-content: space-between; align-items: baseline; padding: 1rem 1.3rem; border-bottom: 1px solid var(--rule); background: #231e16; }
 .st-head .t { font-family: "Spline Sans Mono", monospace; font-size: .72rem; letter-spacing: .2em; text-transform: uppercase; color: var(--muted); }
 .st-head .ref { font-family: "Spline Sans Mono", monospace; font-size: .72rem; color: var(--faint); }
 .st-row { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 1rem; padding: .85rem 1.3rem; border-bottom: 1px solid var(--rule-soft); }
@@ -281,7 +281,7 @@ section { padding: 6rem 0; }
 @media (max-width: 720px) {
   .nav-links {
     position: fixed; inset: 70px 0 auto 0; flex-direction: column; align-items: stretch; gap: 0; height: auto;
-    background: rgba(20,18,14,.98); border-bottom: 1px solid var(--rule); padding: .5rem 1.25rem 1.25rem;
+    background: rgba(29,25,19,.98); border-bottom: 1px solid var(--rule); padding: .5rem 1.25rem 1.25rem;
     transform: translateY(-130%); transition: transform .28s ease;
   }
   .nav-links.open { transform: translateY(0); }
