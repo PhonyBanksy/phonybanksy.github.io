@@ -1,0 +1,60 @@
+==============================================================
+ HOW TO CHANGE THE WORDS & DETAILS ON THE PRIME COLLECTIONS SITE
+==============================================================
+
+You only ever need to open ONE file:
+
+        content.js
+
+Open it with Notepad (right-click > Open with > Notepad) or any text editor.
+
+--------------------------------------------------------------
+THE GOLDEN RULES
+--------------------------------------------------------------
+1. Change ONLY the words between "quotation marks".
+
+      email:  "info@primecollections.co.uk",
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ change this bit only
+
+2. Do NOT change the word before the colon (email, phone, heading...).
+   That is a label the website needs.
+
+3. Keep every " quote, every , comma and every { } bracket where it is.
+
+4. Words in {curly brackets} like {phone}, {email} or {company} fill
+   themselves in automatically. Set your phone/email/company ONCE at the
+   top of the file and they update everywhere they appear.
+
+--------------------------------------------------------------
+YOUR MAIN DETAILS (top of content.js)
+--------------------------------------------------------------
+   company     - your business name
+   phone       - your phone number
+   email       - your email address
+   established - the year shown as "Est. ..."
+   regNumber   - Companies House registration number
+   regAddress  - registered office address
+   year        - the year in the copyright line
+
+Change these and they update across the whole website by themselves.
+
+--------------------------------------------------------------
+AFTER YOU EDIT
+--------------------------------------------------------------
+Save the file. The website updates once the file is uploaded/published
+(Marius or your web person does that, or it happens automatically).
+
+--------------------------------------------------------------
+IF SOMETHING LOOKS WRONG
+--------------------------------------------------------------
+It is almost always a missing " quotation mark or , comma.
+Undo your last change (Ctrl + Z) and save again.
+Good news: if the file has a mistake, the website simply keeps showing the
+last correct wording — it will not go blank.
+
+--------------------------------------------------------------
+NOTE
+--------------------------------------------------------------
+The "i18n" folder holds old translation files and is NOT used right now.
+Ignore it. Everything you need is in content.js.
+==============================================================
