@@ -8,6 +8,8 @@
   <meta property="og:title" content="Prime Collections LTD — Commercial Debt Recovery">
   <meta property="og:type" content="website">
   <meta property="og:description" content="Recovery professionals based in Edinburgh and Glasgow. We turn overdue invoices back into cashflow.">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <meta property="og:image" content="logo.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Inter:wght@400;500;600&family=Spline+Sans+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -20,7 +22,7 @@
   <header class="nav">
     <div class="container nav-inner">
       <a href="#top" class="wordmark">
-        <span class="mark"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 13l4 4L19 7"/></svg></span>
+        <span class="mark"><svg width="26" height="26" viewBox="0 0 24 24" fill="none"><rect x="2.5" y="2.5" width="19" height="19" rx="4.2" stroke="#f5b301" stroke-width="1.7"/><path d="M6.8 12.3 l3 3 L17.4 7.5" stroke="#f5b301" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/><path d="M16.4 5 l2.6 0 0 2.6" stroke="#e5484d" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
         Prime&nbsp;<span>Collections</span>
       </a>
       <nav class="nav-links" id="navLinks">
@@ -56,16 +58,16 @@
           <!-- SIGNATURE: aged-debt ledger strip — the real thing recovery deals with -->
           <div class="aged reveal d3" aria-label="Outstanding debt by age">
             <div class="aged-head">
-              <p class="label">Outstanding by age</p>
-              <p class="label">Where we come in <span class="dot">↓</span></p>
+              <p class="label">How late is the invoice?</p>
+              <p class="label">Red = we step in <span class="dot">↓</span></p>
             </div>
             <div class="aged-row">
-              <div class="aged-cell"><div class="k">Current</div><div class="v">On track</div></div>
-              <div class="aged-cell"><div class="k">30 days</div><div class="v">Chased</div></div>
-              <div class="aged-cell"><div class="k">60 days</div><div class="v">At risk</div></div>
-              <div class="aged-cell hot"><div class="k">90+ days</div><div class="v">Recover</div></div>
+              <div class="aged-cell"><div class="k">Current</div><div class="v">Not due</div></div>
+              <div class="aged-cell"><div class="k">30 days</div><div class="v">Slipping</div></div>
+              <div class="aged-cell warn"><div class="k">60 days</div><div class="v">Overdue</div></div>
+              <div class="aged-cell late"><div class="k">90+ days</div><div class="v">At risk</div></div>
             </div>
-            <div class="aged-note">Once an invoice passes <b>90 days</b>, the odds of collecting it yourself fall sharply. That's the point we step in — and get it paid.</div>
+            <div class="aged-note">Once an invoice is <b>90+ days late</b>, the odds of collecting it yourself fall sharply. That's where we step in.<span class="paid">→ PAID</span></div>
           </div>
         </div>
 
@@ -206,8 +208,16 @@
           <p>Prime Collections LTD provides dependable debt collection services to private and commercial clients across the UK. We're proud that our rates are among the most affordable in the industry. Call our team on 0131 555 0785 to discuss our competitive fees.</p>
           <a href="#contact" class="btn btn-ghost">Talk to us <span class="arw">→</span></a>
         </div>
-        <div class="about-frame">
-          <img src="images/AdobeStock_100087539.jpeg" alt="Business professionals meeting" style="object-position:left;">
+        <!-- Designed statement-of-account mock-up (no photography) -->
+        <div class="statement" role="img" aria-label="Example statement of account: three overdue invoices totalling 13,630 pounds, marked recovered.">
+          <div class="st-head"><span class="t">Statement of Account</span><span class="ref">REF PC-4021</span></div>
+          <div class="st-row"><span class="inv">INV-2043<small>Due 12 Mar</small></span><span class="amt">£1,250.00</span><span class="age">14 days</span></div>
+          <div class="st-row"><span class="inv">INV-2029<small>Due 02 Feb</small></span><span class="amt">£3,480.00</span><span class="age">52 days</span></div>
+          <div class="st-row overdue"><span class="inv">INV-1998<small>Due 08 Jan</small></span><span class="amt">£8,900.00</span><span class="age">94 days</span></div>
+          <div class="st-total">
+            <span class="lbl"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 13l4 4L19 7"/></svg>Recovered · Paid</span>
+            <span class="sum">£13,630.00</span>
+          </div>
         </div>
       </div>
     </section>
@@ -218,20 +228,23 @@
         <span class="label eyebrow">The Prime difference</span>
         <h2 class="h-lead" style="margin-bottom:2.5rem;">Built to put money back in your business</h2>
         <div class="benefit-grid">
-          <div class="benefit">
-            <img src="images/AdobeStock_80765235.jpeg" alt="">
-            <div class="ov"></div>
-            <div class="txt"><p class="label">Fees</p><h3>Cost effective</h3><p>Low commission rates, subject to debt value.</p></div>
+          <div class="gcard">
+            <p class="label">Fees</p>
+            <h3>Cost effective</h3>
+            <p>Low commission rates, charged as a share of what we recover — subject to debt value.</p>
+            <div class="motif"><span class="fee"><span class="big">Low %</span><span class="cap">of sums recovered</span></span></div>
           </div>
-          <div class="benefit">
-            <img src="images/AdobeStock_99588132.jpeg" alt="">
-            <div class="ov"></div>
-            <div class="txt"><p class="label">Service</p><h3>Focused</h3><p>We handle everything start to finish, so you can focus on running your business.</p></div>
+          <div class="gcard">
+            <p class="label">Service</p>
+            <h3>Focused</h3>
+            <p>We handle everything start to finish, so you can focus on running your business.</p>
+            <div class="motif"><span class="flowline"><span class="tick">✓</span>Instruct<span class="arw">→</span><span class="tick">✓</span>Recover<span class="arw">→</span><span class="tick">✓</span>Close</span></div>
           </div>
-          <div class="benefit">
-            <img src="images/AdobeStock_57928724.jpeg" alt="">
-            <div class="ov"></div>
-            <div class="txt"><p class="label">Results</p><h3>Cash flow</h3><p>With our stellar retrieval rate, you pocket the money you've earned.</p></div>
+          <div class="gcard">
+            <p class="label">Results</p>
+            <h3>Cash flow</h3>
+            <p>With our strong retrieval rate, you pocket the money you've already earned.</p>
+            <div class="motif"><span class="owedpaid"><span class="cell a">Owed</span><span class="arw">→</span><span class="cell b">Paid</span></span></div>
           </div>
         </div>
       </div>
@@ -245,7 +258,7 @@
       <div class="footer-grid">
         <div id="legislation">
           <a href="#top" class="wordmark">
-            <span class="mark"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 13l4 4L19 7"/></svg></span>
+            <span class="mark"><svg width="26" height="26" viewBox="0 0 24 24" fill="none"><rect x="2.5" y="2.5" width="19" height="19" rx="4.2" stroke="#f5b301" stroke-width="1.7"/><path d="M6.8 12.3 l3 3 L17.4 7.5" stroke="#f5b301" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/><path d="M16.4 5 l2.6 0 0 2.6" stroke="#e5484d" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
             Prime&nbsp;<span>Collections</span>
           </a>
           <ul class="footer-links">

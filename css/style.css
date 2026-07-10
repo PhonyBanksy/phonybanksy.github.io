@@ -10,8 +10,10 @@
   --ink-3:    #221d14;   /* raised card / input */
   --rule:     #3a3225;   /* ruled hairline */
   --rule-soft:#282219;
-  --gold:     #f5b301;   /* the recovered sum */
+  --gold:     #f5b301;   /* brand / the recovered sum */
   --gold-hi:  #ffd257;
+  --red:      #e5484d;   /* overdue / arrears — used sparingly */
+  --red-dim:  rgba(229,72,77,.12);
   --paper:    #efe9dc;   /* warm off-white text */
   --muted:    #9c9484;   /* secondary */
   --faint:    #6f6858;
@@ -59,7 +61,7 @@ section { padding: 6rem 0; }
 .sub-lead { color: var(--muted); max-width: 52ch; margin: 0 0 3rem; font-size: 1.05rem; }
 
 /* ---------- top gold rule + NAV ---------- */
-.topline { height: 3px; background: linear-gradient(90deg, var(--gold), #c98a00 60%, transparent); }
+.topline { height: 3px; background: linear-gradient(90deg, var(--red) 0, var(--gold) 8%, #c98a00 60%, transparent 88%, var(--red) 100%); }
 .nav {
   position: sticky; top: 0; z-index: 60;
   background: rgba(20,18,14,.8);
@@ -74,8 +76,7 @@ section { padding: 6rem 0; }
   text-transform: uppercase;
 }
 .wordmark .mark {
-  width: 30px; height: 30px; border: 1.5px solid var(--gold); border-radius: 6px;
-  display: grid; place-items: center; color: var(--gold);
+  width: 32px; height: 32px; display: grid; place-items: center;
 }
 .wordmark .mark svg { display: block; }
 .wordmark span { color: var(--muted); font-weight: 500; }
@@ -127,11 +128,14 @@ section { padding: 6rem 0; }
 .aged-cell:last-child { border-right: 0; }
 .aged-cell .k { font-size: .68rem; letter-spacing: .12em; text-transform: uppercase; color: var(--faint); }
 .aged-cell .v { font-family: "Spline Sans Mono", monospace; font-size: 1.15rem; margin-top: .35rem; color: var(--muted); }
-.aged-cell.hot { background: linear-gradient(180deg, rgba(245,179,1,.14), transparent); }
-.aged-cell.hot .k { color: var(--gold); }
-.aged-cell.hot .v { color: var(--gold); font-weight: 500; }
-.aged-note { padding: .7rem 1.1rem; border-top: 1px solid var(--rule); color: var(--muted); font-size: .82rem; }
+.aged-cell.warn .k { color: var(--gold); }
+.aged-cell.warn .v { color: var(--gold-hi); }
+.aged-cell.late { background: linear-gradient(180deg, var(--red-dim), transparent); border-top: 2px solid var(--red); }
+.aged-cell.late .k { color: var(--red); }
+.aged-cell.late .v { color: var(--red); font-weight: 500; }
+.aged-note { display: flex; align-items: center; gap: .8rem; padding: .8rem 1.1rem; border-top: 1px solid var(--rule); color: var(--muted); font-size: .84rem; }
 .aged-note b { color: var(--paper); font-weight: 600; }
+.aged-note .paid { margin-left: auto; flex: 0 0 auto; font-family: "Spline Sans Mono", monospace; font-size: .72rem; letter-spacing: .12em; color: var(--gold); border: 1px solid #4b3d18; border-radius: 4px; padding: .2rem .5rem; }
 
 /* docket form */
 .docket { border: 1px solid var(--rule); border-radius: 8px; background: var(--ink-2); overflow: hidden; }
@@ -199,21 +203,49 @@ section { padding: 6rem 0; }
 .item .body h3 { font-size: 1.2rem; margin: 0 0 .35rem; }
 .item .body p { margin: 0; color: var(--muted); max-width: 68ch; }
 
-/* ---------- about ---------- */
+/* ---------- about + statement mock-up ---------- */
 .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3.5rem; align-items: center; }
 .about-grid p { color: var(--muted); font-size: 1.08rem; }
-.about-frame { position: relative; border: 1px solid var(--rule); border-radius: 8px; padding: 10px; }
-.about-frame img { width: 100%; height: 100%; max-height: 400px; object-fit: cover; border-radius: 4px; display: block; }
 
-/* ---------- benefits ---------- */
+.statement { border: 1px solid var(--rule); border-radius: 8px; background: var(--ink-2); overflow: hidden; box-shadow: 0 24px 60px -30px rgba(0,0,0,.8); }
+.st-head { display: flex; justify-content: space-between; align-items: baseline; padding: 1rem 1.3rem; border-bottom: 1px solid var(--rule); background: #191510; }
+.st-head .t { font-family: "Spline Sans Mono", monospace; font-size: .72rem; letter-spacing: .2em; text-transform: uppercase; color: var(--muted); }
+.st-head .ref { font-family: "Spline Sans Mono", monospace; font-size: .72rem; color: var(--faint); }
+.st-row { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 1rem; padding: .85rem 1.3rem; border-bottom: 1px solid var(--rule-soft); }
+.st-row .inv { font-family: "Spline Sans Mono", monospace; font-size: .84rem; color: var(--paper); }
+.st-row .inv small { display: block; color: var(--faint); font-size: .72rem; letter-spacing: .02em; }
+.st-row .amt { font-family: "Spline Sans Mono", monospace; font-size: .92rem; color: var(--muted); text-align: right; }
+.st-row .age { font-family: "Spline Sans Mono", monospace; font-size: .66rem; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); border: 1px solid var(--rule); border-radius: 4px; padding: .18rem .45rem; white-space: nowrap; }
+.st-row.overdue .age { color: var(--red); border-color: rgba(229,72,77,.5); background: var(--red-dim); }
+.st-row.overdue .amt { color: var(--paper); }
+.st-total { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 1rem; padding: 1.1rem 1.3rem; background: linear-gradient(180deg, rgba(245,179,1,.1), transparent); border-top: 1px solid #4b3d18; }
+.st-total .lbl { display: inline-flex; align-items: center; gap: .55rem; font-family: "Spline Sans Mono", monospace; font-size: .74rem; letter-spacing: .16em; text-transform: uppercase; color: var(--gold); }
+.st-total .lbl svg { color: var(--gold); }
+.st-total .sum { font-family: "Spline Sans Mono", monospace; font-size: 1.35rem; color: var(--gold); font-weight: 600; }
+.st-stamp { position: absolute; }
+
+/* ---------- benefits: designed ledger cards, no photos ---------- */
 .benefit-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.4rem; }
-.benefit { position: relative; border-radius: 8px; overflow: hidden; min-height: 350px; border: 1px solid var(--rule); }
-.benefit img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: saturate(.85) brightness(.9); }
-.benefit .ov { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(20,18,14,.1), rgba(20,18,14,.94) 80%); }
-.benefit .txt { position: absolute; left: 0; right: 0; bottom: 0; padding: 1.6rem; }
-.benefit .txt .label { color: var(--gold); margin: 0 0 .5rem; }
-.benefit h3 { font-size: 1.3rem; margin: 0 0 .35rem; }
-.benefit p { margin: 0; color: #ddd6c9; font-size: .95rem; }
+.gcard { border: 1px solid var(--rule); border-radius: 8px; background: var(--ink-2); padding: 1.8rem; display: flex; flex-direction: column; gap: 1rem; transition: border-color .18s, transform .18s; }
+.gcard:hover { border-color: #4b3d18; transform: translateY(-3px); }
+.gcard .label { margin: 0; }
+.gcard h3 { font-size: 1.3rem; }
+.gcard p { margin: 0; color: var(--muted); font-size: .95rem; }
+.gcard .motif { margin-top: auto; padding-top: 1.2rem; border-top: 1px solid var(--rule-soft); }
+/* fee tile */
+.fee { display: inline-flex; align-items: baseline; gap: .5rem; font-family: "Spline Sans Mono", monospace; }
+.fee .big { font-size: 1.9rem; color: var(--gold); font-weight: 600; }
+.fee .cap { font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); }
+/* mini process */
+.flowline { display: flex; align-items: center; gap: .55rem; font-family: "Spline Sans Mono", monospace; font-size: .74rem; letter-spacing: .04em; color: var(--muted); }
+.flowline .tick { color: var(--gold); }
+.flowline .arw { color: var(--faint); }
+/* owed -> paid */
+.owedpaid { display: flex; align-items: center; gap: .7rem; font-family: "Spline Sans Mono", monospace; }
+.owedpaid .cell { border: 1px solid var(--rule); border-radius: 5px; padding: .35rem .6rem; font-size: .78rem; }
+.owedpaid .cell.a { color: var(--red); border-color: rgba(229,72,77,.4); }
+.owedpaid .cell.b { color: var(--gold); border-color: #4b3d18; }
+.owedpaid .arw { color: var(--gold); }
 
 /* ---------- footer ---------- */
 .footer { border-top: 1px solid var(--rule); background: var(--ink-2); padding: 5rem 0 2.5rem; }

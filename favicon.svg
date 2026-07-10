@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" role="img" aria-label="Prime Collections">
+  <rect width="48" height="48" rx="10" fill="#14120e"/>
+  <rect x="9" y="9" width="30" height="30" rx="7" fill="none" stroke="#f5b301" stroke-width="2.6"/>
+  <!-- paid tick -->
+  <path d="M15 24 l5.5 5.5 L34 15.5" fill="none" stroke="#f5b301" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- overdue flag corner (red accent) -->
+  <path d="M31.6 13 l5 0 0 5" fill="none" stroke="#e5484d" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
