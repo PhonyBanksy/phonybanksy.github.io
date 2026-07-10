@@ -1,403 +1,298 @@
-<html class="ng-scope" data-ng-app="myApp" xmlns:ng="http://angularjs.org">
- <head>
-  <style type="text/css">
-   @charset "UTF-8";[ng\:cloak],[ng-cloak],[data-ng-cloak],[x-ng-cloak],.ng-cloak,.x-ng-cloak,.ng-hide:not(.ng-hide-animate){display:none !important;}ng\:form{display:block;}.ng-animate-shim{visibility:hidden;}.ng-anchor{position:absolute;}
-  </style>
-  <meta content="IE=edge,chrome=1" http-equiv="X-UA-Compatible"/>
-  <meta content="telephone=no" name="format-detection"/>
-  <title class="ng-binding" data-ng-bind="'IHJ — ' + title">
-   IHJ — Commercial Debt Management - Recovery professionals based in Glasgow and Edinburgh
-  </title>
-  <meta content="Start Your Debt Recovery Today. Best Commission Rates Offered. 30 years experience. Delivering outstanding results and maximising customer cashflow." name="description"/>
-  <meta charset="utf-8"/>
-  <meta content="width=device-width, initial-scale=1" name="viewport"/>
-  <link href="css/style.css" rel="stylesheet" type="text/css"/>
-  <link href="images/icon.svg" rel="shortcut icon"/>
-  <meta content="IHJ — Commercial Debt Management - Recovery professionals based in Glasgow and Edinburgh" property="og:title"/>
-  <meta content="website" property="og:type"/>
-  <meta content="Start Your Debt Recovery Today. Best Commission Rates Offered. 30 years experience. Delivering outstanding results and maximising customer cashflow." property="og:description"/>
-  <meta content="http://www.ihjcollection.co.uk/#/" property="og:url"/>
-  <meta content="http://www.ihjcollection.co.uk/images/logoandnameonly.svg" property="og:image"/>
-  <link href="https://www.ihjcollection.co.uk/#/" ng-href="https://www.ihjcollection.co.uk/#/" rel="canonical"/>
-  <!-- Google tag (gtag.js) -->
-  <script async="" src="js/js">
-  </script>
-  <script>
-   window.dataLayer = window.dataLayer || [];
-  		function gtag(){dataLayer.push(arguments);}
-  		gtag('js', new Date());
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Prime Collections LTD — Commercial Debt Recovery, Edinburgh &amp; Glasgow</title>
+  <meta name="description" content="Get paid what you're owed. Commercial debt recovery and credit control across the UK — same-day action, no contract, market-leading fees.">
+  <meta property="og:title" content="Prime Collections LTD — Commercial Debt Recovery">
+  <meta property="og:type" content="website">
+  <meta property="og:description" content="Recovery professionals based in Edinburgh and Glasgow. We turn overdue invoices back into cashflow.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Inter:wght@400;500;600&family=Spline+Sans+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="css/style.css" rel="stylesheet">
+</head>
+<body>
+  <div class="topline"></div>
 
-  		gtag('config', 'G-QJK59LQXXR');
-  </script>
- </head>
- <body class="ng-scope" data-ng-controller="MyCtrl" id="ng-app">
-  <div class="outline">
-  </div>
-  <input class="navtoggle" id="toggle" type="checkbox"/>
-  <label class="navmenu" for="toggle">
-   <span class="off">
-   </span>
-   <span class="on">
-   </span>
-  </label>
-  <nav>
-   <object data="images/icon.svg" ng-click=" go(''); gotoTop()" style="cursor: pointer;" type="image/svg+xml">
-   </object>
-   <a class="active" href="#/" ng-class="{active:isActive('/')}">
-    Home
-   </a>
-   <!--<a  ng-class="{active:isActive('/about-us')}" href="#/about-us">About Us</a>-->
-   <a href="#/our-services" ng-class="{active:isActive('/our-services')}">
-    Services
-   </a>
-   <a href="#/late-payment-legislation" ng-class="{active:isActive('/late-payment-legislation')}">
-    Late Payment Legislation
-   </a>
-   <!--<a  ng-class="{active:isActive('/iresolve-legal')}" href="#/iresolve-legal">iResolve</a>-->
-   <!--		<a  href="https://www.iresolve-legal.co.uk/" target="_blank">iResolve-Legal</a>-->
-   <a href="#/contact-us" ng-class="{active:isActive('/contact-us')}">
-    Contact Us
-   </a>
-  </nav>
-  <div class="down-pointer" id="dwnPoi" style="bottom: -15rem; opacity: 0;">
-   <span>
-    ▼
-   </span>
-  </div>
-  <noscript>
-   We're sorry, but this website requires javascript to run. Please visit your browser settings to enable it or trying using a recently updated browser.
-  </noscript>
-  <!-- ngView:  -->
-  <main class="ng-scope" data-ng-view="" id="top" style="">
-   <meta charset="utf-8" class="ng-scope"/>
-   <section class="split-window ng-scope">
-    <div class="full-height no-top-padding">
-     <object data="images/logo.svg" type="image/svg+xml">
-      <img src="images/img.jpeg"/>
-     </object>
+  <!-- ===== NAV ===== -->
+  <header class="nav">
+    <div class="container nav-inner">
+      <a href="#top" class="wordmark">
+        <span class="mark"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 13l4 4L19 7"/></svg></span>
+        Prime&nbsp;<span>Collections</span>
+      </a>
+      <nav class="nav-links" id="navLinks">
+        <a href="#top" class="active">Home</a>
+        <a href="#services">Services</a>
+        <a href="#legislation">Late Payment</a>
+        <a href="#contact">Contact</a>
+        <a href="#contact" class="btn">Start recovery <span class="arw">→</span></a>
+      </nav>
+      <button class="nav-toggle" id="navToggle" aria-label="Menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
     </div>
-    <div class="introCTA full-height ng-scope" ng-controller="formCtrl">
-     <!--<h1>No Recovery, No Fee Options Available</h1>-->
-     <h1>
-      Commercial Debt Management &amp; Credit Control Services
-     </h1>
-     <h2>
-      Best Commission Rates Offered
-     </h2>
-     <h3>
-      Call Today
-     </h3>
-     <h5>
-      0131 555 0785
-     </h5>
-     <form class="ng-pristine ng-invalid ng-invalid-required ng-valid-email" name="userForm" ng-submit="submitForm(userForm.$valid)">
-      <input class="ng-pristine ng-untouched ng-invalid ng-invalid-required" min="2" name="name" ng-model="name" placeholder="Your Full Name*" required="" type="text"/>
-      <br/>
-      <input class="ng-pristine ng-untouched ng-valid" min="2" name="org" ng-model="org" placeholder="Your Organisation" type="text"/>
-      <br/>
-      <input class="ng-pristine ng-untouched ng-valid-email ng-invalid ng-invalid-required" min="2" name="email" ng-model="email" placeholder="Your Email*" required="" type="email"/>
-      <br/>
-      <input class="ng-pristine ng-untouched ng-valid" min="9" name="phone" ng-model="phone" placeholder="Your Telephone" type="text"/>
-      <br/>
-      <textarea class="ng-pristine ng-untouched ng-invalid ng-invalid-required" name="query" ng-model="query" placeholder="How can we help you?" required=""></textarea>
-      <br/>
-      <input class="button ng-pristine ng-untouched ng-valid" disabled="disabled" id="submitbutton" ng-disabled="userForm.$invalid" ng-model="submitButts" tabindex="-1" type="submit" value="Submit Details"/>
-      <!--onsubmit="ga('send', 'event', 'Contact','Submitted','AllForm','100');"-->
-     </form>
+  </header>
+
+  <main id="top">
+
+    <!-- ===== HERO ===== -->
+    <section class="hero">
+      <div class="container hero-grid">
+        <div>
+          <span class="label eyebrow reveal">Commercial Debt Recovery <span class="dot">·</span> Edinburgh &amp; Glasgow</span>
+          <h1 class="reveal d1">Get paid what <em>you're owed.</em></h1>
+          <p class="sub reveal d2">Commercial debt management and credit control that turns overdue invoices back into cashflow. Same-day action, no contract to sign, market-leading fees.</p>
+          <div class="hero-cta reveal d3">
+            <a href="#contact" class="btn">Start your recovery <span class="arw">→</span></a>
+            <a href="tel:01315550785" class="phone">
+              <small>Call today</small>
+              <b>0131 555 0785</b>
+            </a>
+          </div>
+
+          <!-- SIGNATURE: aged-debt ledger strip — the real thing recovery deals with -->
+          <div class="aged reveal d3" aria-label="Outstanding debt by age">
+            <div class="aged-head">
+              <p class="label">Outstanding by age</p>
+              <p class="label">Where we come in <span class="dot">↓</span></p>
+            </div>
+            <div class="aged-row">
+              <div class="aged-cell"><div class="k">Current</div><div class="v">On track</div></div>
+              <div class="aged-cell"><div class="k">30 days</div><div class="v">Chased</div></div>
+              <div class="aged-cell"><div class="k">60 days</div><div class="v">At risk</div></div>
+              <div class="aged-cell hot"><div class="k">90+ days</div><div class="v">Recover</div></div>
+            </div>
+            <div class="aged-note">Once an invoice passes <b>90 days</b>, the odds of collecting it yourself fall sharply. That's the point we step in — and get it paid.</div>
+          </div>
+        </div>
+
+        <!-- Enquiry docket. Posts to contact_form.php on the live server;
+             mailto:info@ihjcollection.co.uk is the fallback until a backend is wired up. -->
+        <form class="docket reveal d2" action="contact_form.php" method="post">
+          <div class="docket-head">
+            <h3>New recovery request</h3>
+            <span class="label ref">No obligation</span>
+          </div>
+          <div class="docket-body">
+            <p class="small">Tell us what you're owed. We'll come back to you the same day.</p>
+            <div class="field"><input type="text"  name="name"  placeholder="Your full name *" required minlength="2"></div>
+            <div class="field"><input type="text"  name="org"   placeholder="Your organisation"></div>
+            <div class="field"><input type="email" name="email" placeholder="Your email *" required></div>
+            <div class="field"><input type="tel"   name="phone" placeholder="Your telephone"></div>
+            <div class="field"><textarea name="query" placeholder="What are you owed, and by whom?" required></textarea></div>
+            <button type="submit" class="btn">Submit request <span class="arw">→</span></button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- ===== TRUST STRIP ===== -->
+    <div class="trust">
+      <div class="container trust-inner">
+        <!-- NOTE: "Est. 1986" carried over from previous owner (IHJ). Review for Prime Collections LTD. -->
+        <div class="trust-cell"><div class="k">Est. 1986</div><div class="d">Decades of recovery experience</div></div>
+        <div class="trust-cell"><div class="k">Same day</div><div class="d">Cases actioned immediately</div></div>
+        <div class="trust-cell"><div class="k">No contract</div><div class="d">Nothing to sign, ever</div></div>
+        <div class="trust-cell"><div class="k">£ millions</div><div class="d">Recovered for UK businesses</div></div>
+      </div>
     </div>
-   </section>
-   <section class="split-window ng-scope" id="sectionNoOb">
-    <div class="blue-bkrgnd full-height">
-     <!--<h2>Commercial Debt Management &amp; Credit Control Services</h2>-->
-     <h2>
-      Is Your Business Owed Money?
-      <br/>
-      <br/>
-      If you're struggling to recover cash, we can help!
-     </h2>
-     <h3>
-      Experience Matters — Over 30 years assisting businesses collect overdue debt.
-     </h3>
-     <ul>
-      <li>
-       Full Commercial Debt Management Service
-      </li>
-      <li>
-       No contract to sign
-      </li>
-      <li>
-       Cases actioned same day
-      </li>
-      <li>
-       Dedicated client relationship manager
-      </li>
-      <li>
-       Market Leading fees
-      </li>
-      <li>
-       Proactive service – telephony, email and letter
-      </li>
-      <li>
-       Seamless process to litigation
-      </li>
-      <li>
-       Late Payment Collections
-      </li>
-     </ul>
-    </div>
-    <div class="full-height">
-     <div class="est">
-      <h5>
-       Est.
-      </h5>
-      <h4>
-       1986
-      </h4>
-     </div>
-     <h3>
-      Best of Both Worlds Guarantee
-     </h3>
-     <h4>
-      A seamless, low cost process carefully managed from pre-sue to litigation with our partner firms. Bringing true Transparency and Cost Management if and when litigation is required.
-     </h4>
-     <h3 class="full-flex">
-      Call For a
-      <span class="running" id="spanNoOb">
-       No Obligation
-      </span>
-      Discussion:
-     </h3>
-     <div class="contact-field">
-      <img src="images/icon-staff.svg"/>
-      <h6>
-       0131 555 0785
-      </h6>
-     </div>
-     <div class="contact-field">
-      <img src="images/icon-email.svg"/>
-      <h6>
-       <a href="mailto:info@ihjcollection.co.uk">
-        info@ihjcollection.co.uk
-       </a>
-      </h6>
-     </div>
-    </div>
-   </section>
-   <section class="why ng-scope">
-    <h2>
-     Why Work With Us?
-    </h2>
-    <div class="industry-service">
-     <object data="images/icon-xp.svg" type="image/svg+xml">
-     </object>
-     <div class="text-cont">
-      <h3>
-       30 Years Experience
-      </h3>
-      <p>
-       We are a specialist business to business collections company with over 30 years experience. We utilise all this experience to exceed customer expectations and offer a seamless service from pre-sue to litigation.
-      </p>
-     </div>
-    </div>
-    <div class="industry-service">
-     <object data="images/icon-management.svg" type="image/svg+xml">
-     </object>
-     <div class="text-cont">
-      <h3>
-       Management Expertise
-      </h3>
-      <p>
-       We offer dedicated arrears management, tracing, recovery and litigation services across the UK. We have a wide network of expertise and strong relationships with tracing agents, insolvency practitioners and sheriff officers.
-      </p>
-     </div>
-    </div>
-    <div class="industry-service">
-     <object data="images/icon-money.svg" type="image/svg+xml">
-     </object>
-     <div class="text-cont">
-      <h3>
-       Millions of Pounds Recovered
-      </h3>
-      <p>
-       No debt is too small. Our costs are often covered by Late Payment collection. Our aim is to deliver outstanding results and maximise customer cashflow.
-      </p>
-     </div>
-    </div>
-    <!--<div class="industry-service">
-			<object type="image/svg+xml" data="images/icon-nofee.svg"></object>
-			<div class="text-cont">
-            	<h3>No Recovery, No Fee Available</h3>
-            	<p>Our service can be provided on a No Recovery No Fee basis or fixed fee. Fees as low as 4% and we will not be beaten on price.</p>
-			</div>
-		</div>-->
-    <div class="industry-service">
-     <object data="images/icon-parters.svg" type="image/svg+xml">
-     </object>
-     <div class="text-cont">
-      <h3>
-       Seamless Partnerships
-      </h3>
-      <p>
-       We also offer low cost litigation services, through our partner company.
-      </p>
-     </div>
-    </div>
-    <div class="industry-service">
-     <object data="images/icon-staff.svg" type="image/svg+xml">
-     </object>
-     <div class="text-cont">
-      <h3>
-       Expert Staff
-      </h3>
-      <p>
-       We employ and train the best people to understand different businesses require different approaches. Our diverse client base, across a range of sectors, all demand results and a positive customer experience.
-      </p>
-     </div>
-    </div>
-   </section>
-   <section class="split-window about ng-scope">
-    <div>
-     <h1>
-      About Us
-     </h1>
-     <p>
-      IHJ Collection was established in Scotland’s capital back in 1986. Since then, we have been providing dependable debt collection services to private and commercial clients across the UK. We are proud of the fact that our rates are among the most affordable in the industry. Call our support team now on 0131 555 0785 to discuss our competitive fees.
-     </p>
-    </div>
-    <div>
-     <img src="images/AdobeStock_100087539.jpeg" style="object-position: left;"/>
-    </div>
-   </section>
-   <section class="benefits ng-scope">
-    <div class="benefit">
-     <img src="images/AdobeStock_80765235.jpeg" style="object-position: center;"/>
-     <div class="floating-text">
-      <h3>
-       Cost Effective
-      </h3>
-      <p>
-       Low commission rates, subject to debt value.
-      </p>
-     </div>
-    </div>
-    <div class="benefit">
-     <img src="images/AdobeStock_99588132.jpeg" style="object-position: center;"/>
-     <div class="floating-text">
-      <h3>
-       Focused
-      </h3>
-      <p>
-       We take care of everything from start to finish, allowing you to focus on running your business.
-      </p>
-     </div>
-    </div>
-    <div class="benefit">
-     <img src="images/AdobeStock_57928724.jpeg"/>
-     <div class="floating-text">
-      <h3>
-       Cash Flow
-      </h3>
-      <p>
-       With our stellar retrieval rate, you can rest assured that you'll pocket the money you've earned.
-      </p>
-     </div>
-    </div>
-   </section>
+
+    <!-- ===== IS YOUR BUSINESS OWED MONEY / SERVICES ===== -->
+    <section id="services">
+      <div class="container">
+        <span class="label eyebrow">Is your business owed money?</span>
+        <h2 class="h-lead">If you're struggling to recover cash, we can help.</h2>
+        <p class="sub-lead">A full commercial debt management service, carefully managed from first contact to litigation — so you can get back to running your business.</p>
+        <div class="owed-grid">
+          <div class="panel">
+            <p class="label">What's included</p>
+            <ul class="ledger-list">
+              <li>Full commercial debt management service</li>
+              <li>No contract to sign</li>
+              <li>Cases actioned same day</li>
+              <li>Dedicated client relationship manager</li>
+              <li>Market-leading fees</li>
+              <li>Proactive service — telephony, email and letter</li>
+              <li>Seamless process to litigation</li>
+              <li>Late payment collections</li>
+            </ul>
+          </div>
+
+          <div class="panel mark">
+            <!-- NOTE: "Est. 1986" is the previous owner's founding date. Update for Prime Collections LTD. -->
+            <div class="est-chip"><span class="k">Est.</span><span class="v">1986</span></div>
+            <h2>Best of Both Worlds Guarantee</h2>
+            <p class="lede">A seamless, low-cost process managed from pre-sue to litigation with our partner firms — bringing true transparency and cost management if and when litigation is required.</p>
+            <div class="contact-row">
+              <a href="tel:01315550785">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M6.6 10.8a15.5 15.5 0 0 0 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1A17 17 0 0 1 3 4c0-.6.4-1 1-1h3.4c.6 0 1 .4 1 1 0 1.2.2 2.4.6 3.6.1.4 0 .8-.3 1z"/></svg>
+                0131 555 0785
+              </a>
+              <a href="mailto:info@ihjcollection.co.uk">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2zm8 7 8-5H4l8 5zm0 2L4 8v10h16V8l-8 5z"/></svg>
+                info@ihjcollection.co.uk
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== WHY WORK WITH US — statement line items ===== -->
+    <section>
+      <div class="container">
+        <div class="why-head">
+          <div>
+            <span class="label eyebrow">Why work with us</span>
+            <h2 class="h-lead">Recovery professionals you can rely on</h2>
+          </div>
+        </div>
+        <div class="items">
+
+          <div class="item">
+            <span class="ico"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg></span>
+            <div class="body">
+              <h3>Decades of experience</h3>
+              <!-- NOTE: original copy said "30 years experience" (IHJ heritage) — revise as needed. -->
+              <p>A specialist business-to-business collections company. We use that experience to exceed expectations and offer a seamless service from pre-sue right through to litigation.</p>
+            </div>
+          </div>
+
+          <div class="item">
+            <span class="ico"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 21v-6M9 21V9M15 21v-9M21 21V5"/></svg></span>
+            <div class="body">
+              <h3>Management expertise</h3>
+              <p>Dedicated arrears management, tracing, recovery and litigation across the UK, backed by strong relationships with tracing agents, insolvency practitioners and sheriff officers.</p>
+            </div>
+          </div>
+
+          <div class="item">
+            <span class="ico"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="M12 7v10"/><path d="M14.5 9.5C14.5 8.4 13.4 8 12 8s-2.5.7-2.5 1.8S10.6 11.5 12 11.5s2.5.7 2.5 1.8S13.4 15 12 15s-2.5-.5-2.5-1.5"/></svg></span>
+            <div class="body">
+              <h3>Millions of pounds recovered</h3>
+              <p>No debt is too small. Our costs are often covered by late payment collection. The aim is simple: outstanding results, and more cash back in your business.</p>
+            </div>
+          </div>
+
+          <div class="item">
+            <span class="ico"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M8 7a3 3 0 1 0 0-.01M16 7a3 3 0 1 0 0-.01M2 20c0-3 2.7-5 6-5s6 2 6 5M14 15c3 0 6 2 6 5"/></svg></span>
+            <div class="body">
+              <h3>Seamless partnerships</h3>
+              <p>Low-cost litigation services through our partner firms give you a smooth path from collection to court on the occasions it's needed.</p>
+            </div>
+          </div>
+
+          <div class="item">
+            <span class="ico"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6 8-6s8 2 8 6"/></svg></span>
+            <div class="body">
+              <h3>Expert staff</h3>
+              <p>We employ and train people who understand that different businesses need different approaches. Our diverse client base all demand results and a positive experience.</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== ABOUT ===== -->
+    <section>
+      <div class="container about-grid">
+        <div>
+          <span class="label eyebrow">About us</span>
+          <h2 class="h-lead">Dependable recovery, fair rates</h2>
+          <p>Prime Collections LTD provides dependable debt collection services to private and commercial clients across the UK. We're proud that our rates are among the most affordable in the industry. Call our team on 0131 555 0785 to discuss our competitive fees.</p>
+          <a href="#contact" class="btn btn-ghost">Talk to us <span class="arw">→</span></a>
+        </div>
+        <div class="about-frame">
+          <img src="images/AdobeStock_100087539.jpeg" alt="Business professionals meeting" style="object-position:left;">
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== BENEFITS ===== -->
+    <section>
+      <div class="container">
+        <span class="label eyebrow">The Prime difference</span>
+        <h2 class="h-lead" style="margin-bottom:2.5rem;">Built to put money back in your business</h2>
+        <div class="benefit-grid">
+          <div class="benefit">
+            <img src="images/AdobeStock_80765235.jpeg" alt="">
+            <div class="ov"></div>
+            <div class="txt"><p class="label">Fees</p><h3>Cost effective</h3><p>Low commission rates, subject to debt value.</p></div>
+          </div>
+          <div class="benefit">
+            <img src="images/AdobeStock_99588132.jpeg" alt="">
+            <div class="ov"></div>
+            <div class="txt"><p class="label">Service</p><h3>Focused</h3><p>We handle everything start to finish, so you can focus on running your business.</p></div>
+          </div>
+          <div class="benefit">
+            <img src="images/AdobeStock_57928724.jpeg" alt="">
+            <div class="ov"></div>
+            <div class="txt"><p class="label">Results</p><h3>Cash flow</h3><p>With our stellar retrieval rate, you pocket the money you've earned.</p></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
   </main>
-  <footer class="blue-bkrgnd ng-scope" ng-controller="formCtrl" style="padding-bottom: 8rem;">
-   <div class="divider">
-   </div>
-   <ul class="footer-links">
-    <li>
-     <a class="active" href="#/" ng-class="{active:isActive('/')}" ng-click="gotoTop()">
-      Home
-     </a>
-    </li>
-    <!--<li><a ng-click="gotoTop()" ng-class="{active:isActive('/about-us')}" href="#/about-us">About Us</a></li>-->
-    <li>
-     <a href="#/our-services" ng-class="{active:isActive('/our-services')}" ng-click="gotoTop()">
-      Services
-     </a>
-    </li>
-    <li>
-     <a href="#/late-payment-legislation" ng-class="{active:isActive('/late-payment-legislation')}" ng-click="gotoTop()">
-      Late Payment Legislation
-     </a>
-    </li>
-    <li>
-     <a href="#/iresolve-legal" ng-class="{active:isActive('/iresolve-legal')}">
-      iResolve
-     </a>
-    </li>
-    <li>
-     <a href="#/contact-us" ng-class="{active:isActive('/contact-us')}" ng-click="gotoTop()">
-      Contact Us
-     </a>
-    </li>
-   </ul>
-   <p>
-    Contact IHJ Collection at
-    <a href="mailto:info@ihjcollection.co.uk">
-     info@ihjcollection.co.uk
-    </a>
-    for independent debt collection from recovery professionals. Alternatively contact our support team on 0131 555 0785 to discuss your requirements.
-   </p>
-   <form class="ng-pristine ng-invalid ng-invalid-required ng-valid-email" name="userForm" ng-submit="submitForm(userForm.$valid)">
-    <input class="ng-pristine ng-untouched ng-invalid ng-invalid-required" min="2" name="name" ng-model="name" placeholder="Your Full Name*" required="" type="text"/>
-    <br/>
-    <input class="ng-pristine ng-untouched ng-valid" min="2" name="org" ng-model="org" placeholder="Your Organisation" type="text"/>
-    <br/>
-    <input class="ng-pristine ng-untouched ng-valid-email ng-invalid ng-invalid-required" min="2" name="email" ng-model="email" placeholder="Your Email*" required="" type="email"/>
-    <br/>
-    <input class="ng-pristine ng-untouched ng-valid" max="12" min="10" name="phone" ng-model="phone" placeholder="Your Telephone" type="text"/>
-    <br/>
-    <textarea class="ng-pristine ng-untouched ng-invalid ng-invalid-required" name="query" ng-model="query" placeholder="How can we help you?" required=""></textarea>
-    <br/>
-    <input class="button ng-pristine ng-untouched ng-valid" disabled="disabled" id="submitbutton" ng-disabled="userForm.$invalid" ng-model="submitButts" tabindex="-1" type="submit" value="Submit Details"/>
-    <!--onsubmit="ga('send', 'event', 'Contact','Submitted','AllForm','100');"-->
-   </form>
-   <div class="divider">
-   </div>
-   <p class="smallCopyright">
-    IHJ Collection Ltd is a company incorporated in Scotland (Registered No: SC101236) whose registered office address is 25 Morton Street, Edinburgh, EH15 2HN © 2025 IHJ Collection Ltd. All rights reserved.
-    <a href="#/privacy" ng-class="{active:isActive('/privacy')}" ng-click="gotoTop()">
-     Privacy Policy.
-    </a>
-   </p>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="footer" id="contact">
+    <div class="container">
+      <div class="footer-grid">
+        <div id="legislation">
+          <a href="#top" class="wordmark">
+            <span class="mark"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 13l4 4L19 7"/></svg></span>
+            Prime&nbsp;<span>Collections</span>
+          </a>
+          <ul class="footer-links">
+            <li><a href="#top">Home</a></li>
+            <li><a href="#services">Services</a></li>
+            <li><a href="#legislation">Late Payment Legislation</a></li>
+            <li><a href="#contact">Contact</a></li>
+          </ul>
+          <p class="blurb">Contact Prime Collections LTD at <a href="mailto:info@ihjcollection.co.uk">info@ihjcollection.co.uk</a> for independent debt collection from recovery professionals. Or call the team on 0131 555 0785 to discuss your requirements.</p>
+        </div>
+
+        <!-- Second enquiry docket (same backend note as the hero form) -->
+        <form class="docket" action="contact_form.php" method="post">
+          <div class="docket-head">
+            <h3>Send an enquiry</h3>
+            <span class="label ref">Same-day reply</span>
+          </div>
+          <div class="docket-body">
+            <div class="field"><input type="text"  name="name"  placeholder="Your full name *" required minlength="2"></div>
+            <div class="field"><input type="text"  name="org"   placeholder="Your organisation"></div>
+            <div class="field"><input type="email" name="email" placeholder="Your email *" required></div>
+            <div class="field"><input type="tel"   name="phone" placeholder="Your telephone"></div>
+            <div class="field"><textarea name="query" placeholder="How can we help you?" required></textarea></div>
+            <button type="submit" class="btn">Submit request <span class="arw">→</span></button>
+          </div>
+        </form>
+      </div>
+
+      <div class="divider"></div>
+      <!-- PLACEHOLDER LEGAL LINE: registration number & registered office carried over from the
+           previous owner (IHJ Collection Ltd, SC101236). Replace with Prime Collections LTD's own
+           details before going live. -->
+      <p class="copyright">Prime Collections LTD is a company incorporated in Scotland (Registered No: [UPDATE]) whose registered office is [UPDATE ADDRESS]. © 2026 Prime Collections LTD. All rights reserved. <a href="#top">Privacy Policy</a></p>
+    </div>
   </footer>
-  <style type="text/css">
-   #COVID {
-            animation: 1s ease-in covidbanner both;
-            padding: 0.75rem 0.25rem;
-            line-height: 1.2;
-            animation-delay: 2s;
-            text-align: center;
-        }
-        /*@media screen and (max-width: 600px) {
-            #COVID {padding: 1rem 4rem 1rem 1rem; font-size: 0.85em;}
-        }
-        @media screen and (min-width: 600px) {
-            #COVID {text-align: center; padding: 0.5rem;}
-        } */
-        
-        @keyframes covidbanner {
-            from {transform: translateY(2rem); opacity: 0;}
-            to {transform: translateY(0); opacity: 1;}
-        }
-  </style>
-  <!--<div id="COVID" style="position: fixed;left: 0;z-index: 898;background-color: dodgerblue;color: white;width: 100%;bottom: 0;">We're available to help with debt recovery during the COVID-19 pandemic. Call 0131 555 0785 for expert advice in navigating this crisis.</div>-->
-  <script src="js/angular.js">
-  </script>
-  <script src="js/angular-route.js">
-  </script>
-  <script src="js/angular-animate.js">
-  </script>
-  <script src="js/app.js">
-  </script>
-  <script src="js/ofi.min.js" type="text/javascript">
-  </script>
+
   <script>
-   objectFitImages();
+    var t = document.getElementById('navToggle');
+    var l = document.getElementById('navLinks');
+    t.addEventListener('click', function () {
+      var open = l.classList.toggle('open');
+      t.classList.toggle('open', open);
+      t.setAttribute('aria-expanded', open);
+    });
+    l.addEventListener('click', function (e) {
+      if (e.target.closest('a')) { l.classList.remove('open'); t.classList.remove('open'); }
+    });
   </script>
- </body>
+</body>
 </html>
