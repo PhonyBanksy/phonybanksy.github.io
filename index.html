@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>document.documentElement.classList.add('js');</script>
   <title data-i18n="meta.title">Prime Collections LTD — Commercial Debt Recovery, Edinburgh &amp; Glasgow</title>
   <meta name="description" content="Get paid what you're owed. Commercial debt recovery and credit control across the UK — same-day action, no contract, market-leading fees.">
   <meta property="og:title" content="Prime Collections LTD — Commercial Debt Recovery">
@@ -310,6 +311,59 @@
     l.addEventListener('click', function (e) {
       if (e.target.closest('a')) { l.classList.remove('open'); t.classList.remove('open'); }
     });
+  </script>
+
+  <!-- motion: scroll reveals + recovered-total count-up -->
+  <script>
+  (function () {
+    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var hasIO = 'IntersectionObserver' in window;
+
+    // Scroll reveals
+    var sel = '.trust-cell, .owed-grid .panel, .items .item, .benefit-grid .gcard, ' +
+              '.statement, .about-grid > div, .why-head, .sub-lead';
+    var els = Array.prototype.slice.call(document.querySelectorAll(sel));
+    els.forEach(function (el, i) {
+      el.classList.add('reveal-scroll');
+      // gentle stagger between siblings sharing a parent
+      var sibs = el.parentElement ? el.parentElement.children : [el];
+      el.style.transitionDelay = (Math.min(Array.prototype.indexOf.call(sibs, el), 5) * 70) + 'ms';
+    });
+    if (reduce || !hasIO) {
+      els.forEach(function (el) { el.classList.add('is-visible'); });
+    } else {
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          if (e.isIntersecting) { e.target.classList.add('is-visible'); io.unobserve(e.target); }
+        });
+      }, { threshold: 0.14, rootMargin: '0px 0px -8% 0px' });
+      els.forEach(function (el) { io.observe(el); });
+    }
+
+    // Count-up on the recovered total
+    var sum = document.querySelector('.st-total .sum');
+    if (sum) {
+      var target = parseInt((sum.textContent || '').split('.')[0].replace(/[^0-9]/g, ''), 10) || 0;
+      var fmt = function (n) { return '£' + n.toLocaleString('en-GB') + '.00'; };
+      var run = function () {
+        if (reduce) { sum.textContent = fmt(target); return; }
+        var start = null, dur = 1300;
+        sum.textContent = '£0.00';
+        requestAnimationFrame(function step(ts) {
+          if (!start) start = ts;
+          var p = Math.min(1, (ts - start) / dur);
+          sum.textContent = fmt(Math.round(target * (1 - Math.pow(1 - p, 3))));
+          if (p < 1) requestAnimationFrame(step);
+        });
+      };
+      if (hasIO && !reduce) {
+        var io2 = new IntersectionObserver(function (en) {
+          en.forEach(function (e) { if (e.isIntersecting) { run(); io2.disconnect(); } });
+        }, { threshold: 0.5 });
+        io2.observe(sum.closest('.statement') || sum);
+      } else { run(); }
+    }
+  })();
   </script>
 </body>
 </html>
