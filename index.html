@@ -31,12 +31,10 @@
         <a href="#services" data-i18n="nav.services">Services</a>
         <a href="#legislation" data-i18n="nav.latePayment">Late Payment</a>
         <a href="#contact" data-i18n="nav.contact">Contact</a>
-        <select id="langSelect" class="lang" aria-label="Language / Cànan">
+        <select id="langSelect" class="lang" aria-label="Language">
           <option value="en">English</option>
-          <option value="gd">Gàidhlig</option>
-          <option value="ga">Gaeilge</option>
-          <option value="lt">Lietuvių</option>
-          <option value="hi">हिन्दी</option>
+          <!-- Other languages hidden until translated. JSON files kept in i18n/.
+               Re-add options here when ready: gd Gàidhlig, ga Gaeilge, lt Lietuvių, hi हिन्दी -->
         </select>
         <a href="#contact" class="btn"><span data-i18n="nav.cta">Start recovery</span> <span class="arw">→</span></a>
       </nav>
@@ -78,23 +76,6 @@
             <div class="aged-note"><span data-i18n-html="aged.note_html">Once an invoice is <b>90+ days late</b>, the odds of collecting it yourself fall sharply. That's where we step in.</span><span class="paid" data-i18n="aged.paid">→ PAID</span></div>
           </div>
         </div>
-
-        <!-- Enquiry docket. Posts to contact_form.php on the live server. -->
-        <form class="docket reveal d2" action="contact_form.php" method="post">
-          <div class="docket-head">
-            <h3 data-i18n="docket.title">New recovery request</h3>
-            <span class="label ref" data-i18n="docket.badge">No obligation</span>
-          </div>
-          <div class="docket-body">
-            <p class="small" data-i18n="docket.intro">Tell us what you're owed. We'll come back to you the same day.</p>
-            <div class="field"><input type="text"  name="name"  data-i18n-ph="docket.ph_name"  placeholder="Your full name *" required minlength="2"></div>
-            <div class="field"><input type="text"  name="org"   data-i18n-ph="docket.ph_org"   placeholder="Your organisation"></div>
-            <div class="field"><input type="email" name="email" data-i18n-ph="docket.ph_email" placeholder="Your email *" required></div>
-            <div class="field"><input type="tel"   name="phone" data-i18n-ph="docket.ph_phone" placeholder="Your telephone"></div>
-            <div class="field"><textarea name="query" data-i18n-ph="docket.ph_query" placeholder="What are you owed, and by whom?" required></textarea></div>
-            <button type="submit" class="btn"><span data-i18n="docket.submit">Submit request</span> <span class="arw">→</span></button>
-          </div>
-        </form>
       </div>
     </section>
 
