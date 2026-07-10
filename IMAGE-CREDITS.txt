@@ -1,0 +1,19 @@
+IMAGE CREDITS & LICENSING
+=========================
+
+All imagery on this site is copyright-free and cleared for commercial use.
+Keep this file up to date whenever an image is added or replaced.
+
+------------------------------------------------------------------
+File:        img/edinburgh-calton-hill.jpg
+Used for:    Fixed background behind the whole page (see css/style.css, body::after)
+Subject:     View of Edinburgh from Calton Hill, at twilight
+Photographer: Carsten Ruthemann
+Source:      https://www.pexels.com/photo/view-of-edinburgh-from-calton-hill-7813912/
+License:     Pexels License - free for commercial use, no attribution required.
+             https://www.pexels.com/license/
+Downloaded:  2026-07-10
+------------------------------------------------------------------
+
+Note: attribution is NOT legally required under the Pexels License, but we
+record the source here anyway so provenance is always traceable.
