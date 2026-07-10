@@ -118,6 +118,20 @@
     "b3owed": "Owed",
     "b3paid": "Paid"
   },
+  "legislation": {
+    "eyebrow": "Late Payment Legislation",
+    "heading": "You're owed more than the invoice",
+    "text": "Under the Late Payment of Commercial Debts (Interest) Act 1998, when a business pays late you can claim statutory interest, fixed compensation and reasonable recovery costs — on top of the debt itself. Often that covers the cost of recovery entirely.",
+    "c1big": "8% + base",
+    "c1title": "Statutory interest",
+    "c1text": "8% a year plus the Bank of England base rate, charged from the day payment fell due.",
+    "c2big": "£40–100",
+    "c2title": "Fixed compensation",
+    "c2text": "A set sum for every unpaid invoice — £40, £70 or £100 depending on the size of the debt.",
+    "c3big": "+ costs",
+    "c3title": "Recovery costs",
+    "c3text": "You can also reclaim the reasonable costs of recovering what you're owed. We handle the calculation and the claim."
+  },
   "footer": {
     "home": "Home",
     "services": "Services",

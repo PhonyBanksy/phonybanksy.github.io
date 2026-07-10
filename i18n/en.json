@@ -1,11 +1,13 @@
 {
-  "_language": { "code": "en", "name": "English", "note": "ORIGINAL copy — this is the reference. Other language files are copies of this to rewrite." },
-
+  "_language": {
+    "code": "en",
+    "name": "English",
+    "note": "ORIGINAL copy — this is the reference. Other language files are copies of this to rewrite."
+  },
   "meta": {
     "title": "Prime Collections LTD — Commercial Debt Recovery, Edinburgh & Glasgow",
     "description": "Get paid what you're owed. Commercial debt recovery and credit control across the UK — same-day action, no contract, market-leading fees."
   },
-
   "nav": {
     "home": "Home",
     "services": "Services",
@@ -13,7 +15,6 @@
     "contact": "Contact",
     "cta": "Start recovery"
   },
-
   "hero": {
     "eyebrow": "Commercial Debt Recovery · Edinburgh & Glasgow",
     "headline_html": "Get paid what <em>you're owed.</em>",
@@ -21,18 +22,20 @@
     "cta": "Start your recovery",
     "callLabel": "Call today"
   },
-
   "aged": {
     "head1": "How late is the invoice?",
     "head2": "Red = we step in ↓",
-    "c1k": "Current",  "c1v": "Not due",
-    "c2k": "30 days",  "c2v": "Slipping",
-    "c3k": "60 days",  "c3v": "Overdue",
-    "c4k": "90+ days", "c4v": "At risk",
+    "c1k": "Current",
+    "c1v": "Not due",
+    "c2k": "30 days",
+    "c2v": "Slipping",
+    "c3k": "60 days",
+    "c3v": "Overdue",
+    "c4k": "90+ days",
+    "c4v": "At risk",
     "note_html": "Once an invoice is <b>90+ days late</b>, the odds of collecting it yourself fall sharply. That's where we step in.",
     "paid": "→ PAID"
   },
-
   "docket": {
     "title": "New recovery request",
     "badge": "No obligation",
@@ -44,14 +47,16 @@
     "ph_query": "What are you owed, and by whom?",
     "submit": "Submit request"
   },
-
   "trust": {
-    "c1k": "Est. 1986",   "c1d": "Decades of recovery experience",
-    "c2k": "Same day",    "c2d": "Cases actioned immediately",
-    "c3k": "No contract", "c3d": "Nothing to sign, ever",
-    "c4k": "£ millions",  "c4d": "Recovered for UK businesses"
+    "c1k": "Est. 1986",
+    "c1d": "Decades of recovery experience",
+    "c2k": "Same day",
+    "c2d": "Cases actioned immediately",
+    "c3k": "No contract",
+    "c3d": "Nothing to sign, ever",
+    "c4k": "£ millions",
+    "c4d": "Recovered for UK businesses"
   },
-
   "services": {
     "eyebrow": "Is your business owed money?",
     "heading": "If you're struggling to recover cash, we can help.",
@@ -70,7 +75,6 @@
     "guaranteeTitle": "Best of Both Worlds Guarantee",
     "guaranteeText": "A seamless, low-cost process managed from pre-sue to litigation with our partner firms — bringing true transparency and cost management if and when litigation is required."
   },
-
   "why": {
     "eyebrow": "Why work with us",
     "heading": "Recovery professionals you can rely on",
@@ -85,7 +89,6 @@
     "i5t": "Expert staff",
     "i5p": "We employ and train people who understand that different businesses need different approaches. Our diverse client base all demand results and a positive experience."
   },
-
   "about": {
     "eyebrow": "About us",
     "heading": "Dependable recovery, fair rates",
@@ -94,7 +97,6 @@
     "stHead": "Statement of Account",
     "stRecovered": "Recovered · Paid"
   },
-
   "benefits": {
     "eyebrow": "The Prime difference",
     "heading": "Built to put money back in your business",
@@ -115,7 +117,20 @@
     "b3owed": "Owed",
     "b3paid": "Paid"
   },
-
+  "legislation": {
+    "eyebrow": "Late Payment Legislation",
+    "heading": "You're owed more than the invoice",
+    "text": "Under the Late Payment of Commercial Debts (Interest) Act 1998, when a business pays late you can claim statutory interest, fixed compensation and reasonable recovery costs — on top of the debt itself. Often that covers the cost of recovery entirely.",
+    "c1big": "8% + base",
+    "c1title": "Statutory interest",
+    "c1text": "8% a year plus the Bank of England base rate, charged from the day payment fell due.",
+    "c2big": "£40–100",
+    "c2title": "Fixed compensation",
+    "c2text": "A set sum for every unpaid invoice — £40, £70 or £100 depending on the size of the debt.",
+    "c3big": "+ costs",
+    "c3title": "Recovery costs",
+    "c3text": "You can also reclaim the reasonable costs of recovering what you're owed. We handle the calculation and the claim."
+  },
   "footer": {
     "home": "Home",
     "services": "Services",
